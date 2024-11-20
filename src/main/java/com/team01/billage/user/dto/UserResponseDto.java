@@ -2,19 +2,19 @@ package com.team01.billage.user.dto;
 
 import com.team01.billage.user.domain.Provider;
 import com.team01.billage.user.domain.UserRole;
-import lombok.AllArgsConstructor;
+import jakarta.persistence.Column;
+import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-public class UserSignupRequestDto {
+@Builder
+public class UserResponseDto {
+    private  long id;
     private String nickname;
     private String email;
-    private String password;
-    private UserRole userRole;
+    private String imageUrl;
+    private String description;
+    private UserRole role;
     private Provider provider;
+
 }

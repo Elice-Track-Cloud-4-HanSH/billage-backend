@@ -1,5 +1,7 @@
 package com.team01.billage.user.repository;
 
+import com.team01.billage.user.domain.Provider;
+import com.team01.billage.user.domain.UserRole;
 import com.team01.billage.user.domain.Users;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,6 +9,8 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
 import java.util.Optional;
 
+import static com.team01.billage.user.domain.Provider.GOOGLE;
+import static com.team01.billage.user.domain.UserRole.USER;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
@@ -23,8 +27,8 @@ class UserRepositoryTest {
                 .email("test@example.com")
                 .password("password")
                 .imageUrl("https://default-image.url")
-                .role("USER")
-                .provider("NONE")
+                .role(USER)
+                .provider(GOOGLE)
                 .build();
 
         // When

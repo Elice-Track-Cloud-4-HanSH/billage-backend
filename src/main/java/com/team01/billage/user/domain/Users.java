@@ -1,9 +1,11 @@
 package com.team01.billage.user.domain;
 
+import com.team01.billage.user.dto.UserResponseDto;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import com.team01.billage.user.domain.Provider;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -37,10 +39,10 @@ public class Users extends BaseTimeEntity implements UserDetails {
     private String description;
 
     @Column(nullable = false)
-    private String role;
+    private UserRole role;
 
     @Column(nullable = false)
-    private String provider;
+    private Provider provider;
 
     @Column(name = "deleted_at")
     private java.sql.Timestamp deletedAt;
@@ -81,5 +83,18 @@ public class Users extends BaseTimeEntity implements UserDetails {
     @Override
     public boolean isEnabled() {
         return deletedAt == null; // deletedAt이 null이면 활성화된 계정으로 간주
+    }
+
+    // Users 클래스 내부에 추가
+    public UserResponseDto toResponseDto() {
+        return UserResponseDto.builder()
+                .id(this.id)
+                .nickname(this.nickname)
+                .email(this.email)
+                .imageUrl(this.imageUrl)
+                .description(this.description)
+                .role((this.role)) // role은 String이므로 Enum으로 변환
+                .provider(this.provider) // provider도 Enum으로 변환
+                .build();
     }
 }
