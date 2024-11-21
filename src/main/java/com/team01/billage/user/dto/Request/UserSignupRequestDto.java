@@ -1,14 +1,13 @@
-package com.team01.billage.user.dto;
+package com.team01.billage.user.dto.Request;
 
 import com.team01.billage.user.domain.Provider;
 import com.team01.billage.user.domain.UserRole;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import io.swagger.v3.oas.annotations.info.Contact;
+import lombok.*;
 
 @Getter
 @Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserSignupRequestDto {
@@ -17,4 +16,6 @@ public class UserSignupRequestDto {
     private String password;
     private UserRole userRole;
     private Provider provider;
+
+
 }

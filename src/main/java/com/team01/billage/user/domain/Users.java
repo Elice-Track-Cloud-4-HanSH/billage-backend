@@ -1,12 +1,14 @@
 package com.team01.billage.user.domain;
 
-import com.team01.billage.user.dto.UserResponseDto;
+import com.team01.billage.user.dto.Response.UserDeleteResponseDto;
+import com.team01.billage.user.dto.Response.UserResponseDto;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-import com.team01.billage.user.domain.Provider;
 
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Collections;
 
@@ -95,6 +97,25 @@ public class Users extends BaseTimeEntity implements UserDetails {
                 .description(this.description)
                 .role((this.role)) // role은 String이므로 Enum으로 변환
                 .provider(this.provider) // provider도 Enum으로 변환
+                .build();
+    }
+
+
+    public UserDeleteResponseDto deleteUser() {
+        // 이미 삭제된 경우
+        if (this.getDeletedAt() != null) {
+            return UserDeleteResponseDto.builder()
+                    .isDeleted(true)
+                    .message("이미 삭제된 회원입니다.")
+                    .build();
+        }
+
+        // 삭제 처리: deletedAt에 현재 시간 저장 (BaseTimeEntity 활용)
+        this.setDeletedAt(Timestamp.valueOf(LocalDateTime.now()));
+
+        return UserDeleteResponseDto.builder()
+                .isDeleted(true)
+                .message("회원 삭제 성공")
                 .build();
     }
 }

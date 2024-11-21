@@ -1,8 +1,7 @@
-package com.team01.billage.user.dto;
+package com.team01.billage.user.dto.Response;
 
 import com.team01.billage.user.domain.Provider;
 import com.team01.billage.user.domain.UserRole;
-import jakarta.persistence.Column;
 import lombok.Builder;
 import lombok.Getter;
 
