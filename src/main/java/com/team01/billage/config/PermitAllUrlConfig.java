@@ -15,7 +15,8 @@ public class PermitAllUrlConfig {
             "/h2-console/**",
             "/swagger-ui/**",
             "/v3/api-docs/**",
-            "/api/categories"
+            "/api/categories",
+            "/api/products/**" // 나중에 GET 메서드만 허용으로 변경
         );
     }
 }
