@@ -1,7 +1,7 @@
 package com.team01.billage.user.controller;
 
 import com.team01.billage.user.domain.Users;
-import com.team01.billage.user.dto.Response.UserCheckIdResponseDto;
+import com.team01.billage.user.dto.Response.UserCheckEmailResponseDto;
 import com.team01.billage.user.dto.Response.UserCheckNicknameResponseDto;
 import com.team01.billage.user.dto.Request.UserSignupRequestDto;
 import com.team01.billage.user.dto.Response.UserDeleteResponseDto;
@@ -61,24 +61,24 @@ public class UserApiController {
     @Operation(summary = "이메일 중복 확인 API", description = "사용자가 입력한 이메일이 중복인지 확인합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "사용 가능한 이메일",
-                    content = @Content(schema = @Schema(implementation = UserCheckIdResponseDto.class))),
+                    content = @Content(schema = @Schema(implementation = UserCheckEmailResponseDto.class))),
             @ApiResponse(responseCode = "409", description = "이미 사용 중인 이메일",
-                    content = @Content(schema = @Schema(implementation = UserCheckIdResponseDto.class)))
+                    content = @Content(schema = @Schema(implementation = UserCheckEmailResponseDto.class)))
     })
     @GetMapping("/signup/check-email")
-    public ResponseEntity<UserCheckIdResponseDto> checkEmail(@RequestParam("userEmail") String userEmail) {
+    public ResponseEntity<UserCheckEmailResponseDto> checkEmail(@RequestParam("userEmail") String userEmail) {
         boolean isUsernameTaken = userService.isDuplicateEmail(userEmail);
 
         if (isUsernameTaken) {
             // 아이디가 이미 존재하는 경우
             return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(UserCheckIdResponseDto.builder()
+                    .body(UserCheckEmailResponseDto.builder()
                             .isAvailable(false).message("이미 사용중인 아이디입니다.").build());
         }
 
         // 아이디 사용 가능
         return ResponseEntity.ok()
-                .body(UserCheckIdResponseDto.builder()
+                .body(UserCheckEmailResponseDto.builder()
                         .isAvailable(true).message("사용할 수 있는 아이디입니다.").build());
     }
 
