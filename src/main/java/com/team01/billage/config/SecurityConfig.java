@@ -32,11 +32,25 @@ public class SecurityConfig {
             )
             .sessionManagement(
                 session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(authorize -> authorize
-                .requestMatchers(permitAllUrlConfig.getPermitAllUrls().toArray(String[]::new))
-                .permitAll()
-                .anyRequest().authenticated()
-            );
+        // 요청 권한 설정: 특정 URL 패턴에 대한 접근 권한을 설정
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(
+                                "/v2/api-docs",
+                                "/v3/api-docs",
+                                "/v3/api-docs/**",
+                                "/swagger-resources",
+                                "/swagger-resources/**",
+                                "/configuration/ui",
+                                "/configuration/security",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/webjars/**",
+                                "/api/**"
+                        ).permitAll()
+                        .requestMatchers("/api/**").permitAll()  // 공개 API 경로
+                        .anyRequest().authenticated()
+                );
+
 
         return http.build();
     }
