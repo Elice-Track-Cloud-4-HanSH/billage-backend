@@ -5,6 +5,7 @@ import static com.team01.billage.exception.ErrorCode.USER_NOT_FOUND;
 import static com.team01.billage.exception.ErrorCode.WRITE_ACCESS_FORBIDDEN;
 
 import com.team01.billage.exception.CustomException;
+import com.team01.billage.product_review.dto.ShowReviewResponseDto;
 import com.team01.billage.product_review.dto.WriteReviewRequestDto;
 import com.team01.billage.rental_record.domain.RentalRecord;
 import com.team01.billage.rental_record.repository.RentalRecordRepository;
@@ -12,6 +13,7 @@ import com.team01.billage.user.domain.Users;
 import com.team01.billage.user.repository.UserRepository;
 import com.team01.billage.user_review.domain.UserReview;
 import com.team01.billage.user_review.repository.UserReviewRepository;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -48,5 +50,10 @@ public class UserReviewService {
             .build();
 
         userReviewRepository.save(userReview);
+    }
+
+    public List<ShowReviewResponseDto> readUserReviews(String email) {
+
+        return userReviewRepository.findByAuthor_email(email);
     }
 }
