@@ -5,11 +5,13 @@ import static com.team01.billage.exception.ErrorCode.WRITE_ACCESS_FORBIDDEN;
 
 import com.team01.billage.exception.CustomException;
 import com.team01.billage.product_review.domain.ProductReview;
+import com.team01.billage.product_review.dto.ShowReviewResponseDto;
 import com.team01.billage.product_review.dto.WriteReviewRequestDto;
 import com.team01.billage.product_review.repository.ProductReviewRepository;
 import com.team01.billage.rental_record.domain.RentalRecord;
 import com.team01.billage.rental_record.repository.RentalRecordRepository;
 import com.team01.billage.user.repository.UserRepository;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -39,5 +41,10 @@ public class ProductReviewService {
             .build();
 
         productReviewRepository.save(productReview);
+    }
+
+    public List<ShowReviewResponseDto> readProductReviews(String email) {
+
+        return productReviewRepository.findByAuthor_email(email);
     }
 }
