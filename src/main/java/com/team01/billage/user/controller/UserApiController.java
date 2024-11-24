@@ -1,150 +1,118 @@
 package com.team01.billage.user.controller;
 
-import com.team01.billage.user.domain.Users;
-import com.team01.billage.user.dto.Response.UserCheckEmailResponseDto;
-import com.team01.billage.user.dto.Response.UserCheckNicknameResponseDto;
+import com.team01.billage.user.dto.Response.*;
 import com.team01.billage.user.dto.Request.UserSignupRequestDto;
-import com.team01.billage.user.dto.Response.UserDeleteResponseDto;
-import com.team01.billage.user.dto.Response.UserSignupResponseDto;
-import com.team01.billage.user.dto.UserDto;
-import com.team01.billage.user.repository.UserRepository;
 import com.team01.billage.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import static com.team01.billage.config.jwt.UserConstants.ACCESS_TOKEN_TYPE_VALUE;
 import static com.team01.billage.config.jwt.UserConstants.REFRESH_TOKEN_TYPE_VALUE;
 
+@Tag(name = "User", description = "사용자 관련 API")
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api")
+@RequestMapping("/api/users")
 @Slf4j
 public class UserApiController {
 
     private final UserService userService;
-    private final UserRepository userRepository;
 
-    //회원가입
-    @Operation(summary = "회원가입 API", description = "새로운 사용자를 등록합니다.")
+    @Operation(summary = "회원가입", description = "새로운 사용자를 등록합니다.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "회원가입 성공",
-                    content = @Content(schema = @Schema(implementation = UserSignupResponseDto.class))),
-            @ApiResponse(responseCode = "400", description = "잘못된 요청",
-                    content = @Content(schema = @Schema(implementation = UserSignupResponseDto.class)))
+            @ApiResponse(responseCode = "201", description = "회원가입 성공"),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청"),
+            @ApiResponse(responseCode = "409", description = "이메일 또는 닉네임 중복")
     })
     @PostMapping("/signup")
-    public ResponseEntity<UserSignupResponseDto> signup(@RequestBody UserSignupRequestDto userSignupRequestDto) {
-
-        if (userSignupRequestDto == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(UserSignupResponseDto.builder().message("bad request").build());
-        }
-
-        Users user = userService.save(userSignupRequestDto);
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(UserSignupResponseDto.builder().message("signup success").build());
+    public ResponseEntity<UserSignupResponseDto> signup(
+            @Valid @RequestBody UserSignupRequestDto signupRequest) {
+        UserResponseDto userResponse = userService.signup(signupRequest);
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(new UserSignupResponseDto("회원가입이 완료되었습니다."));
     }
 
-
-    //아이디 중복확인
-    @Operation(summary = "이메일 중복 확인 API", description = "사용자가 입력한 이메일이 중복인지 확인합니다.")
+    @Operation(summary = "이메일 중복 확인", description = "이메일 중복 여부를 확인합니다.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "사용 가능한 이메일",
-                    content = @Content(schema = @Schema(implementation = UserCheckEmailResponseDto.class))),
-            @ApiResponse(responseCode = "409", description = "이미 사용 중인 이메일",
-                    content = @Content(schema = @Schema(implementation = UserCheckEmailResponseDto.class)))
+            @ApiResponse(responseCode = "200", description = "사용 가능한 이메일"),
+            @ApiResponse(responseCode = "409", description = "중복된 이메일")
     })
     @GetMapping("/signup/check-email")
-    public ResponseEntity<UserCheckEmailResponseDto> checkEmail(@RequestParam("userEmail") String userEmail) {
-        boolean isUsernameTaken = userService.isDuplicateEmail(userEmail);
-
-        if (isUsernameTaken) {
-            // 아이디가 이미 존재하는 경우
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(UserCheckEmailResponseDto.builder()
-                            .isAvailable(false).message("이미 사용중인 아이디입니다.").build());
-        }
-
-        // 아이디 사용 가능
-        return ResponseEntity.ok()
-                .body(UserCheckEmailResponseDto.builder()
-                        .isAvailable(true).message("사용할 수 있는 아이디입니다.").build());
+    public ResponseEntity<EmailAvailabilityResponse> checkEmailAvailability(
+            @RequestParam String email) {
+        userService.validateEmail(email);
+        return ResponseEntity.ok(new EmailAvailabilityResponse("사용 가능한 이메일입니다."));
     }
 
-
-    @Operation(summary = "닉네임 중복 확인 API", description = "사용자가 입력한 닉네임이 중복인지 확인합니다.")
+    @Operation(summary = "닉네임 중복 확인", description = "닉네임 중복 여부를 확인합니다.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "사용 가능한 닉네임",
-                    content = @Content(schema = @Schema(implementation = UserCheckNicknameResponseDto.class))),
-            @ApiResponse(responseCode = "409", description = "이미 사용 중인 닉네임",
-                    content = @Content(schema = @Schema(implementation = UserCheckNicknameResponseDto.class)))
+            @ApiResponse(responseCode = "200", description = "사용 가능한 닉네임"),
+            @ApiResponse(responseCode = "409", description = "중복된 닉네임")
     })
     @GetMapping("/signup/check-nickname")
-    public ResponseEntity<UserCheckNicknameResponseDto> checkNickname(@RequestParam("nickname") String nickname) {
-        boolean isNicknameTaken = userService.isDuplicateNickname(nickname);
-
-        if (isNicknameTaken) {
-            // 닉네임이 이미 존재하는 경우
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(UserCheckNicknameResponseDto.builder()
-                            .isAvailable(false).message("이미 사용중인 닉네임입니다.").build());
-        }
-
-        // 닉네임 사용 가능
-        return ResponseEntity.ok()
-                .body(UserCheckNicknameResponseDto.builder()
-                        .isAvailable(true).message("사용할 수 있는 닉네임입니다.").build());
+    public ResponseEntity<NicknameAvailabilityResponse> checkNicknameAvailability(
+            @RequestParam String nickname) {
+        userService.validateNickname(nickname);
+        return ResponseEntity.ok(new NicknameAvailabilityResponse("사용 가능한 닉네임입니다."));
     }
 
-
-
-    @Operation(summary = "회원 탈퇴 API (소프트 삭제)", description = "이메일을 기반으로 회원을 소프트 삭제 처리합니다.")
+    @Operation(summary = "회원 탈퇴", description = "회원 정보를 소프트 삭제처리합니다.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "회원 탈퇴 성공",
-                    content = @Content(schema = @Schema(implementation = UserDeleteResponseDto.class))),
-            @ApiResponse(responseCode = "400", description = "회원 탈퇴 실패",
-                    content = @Content(schema = @Schema(implementation = UserDeleteResponseDto.class)))
+            @ApiResponse(responseCode = "200", description = "탈퇴 처리 성공"),
+            @ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음")
     })
-    //회원 탈퇴(soft delete)
-    @DeleteMapping("/users-soft/{email}")
-    public ResponseEntity<UserDeleteResponseDto> softDeleteUser(UserDto userDto,
-                                                                @PathVariable String email,
-                                                                HttpServletResponse response) {
-        UserDeleteResponseDto userDeleteResponseDto = userService.softDeleteUser(userDto);
+    @DeleteMapping("/{email}")
+    public ResponseEntity<UserDeleteResponseDto> deleteUser(
+            @PathVariable String email,
+            HttpServletResponse response) {
+        UserDeleteResponseDto deleteResponse = userService.deleteUser(email);
 
-        if (userDeleteResponseDto.isDeleted()) {
-            deleteCookie(REFRESH_TOKEN_TYPE_VALUE, response);
-            deleteCookie(ACCESS_TOKEN_TYPE_VALUE, response);
-
-            return ResponseEntity.status(HttpStatus.OK)
-                    .body(UserDeleteResponseDto.builder().message("회원탈퇴 성공").build());
+        if (deleteResponse.isDeleted()) {
+            clearAuthCookies(response);
+            return ResponseEntity.ok(deleteResponse);
         }
 
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(UserDeleteResponseDto.builder().message("오류 발생").build());
+        return ResponseEntity.badRequest().body(deleteResponse);
     }
 
+    private void clearAuthCookies(HttpServletResponse response) {
+        deleteCookie(ACCESS_TOKEN_TYPE_VALUE, response);
+        deleteCookie(REFRESH_TOKEN_TYPE_VALUE, response);
+    }
 
-    //쿠키 삭제 로직
-    private void deleteCookie(String token, HttpServletResponse response) {
-        Cookie cookie = new Cookie(token, null);
+    private void deleteCookie(String name, HttpServletResponse response) {
+        Cookie cookie = new Cookie(name, null);
         cookie.setHttpOnly(true);
         cookie.setSecure(true);
         cookie.setAttribute("SameSite", "Lax");
         cookie.setPath("/");
-        cookie.setMaxAge(0); // 쿠키 즉시 만료
+        cookie.setMaxAge(0);
         response.addCookie(cookie);
     }
-
 }
+
+// Response classes
+@Schema(description = "이메일 사용 가능 여부 응답")
+record EmailAvailabilityResponse(
+        @Schema(description = "응답 메시지")
+        String message
+) {}
+
+@Schema(description = "닉네임 사용 가능 여부 응답")
+record NicknameAvailabilityResponse(
+        @Schema(description = "응답 메시지")
+        String message
+) {}
