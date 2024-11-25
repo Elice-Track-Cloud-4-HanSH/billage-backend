@@ -39,7 +39,7 @@ public class CustomProductReviewRepositoryImpl implements CustomProductReviewRep
     }
 
     @Override
-    public List<ShowReviewResponseDto> findByProduct_id(long productId) {
+    public List<ShowReviewResponseDto> findByProduct_id(Long productId) {
         QProductReview productReview = QProductReview.productReview;
         QUsers author = QUsers.users;
         QProduct product = QProduct.product;
@@ -58,7 +58,7 @@ public class CustomProductReviewRepositoryImpl implements CustomProductReviewRep
             .from(productReview)
             .join(productReview.product, product)
             .join(productReview.author, author)
-            .where(productReview.product.id.eq((int) productId))
+            .where(productReview.product.id.eq(productId))
             .fetch();
     }
 }
