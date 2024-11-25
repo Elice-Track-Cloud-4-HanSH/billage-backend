@@ -94,21 +94,6 @@ public class ProductService {
     }
 
     @Transactional
-    public RentalStatusResponseDto updateProductRentalStatus(Long productId, RentalStatusUpdateRequestDto request) {
-
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new CustomException(PRODUCT_NOT_FOUND));
-
-        RentalStatus rentalStatus = RentalStatus.valueOf(request.getRentalStatus().toUpperCase());
-        product.updateRentalStatus(rentalStatus);
-
-        return RentalStatusResponseDto.builder()
-                .rentalStatus(product.getRentalStatus().getDisplayName())
-                .build();
-
-    }
-
-    @Transactional
     public void deleteProduct(Long productId) {
 
         Product product = productRepository.findById(productId)

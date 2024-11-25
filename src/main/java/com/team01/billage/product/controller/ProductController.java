@@ -41,15 +41,6 @@ public class ProductController {
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
-    // 필요없음 -> 삭제
-    @PatchMapping("/{productId}/status")
-    public ResponseEntity<RentalStatusResponseDto> updateProductRentalStatus(
-            @PathVariable("productId") Long productId,
-            @RequestBody RentalStatusUpdateRequestDto rentalStatusUpdateRequestDto) {
-        RentalStatusResponseDto response = productService.updateProductRentalStatus(productId, rentalStatusUpdateRequestDto);
-        return ResponseEntity.status(HttpStatus.OK).body(response);
-    }
-
     @DeleteMapping("/{productId}")
     public ResponseEntity<String> deleteProduct(@PathVariable("productId") Long productId) {
         productService.deleteProduct(productId);
