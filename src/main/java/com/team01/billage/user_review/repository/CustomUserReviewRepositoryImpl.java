@@ -21,8 +21,10 @@ public class CustomUserReviewRepositoryImpl implements CustomUserReviewRepositor
         return queryFactory.select(
                 Projections.constructor(
                     ShowReviewResponseDto.class,
+                    userReview.id,
                     userReview.score,
                     userReview.content,
+                    author.id,
                     author.nickname,
                     author.imageUrl
                 )
@@ -41,8 +43,10 @@ public class CustomUserReviewRepositoryImpl implements CustomUserReviewRepositor
         return queryFactory.select(
                 Projections.constructor(
                     ShowReviewResponseDto.class,
+                    userReview.id,
                     userReview.score,
                     userReview.content,
+                    target.id,
                     target.nickname,
                     target.imageUrl
                 )
