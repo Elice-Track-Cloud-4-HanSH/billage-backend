@@ -27,7 +27,7 @@ public class ProductService {
     @Transactional
     public ProductDetailResponseDto findProduct(Long productId) {
 
-        Product product = productRepository.findById(productId)
+        Product product = productRepository.findByIdAndDeletedAtIsNull(productId)
                 .orElseThrow(() -> new CustomException(PRODUCT_NOT_FOUND));
 
         product.increaseViewCount(); // 조회수 단순 증가
@@ -39,7 +39,7 @@ public class ProductService {
     }
 
     public List<ProductResponseDto> findAllProducts() {
-        List<Product> products = productRepository.findAll();
+        List<Product> products = productRepository.findAllByDeletedAtIsNull();
         return products.stream()
                 .map(product -> ProductResponseDto.builder()
                         .title(product.getTitle())
@@ -76,7 +76,7 @@ public class ProductService {
     @Transactional
     public ProductDetailResponseDto updateProduct(Long productId, ProductRequestDto productRequestDto) {
 
-        Product product = productRepository.findById(productId)
+        Product product = productRepository.findByIdAndDeletedAtIsNull(productId)
                 .orElseThrow(() -> new CustomException(PRODUCT_NOT_FOUND));
 
         if (product.getRentalStatus() != RentalStatus.AVAILABLE) {
@@ -96,7 +96,7 @@ public class ProductService {
     @Transactional
     public ProductDeleteCheckDto deleteProduct(Long productId) {
 
-        Product product = productRepository.findById(productId)
+        Product product = productRepository.findByIdAndDeletedAtIsNull(productId)
                 .orElseThrow(() -> new CustomException(PRODUCT_NOT_FOUND));
 
         if (product.getRentalStatus() != RentalStatus.AVAILABLE) {

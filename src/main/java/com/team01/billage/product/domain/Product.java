@@ -2,7 +2,6 @@ package com.team01.billage.product.domain;
 
 import com.team01.billage.category.domain.Category;
 import com.team01.billage.product.dto.ProductRequestDto;
-import com.team01.billage.product.dto.RentalStatusUpdateRequestDto;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -73,7 +72,7 @@ public class Product {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
-    public void updateProduct(ProductRequestDto dto){
+    public void updateProduct(ProductRequestDto dto) {
         this.title = dto.getTitle();
         this.description = dto.getDescription();
         this.dayPrice = dto.getDayPrice();
@@ -82,19 +81,19 @@ public class Product {
         this.longitude = dto.getLongitude();
     }
 
-    public void updateProductCategory(Category category){
+    public void updateProductCategory(Category category) {
         this.category = category;
     }
 
-    public void updateRentalStatus(RentalStatus status){
+    public void updateRentalStatus(RentalStatus status) {
         this.rentalStatus = status;
     }
 
-    public void deleteProduct(){
+    public void deleteProduct() {
         this.deletedAt = LocalDateTime.now();
     }
 
-    public void increaseViewCount(){
+    public void increaseViewCount() {
         this.viewCount += 1;
     }
 
