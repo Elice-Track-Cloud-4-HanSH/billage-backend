@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 public class ProductDetailResponseDto { // 상품 상세 확인 DTO
 
     private CategoryProductResponseDto categoryDto;
+    private Long productId;
     private String title;
     private String description;
     private String rentalStatus;
