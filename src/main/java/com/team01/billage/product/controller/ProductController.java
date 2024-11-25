@@ -18,33 +18,28 @@ public class ProductController {
 
     @GetMapping("/{productId}")
     public ResponseEntity<ProductDetailResponseDto> findProduct(@PathVariable("productId") Long productId) {
-        ProductDetailResponseDto response = productService.findProduct(productId);
-        return ResponseEntity.status(HttpStatus.OK).body(response);
+        return ResponseEntity.status(HttpStatus.OK).body(productService.findProduct(productId));
     }
 
     @GetMapping
     public ResponseEntity<List<ProductResponseDto>> findAllProducts() {
-        List<ProductResponseDto> response = productService.findAllProducts();
-        return ResponseEntity.status(HttpStatus.OK).body(response);
+        return ResponseEntity.status(HttpStatus.OK).body(productService.findAllProducts());
     }
 
     @PostMapping
     public ResponseEntity<ProductDetailResponseDto> createProduct(@RequestBody ProductRequestDto productRequestDto) {
-        ProductDetailResponseDto response = productService.createProduct(productRequestDto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        return ResponseEntity.status(HttpStatus.CREATED).body(productService.createProduct(productRequestDto));
     }
 
     @PutMapping("/{productId}")
     public ResponseEntity<ProductDetailResponseDto> updateProduct(
             @PathVariable("productId") Long productId, @RequestBody ProductRequestDto productRequestDto) {
-        ProductDetailResponseDto response = productService.updateProduct(productId, productRequestDto);
-        return ResponseEntity.status(HttpStatus.OK).body(response);
+        return ResponseEntity.status(HttpStatus.OK).body(productService.updateProduct(productId, productRequestDto));
     }
 
     @DeleteMapping("/{productId}")
     public ResponseEntity<ProductDeleteCheckDto> deleteProduct(@PathVariable("productId") Long productId) {
-        ProductDeleteCheckDto productDeleteCheckDto = productService.deleteProduct(productId);
-        return ResponseEntity.status(HttpStatus.OK).body(productDeleteCheckDto);
+        return ResponseEntity.status(HttpStatus.OK).body(productService.deleteProduct(productId));
     }
 
 }
