@@ -29,23 +29,24 @@ public class ProductController {
     }
 
     @PostMapping
-    public ResponseEntity<ProductDetailResponseDto> createProduct(@RequestBody ProductRequestDto request) {
-        ProductDetailResponseDto response = productService.createProduct(request);
+    public ResponseEntity<ProductDetailResponseDto> createProduct(@RequestBody ProductRequestDto productRequestDto) {
+        ProductDetailResponseDto response = productService.createProduct(productRequestDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PutMapping("/{productId}")
     public ResponseEntity<ProductDetailResponseDto> updateProduct(
-            @PathVariable("productId") Long productId, @RequestBody ProductRequestDto request) {
-        ProductDetailResponseDto response = productService.updateProduct(productId, request);
+            @PathVariable("productId") Long productId, @RequestBody ProductRequestDto productRequestDto) {
+        ProductDetailResponseDto response = productService.updateProduct(productId, productRequestDto);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
+    // 필요없음 -> 삭제
     @PatchMapping("/{productId}/status")
     public ResponseEntity<RentalStatusResponseDto> updateProductRentalStatus(
             @PathVariable("productId") Long productId,
-            @RequestBody RentalStatusUpdateRequestDto request) {
-        RentalStatusResponseDto response = productService.updateProductRentalStatus(productId, request);
+            @RequestBody RentalStatusUpdateRequestDto rentalStatusUpdateRequestDto) {
+        RentalStatusResponseDto response = productService.updateProductRentalStatus(productId, rentalStatusUpdateRequestDto);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
