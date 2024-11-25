@@ -52,19 +52,19 @@ public class ProductService {
     }
 
     @Transactional
-    public ProductDetailResponseDto createProduct(ProductRequestDto request) {
+    public ProductDetailResponseDto createProduct(ProductRequestDto productRequestDto) {
 
-        Category category = categoryRepository.findById(request.getCategoryId())
+        Category category = categoryRepository.findById(productRequestDto.getCategoryId())
                 .orElseThrow(() -> new CustomException(CATEGORY_NOT_FOUND));
 
         Product product = Product.builder()
                 .category(category)
-                .title(request.getTitle())
-                .description(request.getDescription())
-                .dayPrice(request.getDayPrice())
-                .weekPrice(request.getWeekPrice())
-                .latitude(request.getLatitude())
-                .longitude(request.getLongitude())
+                .title(productRequestDto.getTitle())
+                .description(productRequestDto.getDescription())
+                .dayPrice(productRequestDto.getDayPrice())
+                .weekPrice(productRequestDto.getWeekPrice())
+                .latitude(productRequestDto.getLatitude())
+                .longitude(productRequestDto.getLongitude())
                 .build();
 
         Product createProduct = productRepository.save(product);
@@ -74,7 +74,7 @@ public class ProductService {
     }
 
     @Transactional
-    public ProductDetailResponseDto updateProduct(Long productId, ProductRequestDto request) {
+    public ProductDetailResponseDto updateProduct(Long productId, ProductRequestDto productRequestDto) {
 
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new CustomException(PRODUCT_NOT_FOUND));
@@ -83,11 +83,11 @@ public class ProductService {
             throw new CustomException(PRODUCT_MODIFICATION_NOT_ALLOWED);
         }
 
-        Category category = categoryRepository.findById(request.getCategoryId())
+        Category category = categoryRepository.findById(productRequestDto.getCategoryId())
                 .orElseThrow(() -> new CustomException(CATEGORY_NOT_FOUND));
 
         product.updateProductCategory(category);
-        product.updateProduct(request);
+        product.updateProduct(productRequestDto);
 
         return toDetailDto(product, category);
 
