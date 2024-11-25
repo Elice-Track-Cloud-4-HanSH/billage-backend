@@ -42,9 +42,9 @@ public class ProductController {
     }
 
     @DeleteMapping("/{productId}")
-    public ResponseEntity<String> deleteProduct(@PathVariable("productId") Long productId) {
-        productService.deleteProduct(productId);
-        return ResponseEntity.status(HttpStatus.OK).body("대여 상품 삭제 완료: " + productId);
+    public ResponseEntity<ProductDeleteCheckDto> deleteProduct(@PathVariable("productId") Long productId) {
+        ProductDeleteCheckDto productDeleteCheckDto = productService.deleteProduct(productId);
+        return ResponseEntity.status(HttpStatus.OK).body(productDeleteCheckDto);
     }
 
 }

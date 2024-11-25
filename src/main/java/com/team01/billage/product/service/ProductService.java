@@ -94,7 +94,7 @@ public class ProductService {
     }
 
     @Transactional
-    public void deleteProduct(Long productId) {
+    public ProductDeleteCheckDto deleteProduct(Long productId) {
 
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new CustomException(PRODUCT_NOT_FOUND));
@@ -104,6 +104,11 @@ public class ProductService {
         }
 
         product.deleteProduct();
+
+        return ProductDeleteCheckDto.builder()
+                .productId(productId)
+                .deletedAt(product.getDeletedAt())
+                .build();
 
     }
 
