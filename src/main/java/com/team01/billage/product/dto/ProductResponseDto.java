@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class ProductResponseDto { // 상품 목록 DTO
 
+    private Long productId;
     private String title;
     private LocalDateTime updatedAt;
     private int dayPrice;
