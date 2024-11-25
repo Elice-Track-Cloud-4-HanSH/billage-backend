@@ -71,7 +71,7 @@ class UserApiControllerTest {
                 .password(signupRequest.getPassword())
                 .build();
 
-        given(userService.save(any(UserSignupRequestDto.class))).willReturn(savedUser);
+        given(userService.signup(any(UserSignupRequestDto.class))).willReturn(savedUser.toResponseDto());
 
         // JSON 요청 본문 생성
         String requestBody = new ObjectMapper().writeValueAsString(signupRequest);
