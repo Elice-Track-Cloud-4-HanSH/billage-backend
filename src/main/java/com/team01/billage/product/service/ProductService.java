@@ -5,7 +5,7 @@ import com.team01.billage.category.dto.CategoryProductResponseDto;
 import com.team01.billage.category.repository.CategoryRepository;
 import com.team01.billage.exception.CustomException;
 import com.team01.billage.product.domain.Product;
-import com.team01.billage.product.domain.RentalStatus;
+import com.team01.billage.product.enums.RentalStatus;
 import com.team01.billage.product.dto.*;
 import com.team01.billage.product.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;

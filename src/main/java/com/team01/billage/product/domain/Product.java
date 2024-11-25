@@ -2,6 +2,7 @@ package com.team01.billage.product.domain;
 
 import com.team01.billage.category.domain.Category;
 import com.team01.billage.product.dto.ProductRequestDto;
+import com.team01.billage.product.enums.RentalStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
