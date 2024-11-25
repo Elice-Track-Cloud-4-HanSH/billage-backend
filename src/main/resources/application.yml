@@ -28,6 +28,6 @@ spring:
     import:
       - s3bucket.yml
 
-  custom:
-    category-image:
-      base-url: "https://localhost:8080"
+custom:
+  category-image:
+    base-url: "https://localhost:8080"
