@@ -38,6 +38,7 @@ public class UserService {
         Users user = Users.builder()
                 .nickname(dto.getNickname())
                 .email(dto.getEmail())
+                // 비밀번호 암호화
                 .password(passwordEncoder.encode(dto.getPassword()))
                 .role(dto.getUserRole())
                 .provider(dto.getProvider())
@@ -69,7 +70,7 @@ public class UserService {
      * 회원 정보 수정
      */
     @Transactional
-    public UserResponseDto updateUser(Long userId, @Valid UserUpdateRequestDto dto) {
+    public UserResponseDto updateUser(Long userId, UserUpdateRequestDto dto) {
         Users user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
@@ -130,6 +131,7 @@ public class UserService {
             validateNickname(dto.getNickname());
             user.setNickname(dto.getNickname());
         }
+        // 비밀번호 변경 시 암호화
         if (dto.getPassword() != null && !dto.getPassword().isEmpty()) {
             user.setPassword(passwordEncoder.encode(dto.getPassword()));
         }
@@ -139,5 +141,20 @@ public class UserService {
         if (dto.getDescription() != null) {
             user.setDescription(dto.getDescription());
         }
+    }
+
+    /**
+     * 비밀번호 확인
+     */
+    public UserPasswordResponseDto verifyPassword(String email, String rawPassword) {
+        Users user = findByEmail(email);
+
+        // 입력받은 평문 비밀번호와 저장된 암호화된 비밀번호를 비교
+        boolean matches = passwordEncoder.matches(rawPassword, user.getPassword());
+
+        return new UserPasswordResponseDto(
+                matches,
+                matches ? "비밀번호가 일치합니다" : "비밀번호가 일치하지 않습니다"
+        );
     }
 }

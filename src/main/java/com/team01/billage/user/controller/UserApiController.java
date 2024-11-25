@@ -1,5 +1,6 @@
 package com.team01.billage.user.controller;
 
+import com.team01.billage.user.dto.Request.UserPasswordRequestDto;
 import com.team01.billage.user.dto.Response.*;
 import com.team01.billage.user.dto.Request.UserSignupRequestDto;
 import com.team01.billage.user.service.UserService;
@@ -16,6 +17,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import static com.team01.billage.config.jwt.UserConstants.ACCESS_TOKEN_TYPE_VALUE;
@@ -102,17 +105,26 @@ public class UserApiController {
         cookie.setMaxAge(0);
         response.addCookie(cookie);
     }
+
+    @Operation(summary = "비밀번호 확인", description = "회원 탈퇴 전 비밀번호를 확인합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "비밀번호 확인 성공"),
+            @ApiResponse(responseCode = "401", description = "비밀번호 불일치"),
+            @ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음")
+    })
+    @PostMapping("/check-password")
+    public ResponseEntity<UserPasswordResponseDto> checkPassword(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @Valid @RequestBody UserPasswordRequestDto requestDto
+    ) {
+        UserPasswordResponseDto response = userService.verifyPassword(
+                userDetails.getUsername(),  // email
+                requestDto.password()
+        );
+
+        return response.matches()
+                ? ResponseEntity.ok(response)
+                : ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+    }
 }
 
-// Response classes
-@Schema(description = "이메일 사용 가능 여부 응답")
-record EmailAvailabilityResponse(
-        @Schema(description = "응답 메시지")
-        String message
-) {}
-
-@Schema(description = "닉네임 사용 가능 여부 응답")
-record NicknameAvailabilityResponse(
-        @Schema(description = "응답 메시지")
-        String message
-) {}
