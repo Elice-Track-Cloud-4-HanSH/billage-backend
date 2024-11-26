@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -23,7 +24,7 @@ public class ChatRoom {
     private Long id;
 
     @OneToMany(mappedBy = "chatRoom", cascade = CascadeType.ALL)
-    private List<Chat> chats;
+    private List<Chat> chats = new ArrayList<>();
 
     // 구매자 ID
     @ManyToOne
@@ -55,5 +56,15 @@ public class ChatRoom {
 
     public void setSellerExitAt() {
         sellerExitAt = LocalDateTime.now();
+    }
+
+    public void addTestChat(Chat chat) {
+        chats.add(chat);
+    }
+
+    public ChatRoom(TestUser buyer, TestUser seller, TestProduct product) {
+        this.buyer = buyer;
+        this.seller = seller;
+        this.product = product;
     }
 }

@@ -15,13 +15,13 @@ import java.util.Optional;
 public interface ChatRepository extends JpaRepository<Chat, Long> {
 //    @Query(value = "SELECT c FROM Chat c JOIN FETCH ChatRoom cr ON c.chatRoom = cr WHERE cr.id = :chatroomId ORDER BY c.createdAt DESC")
     @Query(value = "SELECT c FROM Chat c WHERE c.chatRoom.id = :chatroomId ORDER BY c.createdAt DESC")
-    List<Chat> getAllChatsInChatroom(@Param("chatroomId") Long chatroomId, Pageable pageable);
+    List<Chat> getPagenatedChatsInChatroom(@Param("chatroomId") Long chatroomId, Pageable pageable);
 
-    @Query(value = "SELECT DISTINCT c FROM Chat c WHERE c.chatRoom.id = :chatroomId AND c.sender.id != :userId AND c.isRead = true ORDER BY c.createdAt DESC")
-    List<Chat> getLastReadChat(@Param("chatroomId") Long chatroomId, @Param("userId") Long userId, Pageable pageable);
+    @Query(value = "SELECT c FROM Chat c WHERE c.chatRoom.id = :chatroomId AND c.sender.id != :userId AND c.isRead = true ORDER BY c.createdAt DESC LIMIT 1")
+    Optional<Chat> getLastReadChat(@Param("chatroomId") Long chatroomId, @Param("userId") Long userId);
 
-    @Query(value = "SELECT DISTINCT c FROM Chat c WHERE c.chatRoom.id = :chatroomId AND c.sender.id != :userId ORDER BY c.createdAt ASC")
-    List<Chat> getFirstChat(@Param("chatroomId") Long chatroomId, @Param("userId") Long userId, Pageable pageable);
+    @Query(value = "SELECT c FROM Chat c WHERE c.chatRoom.id = :chatroomId AND c.sender.id != :userId ORDER BY c.createdAt ASC LIMIT 1")
+    Optional<Chat> getFirstChat(@Param("chatroomId") Long chatroomId, @Param("userId") Long userId);
 
     @Transactional
     @Modifying
