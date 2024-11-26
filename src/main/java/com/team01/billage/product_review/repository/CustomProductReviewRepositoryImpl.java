@@ -23,8 +23,10 @@ public class CustomProductReviewRepositoryImpl implements CustomProductReviewRep
         return queryFactory.select(
                 Projections.constructor(
                     ShowReviewResponseDto.class,
+                    productReview.id,
                     productReview.score,
                     productReview.content,
+                    product.id,
                     product.title
                     //, product.imageUrl
                 )
@@ -37,7 +39,7 @@ public class CustomProductReviewRepositoryImpl implements CustomProductReviewRep
     }
 
     @Override
-    public List<ShowReviewResponseDto> findByProduct_id(long id) {
+    public List<ShowReviewResponseDto> findByProduct_id(Long productId) {
         QProductReview productReview = QProductReview.productReview;
         QUsers author = QUsers.users;
         QProduct product = QProduct.product;
@@ -45,8 +47,10 @@ public class CustomProductReviewRepositoryImpl implements CustomProductReviewRep
         return queryFactory.select(
                 Projections.constructor(
                     ShowReviewResponseDto.class,
+                    productReview.id,
                     productReview.score,
                     productReview.content,
+                    author.id,
                     author.nickname,
                     author.imageUrl
                 )
@@ -54,7 +58,7 @@ public class CustomProductReviewRepositoryImpl implements CustomProductReviewRep
             .from(productReview)
             .join(productReview.product, product)
             .join(productReview.author, author)
-            .where(productReview.product.id.eq((int) id))
+            .where(productReview.product.id.eq(productId))
             .fetch();
     }
 }

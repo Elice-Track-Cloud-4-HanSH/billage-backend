@@ -1,6 +1,6 @@
 package com.team01.billage.product_review.service;
 
-import static com.team01.billage.exception.ErrorCode.RENTAL_REVIEW_NOT_FOUND;
+import static com.team01.billage.exception.ErrorCode.RENTAL_RECORD_NOT_FOUND;
 import static com.team01.billage.exception.ErrorCode.WRITE_ACCESS_FORBIDDEN;
 
 import com.team01.billage.exception.CustomException;
@@ -23,11 +23,12 @@ public class ProductReviewService {
     private final UserRepository userRepository;
     private final RentalRecordRepository rentalRecordRepository;
 
-    public void createProductReview(WriteReviewRequestDto writeReviewRequestDto, long id,
+    public void createProductReview(WriteReviewRequestDto writeReviewRequestDto,
+        long rentalRecordId,
         String email) {
 
-        RentalRecord rentalRecord = rentalRecordRepository.findById(id)
-            .orElseThrow(() -> new CustomException(RENTAL_REVIEW_NOT_FOUND));
+        RentalRecord rentalRecord = rentalRecordRepository.findById(rentalRecordId)
+            .orElseThrow(() -> new CustomException(RENTAL_RECORD_NOT_FOUND));
 
         if (!rentalRecord.getBuyer().getEmail().equals(email)) {
             throw new CustomException(WRITE_ACCESS_FORBIDDEN);

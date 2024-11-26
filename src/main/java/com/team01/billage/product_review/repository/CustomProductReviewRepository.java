@@ -7,5 +7,5 @@ public interface CustomProductReviewRepository {
 
     List<ShowReviewResponseDto> findByAuthor_email(String email);
 
-    List<ShowReviewResponseDto> findByProduct_id(long id);
+    List<ShowReviewResponseDto> findByProduct_id(Long id);
 }

@@ -63,4 +63,8 @@ public class RentalRecord {
     @ManyToOne
     @JoinColumn(name = "seller_id", nullable = false)
     private Users seller;
+
+    public void productReturn() {
+        this.returnDate = LocalDate.now();
+    }
 }

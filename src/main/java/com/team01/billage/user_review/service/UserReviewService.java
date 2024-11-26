@@ -1,6 +1,6 @@
 package com.team01.billage.user_review.service;
 
-import static com.team01.billage.exception.ErrorCode.RENTAL_REVIEW_NOT_FOUND;
+import static com.team01.billage.exception.ErrorCode.RENTAL_RECORD_NOT_FOUND;
 import static com.team01.billage.exception.ErrorCode.USER_NOT_FOUND;
 import static com.team01.billage.exception.ErrorCode.WRITE_ACCESS_FORBIDDEN;
 
@@ -25,13 +25,13 @@ public class UserReviewService {
     private final UserRepository userRepository;
     private final RentalRecordRepository rentalRecordRepository;
 
-    public void createUserReview(WriteReviewRequestDto writeReviewRequestDto, long id,
+    public void createUserReview(WriteReviewRequestDto writeReviewRequestDto, long rentalRecordId,
         String email) {
 
         Users author = userRepository.findByEmail(email)
             .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
-        RentalRecord rentalRecord = rentalRecordRepository.findById(id)
-            .orElseThrow(() -> new CustomException(RENTAL_REVIEW_NOT_FOUND));
+        RentalRecord rentalRecord = rentalRecordRepository.findById(rentalRecordId)
+            .orElseThrow(() -> new CustomException(RENTAL_RECORD_NOT_FOUND));
         Users target;
 
         if (rentalRecord.getBuyer().equals(author)) {
