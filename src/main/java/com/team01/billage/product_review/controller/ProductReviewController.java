@@ -24,12 +24,13 @@ public class ProductReviewController {
 
     private final ProductReviewService productReviewService;
 
-    @PostMapping("/{id}")
+    @PostMapping("/{rentalRecordId}")
     public ResponseEntity<Void> writeProductReview(
         @Valid @RequestBody WriteReviewRequestDto writeReviewRequestDto,
-        @PathVariable("id") long id, @AuthenticationPrincipal UserDetails userDetails) {
+        @PathVariable("rentalRecordId") long rentalRecordId,
+        @AuthenticationPrincipal UserDetails userDetails) {
 
-        productReviewService.createProductReview(writeReviewRequestDto, id,
+        productReviewService.createProductReview(writeReviewRequestDto, rentalRecordId,
             userDetails.getUsername());
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
