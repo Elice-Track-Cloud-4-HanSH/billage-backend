@@ -41,6 +41,12 @@ public class Chat {
     @Column(columnDefinition = "TIMESTAMP(0)", updatable = false)
     private LocalDateTime createdAt;
 
+    public Chat(ChatRoom chatRoom, TestUser sender, String message) {
+        this.chatRoom = chatRoom;
+        this.sender = sender;
+        this.message = message;
+    }
+
     @PrePersist
     public void initializeFields() {
         if (message.isEmpty()) {

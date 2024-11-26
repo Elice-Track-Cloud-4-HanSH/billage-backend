@@ -7,10 +7,12 @@ import com.team01.billage.chatting.dto.ChatMessage;
 import com.team01.billage.chatting.repository.ChatRepository;
 import com.team01.billage.chatting.repository.ChatRoomRepository;
 import com.team01.billage.chatting.repository.TestUserRepository;
+import com.team01.billage.chatting.store.WebSocketSessionStore;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
+import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.stereotype.Controller;
 
 import java.security.Principal;
@@ -27,12 +29,14 @@ public class ChatController {
     @SendTo("/sub/chat/{chatroomId}")
     public ChatMessage chat(
             @DestinationVariable Long chatroomId,
-            Principal principal,
+            SimpMessageHeaderAccessor headerAccessor,
             ChatMessage message
     ) {
         System.out.println(message);
 
-        Long senderId = Long.parseLong(principal.getName());
+        String sessionId = headerAccessor.getSessionId();
+        Long senderId = WebSocketSessionStore.get(sessionId);
+
         TestUser sender = testUserRepository.findById(senderId).orElse(null);
         ChatRoom chatRoom = chatRoomRepository.findById(chatroomId).orElse(null);
         Chat chat = Chat.builder()
