@@ -3,6 +3,7 @@ package com.team01.billage.product.domain;
 import com.team01.billage.category.domain.Category;
 import com.team01.billage.product.dto.ProductRequestDto;
 import com.team01.billage.product.enums.RentalStatus;
+import com.team01.billage.user.domain.Users;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -28,7 +29,9 @@ public class Product {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // 회원
+    @ManyToOne
+    @JoinColumn(name = "seller_id", nullable = false)
+    private Users seller;
 
     // 판매지역
 

@@ -1,13 +1,18 @@
 package com.team01.billage.product.service;
 
 import com.team01.billage.category.domain.Category;
-import com.team01.billage.category.dto.CategoryProductResponseDto;
 import com.team01.billage.category.repository.CategoryRepository;
 import com.team01.billage.exception.CustomException;
 import com.team01.billage.product.domain.Product;
+import com.team01.billage.product.dto.ProductDeleteCheckDto;
+import com.team01.billage.product.dto.ProductDetailResponseDto;
+import com.team01.billage.product.dto.ProductRequestDto;
+import com.team01.billage.product.dto.ProductResponseDto;
 import com.team01.billage.product.enums.RentalStatus;
-import com.team01.billage.product.dto.*;
 import com.team01.billage.product.repository.ProductRepository;
+import com.team01.billage.product_review.dto.ShowReviewResponseDto;
+import com.team01.billage.product_review.repository.ProductReviewRepository;
+import com.team01.billage.user.domain.Users;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +28,7 @@ public class ProductService {
 
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
+    private final ProductReviewRepository productReviewRepository;
 
     @Transactional
     public ProductDetailResponseDto findProduct(Long productId) {
@@ -32,10 +38,7 @@ public class ProductService {
 
         product.increaseViewCount(); // 조회수 단순 증가
 
-        Category category = product.getCategory();
-
-        return toDetailDto(product, category);
-
+        return toDetailDto(product);
     }
 
     public List<ProductResponseDto> findAllProducts() {
@@ -70,7 +73,7 @@ public class ProductService {
 
         Product createProduct = productRepository.save(product);
 
-        return toDetailDto(createProduct, category);
+        return toDetailDto(createProduct);
 
     }
 
@@ -90,7 +93,7 @@ public class ProductService {
         product.updateProductCategory(category);
         product.updateProduct(productRequestDto);
 
-        return toDetailDto(product, category);
+        return toDetailDto(product);
 
     }
 
@@ -113,16 +116,14 @@ public class ProductService {
 
     }
 
-    private ProductDetailResponseDto toDetailDto(Product product, Category category) {
+    private ProductDetailResponseDto toDetailDto(Product product) {
 
-        CategoryProductResponseDto categoryDto = CategoryProductResponseDto.builder()
-                .id(category.getId())
-                .name(category.getName())
-                .build();
+        List<ShowReviewResponseDto> reviews = productReviewRepository.findByProduct_id(
+                product.getId());
+        Users seller = product.getSeller();
 
         return ProductDetailResponseDto.builder()
-                .categoryDto(categoryDto)
-                .productId(product.getId())
+                .categoryName(product.getCategory().getName())
                 .title(product.getTitle())
                 .description(product.getDescription())
                 .rentalStatus(product.getRentalStatus().getDisplayName())
@@ -132,6 +133,10 @@ public class ProductService {
                 .longitude(product.getLongitude())
                 .viewCount(product.getViewCount())
                 .updatedAt(product.getUpdatedAt())
+                .sellerId(seller.getId())
+                .sellerNickname(seller.getNickname())
+                .sellerImageUrl(seller.getImageUrl())
+                .reviews(reviews)
                 .build();
 
     }
