@@ -33,6 +33,7 @@ public class CustomUserReviewRepositoryImpl implements CustomUserReviewRepositor
             .from(userReview)
             .join(userReview.author, author)
             .where(author.email.eq(email))
+            .orderBy(userReview.createdAt.desc())
             .fetch();
     }
 
@@ -55,6 +56,7 @@ public class CustomUserReviewRepositoryImpl implements CustomUserReviewRepositor
             .from(userReview)
             .join(userReview.target, target)
             .where(target.nickname.eq(nickname))
+            .orderBy(userReview.createdAt.desc())
             .fetch();
     }
 

@@ -35,6 +35,7 @@ public class CustomProductReviewRepositoryImpl implements CustomProductReviewRep
             .join(productReview.product, product)
             .join(productReview.author, author)
             .where(author.email.eq(email))
+            .orderBy(productReview.createdAt.desc())
             .fetch();
     }
 
@@ -59,6 +60,7 @@ public class CustomProductReviewRepositoryImpl implements CustomProductReviewRep
             .join(productReview.product, product)
             .join(productReview.author, author)
             .where(productReview.product.id.eq(productId))
+            .orderBy(productReview.createdAt.desc())
             .fetch();
     }
 }

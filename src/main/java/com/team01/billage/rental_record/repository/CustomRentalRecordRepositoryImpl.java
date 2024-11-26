@@ -60,6 +60,7 @@ public class CustomRentalRecordRepositoryImpl implements CustomRentalRecordRepos
                     .and(isRenting ? rentalRecord.returnDate.isNull()
                         : rentalRecord.returnDate.isNotNull())
             )
+            .orderBy(rentalRecord.createdAt.desc())
             .fetch();
     }
 }
