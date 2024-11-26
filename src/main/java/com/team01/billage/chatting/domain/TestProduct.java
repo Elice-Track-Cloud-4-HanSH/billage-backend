@@ -18,4 +18,8 @@ public class TestProduct {
     private Long id;
 
     private String name;
+
+    public TestProduct(String name) {
+        this.name = name;
+    }
 }

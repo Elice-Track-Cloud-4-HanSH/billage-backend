@@ -41,9 +41,11 @@ public class CustomRentalRecordRepositoryImpl implements CustomRentalRecordRepos
         return queryFactory.select(
                 Projections.constructor(
                     ShowRecordResponseDto.class,
+                    rentalRecord.id,
                     rentalRecord.startDate,
                     rentalRecord.expectedReturnDate,
                     rentalRecord.returnDate,
+                    rentalRecord.product.id,
                     //rentalRecord.product.imageUrl,
                     rentalRecord.product.title,
                     userType.imageUrl,

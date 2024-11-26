@@ -1,24 +1,28 @@
 package com.team01.billage.user.service;
 
+import static com.team01.billage.exception.ErrorCode.USER_NOT_FOUND;
+
 import com.team01.billage.exception.CustomException;
 import com.team01.billage.exception.ErrorCode;
+import com.team01.billage.product_review.dto.ShowReviewResponseDto;
 import com.team01.billage.user.domain.Users;
-import com.team01.billage.user.dto.Response.*;
-import com.team01.billage.user.dto.Request.*;
+import com.team01.billage.user.dto.Request.UserSignupRequestDto;
+import com.team01.billage.user.dto.Request.UserUpdateRequestDto;
+import com.team01.billage.user.dto.Response.TargetProfileResponseDto;
+import com.team01.billage.user.dto.Response.UserDeleteResponseDto;
+import com.team01.billage.user.dto.Response.UserResponseDto;
 import com.team01.billage.user.repository.UserRepository;
+import com.team01.billage.user_review.repository.UserReviewRepository;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -27,6 +31,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder passwordEncoder;
+    private final UserReviewRepository userReviewRepository;
 
     /**
      * 회원 가입
@@ -53,7 +58,7 @@ public class UserService {
      */
     public Users findByEmail(String email) {
         return userRepository.findByEmailAndDeletedAtIsNull(email)
-                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+            .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
     }
 
     /**
@@ -61,9 +66,9 @@ public class UserService {
      */
     public List<UserResponseDto> findAll() {
         return userRepository.findAll().stream()
-                .filter(user -> !user.isDeleted())
-                .map(Users::toResponseDto)
-                .collect(Collectors.toList());
+            .filter(user -> !user.isDeleted())
+            .map(Users::toResponseDto)
+            .collect(Collectors.toList());
     }
 
     /**
@@ -72,7 +77,7 @@ public class UserService {
     @Transactional
     public UserResponseDto updateUser(Long userId, UserUpdateRequestDto dto) {
         Users user = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+            .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
         if (user.isDeleted()) {
             throw new CustomException(ErrorCode.USER_NOT_FOUND);
@@ -97,8 +102,8 @@ public class UserService {
      */
     @Operation(summary = "이메일 중복 확인 API", description = "사용자가 입력한 이메일이 중복인지 확인합니다.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "사용 가능한 이메일"),
-            @ApiResponse(responseCode = "409", description = "이미 사용 중인 이메일")
+        @ApiResponse(responseCode = "200", description = "사용 가능한 이메일"),
+        @ApiResponse(responseCode = "409", description = "이미 사용 중인 이메일")
     })
     public void validateEmail(String email) {
         if (userRepository.existsByEmail(email)) {
@@ -111,13 +116,32 @@ public class UserService {
      */
     @Operation(summary = "닉네임 중복 확인 API", description = "사용자가 입력한 닉네임이 중복인지 확인합니다.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "사용 가능한 닉네임"),
-            @ApiResponse(responseCode = "409", description = "이미 사용 중인 닉네임")
+        @ApiResponse(responseCode = "200", description = "사용 가능한 닉네임"),
+        @ApiResponse(responseCode = "409", description = "이미 사용 중인 닉네임")
     })
     public void validateNickname(String nickname) {
         if (userRepository.existsByNickname(nickname)) {
             throw new CustomException(ErrorCode.NICKNAME_ALREADY_EXISTS);
         }
+    }
+
+    public TargetProfileResponseDto showProfile(String nickname) {
+
+        Users target = userRepository.findByNickname(nickname)
+            .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
+
+        List<ShowReviewResponseDto> reviews = userReviewRepository.findByTarget_nickname(nickname);
+
+        Double avgScore = userReviewRepository.scoreAverage(nickname)
+            .map(score -> Math.round(score * 10) / 10.0).orElse(0.0);
+
+        return TargetProfileResponseDto.builder()
+            .imageUrl(target.getImageUrl())
+            .nickname(target.getNickname())
+            .description(target.getDescription())
+            .avgScore(avgScore)
+            .reviews(reviews)
+            .build();
     }
 
     // Private helper methods

@@ -3,6 +3,7 @@ package com.team01.billage.category.service;
 import com.team01.billage.category.dto.CategoryResponseDto;
 import com.team01.billage.category.repository.CategoryRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -12,7 +13,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class CategoryService {
 
-    private final String baseUrl = "https://localhost:8080";
+    @Value("${custom.category-image.base-url}")
+    private String baseUrl;
 
     private final CategoryRepository categoryRepository;
 

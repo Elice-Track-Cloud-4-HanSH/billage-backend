@@ -6,11 +6,13 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class ShowRecordResponseDto {
 
+    private long rentalRecordId;
+    private LocalDate startDate;
+    private LocalDate expectedReturnDate;
+    private LocalDate returnDate;
+    private long productId;
     private String productImageUrl;
     private String title;
     private String userImageUrl;
     private String nickname;
-    private LocalDate startDate;
-    private LocalDate expectedReturnDate;
-    private LocalDate returnDate;
 }

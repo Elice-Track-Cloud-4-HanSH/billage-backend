@@ -1,21 +1,27 @@
 package com.team01.billage.product.service;
 
+import static com.team01.billage.exception.ErrorCode.CATEGORY_NOT_FOUND;
+import static com.team01.billage.exception.ErrorCode.PRODUCT_MODIFICATION_NOT_ALLOWED;
+import static com.team01.billage.exception.ErrorCode.PRODUCT_NOT_FOUND;
+
 import com.team01.billage.category.domain.Category;
-import com.team01.billage.category.dto.CategoryProductResponseDto;
 import com.team01.billage.category.repository.CategoryRepository;
 import com.team01.billage.exception.CustomException;
 import com.team01.billage.product.domain.Product;
 import com.team01.billage.product.domain.RentalStatus;
-import com.team01.billage.product.dto.*;
+import com.team01.billage.product.dto.ProductDeleteCheckDto;
+import com.team01.billage.product.dto.ProductDetailResponseDto;
+import com.team01.billage.product.dto.ProductRequestDto;
+import com.team01.billage.product.dto.ProductResponseDto;
 import com.team01.billage.product.repository.ProductRepository;
+import com.team01.billage.product_review.dto.ShowReviewResponseDto;
+import com.team01.billage.product_review.repository.ProductReviewRepository;
+import com.team01.billage.user.domain.Users;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.stream.Collectors;
-
-import static com.team01.billage.exception.ErrorCode.*;
 
 @Service
 @RequiredArgsConstructor
@@ -23,96 +29,81 @@ public class ProductService {
 
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
+    private final ProductReviewRepository productReviewRepository;
 
     @Transactional
     public ProductDetailResponseDto findProduct(Long productId) {
 
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new CustomException(PRODUCT_NOT_FOUND));
+        Product product = productRepository.findByIdAndDeletedAtIsNull(productId)
+            .orElseThrow(() -> new CustomException(PRODUCT_NOT_FOUND));
 
         product.increaseViewCount(); // 조회수 단순 증가
 
-        Category category = product.getCategory();
-
-        return toDetailDto(product, category);
-
+        return toDetailDto(product);
     }
 
     public List<ProductResponseDto> findAllProducts() {
-        List<Product> products = productRepository.findAll();
+        List<Product> products = productRepository.findAllByDeletedAtIsNull();
         return products.stream()
-                .map(product -> ProductResponseDto.builder()
-                        .title(product.getTitle())
-                        .updatedAt(product.getUpdatedAt())
-                        .dayPrice(product.getDayPrice())
-                        .weekPrice(product.getWeekPrice())
-                        .viewCount(product.getViewCount())
-                        .build())
-                .collect(Collectors.toList());
+            .map(product -> ProductResponseDto.builder()
+                .productId(product.getId())
+                .title(product.getTitle())
+                .updatedAt(product.getUpdatedAt())
+                .dayPrice(product.getDayPrice())
+                .weekPrice(product.getWeekPrice())
+                .viewCount(product.getViewCount())
+                .build())
+            .collect(Collectors.toList());
     }
 
     @Transactional
-    public ProductDetailResponseDto createProduct(ProductRequestDto request) {
+    public ProductDetailResponseDto createProduct(ProductRequestDto productRequestDto) {
 
-        Category category = categoryRepository.findById(request.getCategoryId())
-                .orElseThrow(() -> new CustomException(CATEGORY_NOT_FOUND));
+        Category category = categoryRepository.findById(productRequestDto.getCategoryId())
+            .orElseThrow(() -> new CustomException(CATEGORY_NOT_FOUND));
 
         Product product = Product.builder()
-                .category(category)
-                .title(request.getTitle())
-                .description(request.getDescription())
-                .dayPrice(request.getDayPrice())
-                .weekPrice(request.getWeekPrice())
-                .latitude(request.getLatitude())
-                .longitude(request.getLongitude())
-                .build();
+            .category(category)
+            .title(productRequestDto.getTitle())
+            .description(productRequestDto.getDescription())
+            .dayPrice(productRequestDto.getDayPrice())
+            .weekPrice(productRequestDto.getWeekPrice())
+            .latitude(productRequestDto.getLatitude())
+            .longitude(productRequestDto.getLongitude())
+            .build();
 
         Product createProduct = productRepository.save(product);
 
-        return toDetailDto(createProduct, category);
+        return toDetailDto(createProduct);
 
     }
 
     @Transactional
-    public ProductDetailResponseDto updateProduct(Long productId, ProductRequestDto request) {
+    public ProductDetailResponseDto updateProduct(Long productId,
+        ProductRequestDto productRequestDto) {
 
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new CustomException(PRODUCT_NOT_FOUND));
+        Product product = productRepository.findByIdAndDeletedAtIsNull(productId)
+            .orElseThrow(() -> new CustomException(PRODUCT_NOT_FOUND));
 
         if (product.getRentalStatus() != RentalStatus.AVAILABLE) {
             throw new CustomException(PRODUCT_MODIFICATION_NOT_ALLOWED);
         }
 
-        Category category = categoryRepository.findById(request.getCategoryId())
-                .orElseThrow(() -> new CustomException(CATEGORY_NOT_FOUND));
+        Category category = categoryRepository.findById(productRequestDto.getCategoryId())
+            .orElseThrow(() -> new CustomException(CATEGORY_NOT_FOUND));
 
         product.updateProductCategory(category);
-        product.updateProduct(request);
+        product.updateProduct(productRequestDto);
 
-        return toDetailDto(product, category);
-
-    }
-
-    @Transactional
-    public RentalStatusResponseDto updateProductRentalStatus(Long productId, RentalStatusUpdateRequestDto request) {
-
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new CustomException(PRODUCT_NOT_FOUND));
-
-        RentalStatus rentalStatus = RentalStatus.valueOf(request.getRentalStatus().toUpperCase());
-        product.updateRentalStatus(rentalStatus);
-
-        return RentalStatusResponseDto.builder()
-                .rentalStatus(product.getRentalStatus().getDisplayName())
-                .build();
+        return toDetailDto(product);
 
     }
 
     @Transactional
-    public void deleteProduct(Long productId) {
+    public ProductDeleteCheckDto deleteProduct(Long productId) {
 
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new CustomException(PRODUCT_NOT_FOUND));
+        Product product = productRepository.findByIdAndDeletedAtIsNull(productId)
+            .orElseThrow(() -> new CustomException(PRODUCT_NOT_FOUND));
 
         if (product.getRentalStatus() != RentalStatus.AVAILABLE) {
             throw new CustomException(PRODUCT_MODIFICATION_NOT_ALLOWED);
@@ -120,27 +111,34 @@ public class ProductService {
 
         product.deleteProduct();
 
+        return ProductDeleteCheckDto.builder()
+            .productId(productId)
+            .deletedAt(product.getDeletedAt())
+            .build();
+
     }
 
-    private ProductDetailResponseDto toDetailDto(Product product, Category category) {
+    private ProductDetailResponseDto toDetailDto(Product product) {
 
-        CategoryProductResponseDto categoryDto = CategoryProductResponseDto.builder()
-                .id(category.getId())
-                .name(category.getName())
-                .build();
+        List<ShowReviewResponseDto> reviews = productReviewRepository.findByProduct_id(
+            product.getId());
+        Users seller = product.getSeller();
 
         return ProductDetailResponseDto.builder()
-                .categoryDto(categoryDto)
-                .title(product.getTitle())
-                .description(product.getDescription())
-                .rentalStatus(product.getRentalStatus().getDisplayName())
-                .dayPrice(product.getDayPrice())
-                .weekPrice(product.getWeekPrice())
-                .latitude(product.getLatitude())
-                .longitude(product.getLongitude())
-                .viewCount(product.getViewCount())
-                .updatedAt(product.getUpdatedAt())
-                .build();
+            .categoryName(product.getCategory().getName())
+            .title(product.getTitle())
+            .description(product.getDescription())
+            .rentalStatus(product.getRentalStatus().getDisplayName())
+            .dayPrice(product.getDayPrice())
+            .weekPrice(product.getWeekPrice())
+            .latitude(product.getLatitude())
+            .longitude(product.getLongitude())
+            .viewCount(product.getViewCount())
+            .updatedAt(product.getUpdatedAt())
+            .sellerNickname(seller.getNickname())
+            .sellerImageUrl(seller.getImageUrl())
+            .reviews(reviews)
+            .build();
 
     }
 

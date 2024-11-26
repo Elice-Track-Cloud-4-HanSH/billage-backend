@@ -2,8 +2,20 @@ package com.team01.billage.product.domain;
 
 import com.team01.billage.category.domain.Category;
 import com.team01.billage.product.dto.ProductRequestDto;
-import com.team01.billage.product.dto.RentalStatusUpdateRequestDto;
-import jakarta.persistence.*;
+import com.team01.billage.user.domain.Users;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -11,9 +23,6 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "products")
@@ -26,9 +35,11 @@ public class Product {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private Long id;
 
-    // 회원
+    @ManyToOne
+    @JoinColumn(name = "seller_id", nullable = false)
+    private Users seller;
 
     // 판매지역
 
@@ -73,7 +84,7 @@ public class Product {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
-    public void updateProduct(ProductRequestDto dto){
+    public void updateProduct(ProductRequestDto dto) {
         this.title = dto.getTitle();
         this.description = dto.getDescription();
         this.dayPrice = dto.getDayPrice();
@@ -82,19 +93,19 @@ public class Product {
         this.longitude = dto.getLongitude();
     }
 
-    public void updateProductCategory(Category category){
+    public void updateProductCategory(Category category) {
         this.category = category;
     }
 
-    public void updateRentalStatus(RentalStatus status){
+    public void updateRentalStatus(RentalStatus status) {
         this.rentalStatus = status;
     }
 
-    public void deleteProduct(){
+    public void deleteProduct() {
         this.deletedAt = LocalDateTime.now();
     }
 
-    public void increaseViewCount(){
+    public void increaseViewCount() {
         this.viewCount += 1;
     }
 

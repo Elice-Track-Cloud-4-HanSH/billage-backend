@@ -1,5 +1,6 @@
 package com.team01.billage.chatting.repository;
 
+import com.team01.billage.chatting.domain.Chat;
 import com.team01.billage.chatting.domain.ChatRoom;
 import com.team01.billage.chatting.domain.TestProduct;
 import com.team01.billage.chatting.domain.TestUser;
@@ -7,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Component
@@ -27,18 +29,19 @@ public class ChatDBDataInitializer implements CommandLineRunner {
 
         userRepository.saveAll(List.of(buyer, seller));
 
-        TestProduct product = TestProduct.builder()
-                .name("상품1")
-                .build();
+        List<TestProduct> products = new ArrayList<>();
+        for (int i = 0; i < 30; i++) {
+            products.add(new TestProduct(String.format("상품 %d", i+1)));
+        }
+        productRepository.saveAll(products);
 
-        productRepository.save(product);
-
-        ChatRoom chatroom = ChatRoom.builder()
-                .buyer(buyer)
-                .seller(seller)
-                .product(product)
-                .build();
-
-        chatRoomRepository.save(chatroom);
+        List<ChatRoom> chatrooms = new ArrayList<>();
+        for (TestProduct product : products) {
+            ChatRoom chatRoom = new ChatRoom(buyer, seller, product);
+            Chat chat = new Chat(chatRoom, buyer, "Hello World + %d");
+            chatRoom.addTestChat(chat);
+            chatrooms.add(chatRoom);
+        }
+        chatRoomRepository.saveAll(chatrooms);
     }
 }
