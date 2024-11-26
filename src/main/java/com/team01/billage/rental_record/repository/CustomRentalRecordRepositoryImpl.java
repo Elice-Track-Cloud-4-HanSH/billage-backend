@@ -48,7 +48,6 @@ public class CustomRentalRecordRepositoryImpl implements CustomRentalRecordRepos
                     rentalRecord.product.id,
                     //rentalRecord.product.imageUrl,
                     rentalRecord.product.title,
-                    userType.id,
                     userType.imageUrl,
                     userType.nickname
                 ))

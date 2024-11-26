@@ -135,7 +135,6 @@ public class ProductService {
             .longitude(product.getLongitude())
             .viewCount(product.getViewCount())
             .updatedAt(product.getUpdatedAt())
-            .sellerId(seller.getId())
             .sellerNickname(seller.getNickname())
             .sellerImageUrl(seller.getImageUrl())
             .reviews(reviews)
