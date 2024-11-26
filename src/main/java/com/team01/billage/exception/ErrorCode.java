@@ -10,6 +10,8 @@ public enum ErrorCode {
     /* 400 BAD_REQUEST : 잘못된 요청 */
     PRODUCT_MODIFICATION_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "현재 대여 중인 상품은 수정/삭제할 수 없습니다."),
     USER_ALREADY_DELETED(HttpStatus.BAD_REQUEST, "이미 삭제된 회원입니다."),
+    PASSWORD_NOT_MATCH(HttpStatus.BAD_REQUEST, "비밀번호가 올바르지 않습니다."),
+    INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "유효하지 않은 토큰입니다."),
 
     /* 401 UNAUTHORIZED : 인증되지 않은 사용자 */
 
@@ -28,6 +30,7 @@ public enum ErrorCode {
     USER_ALREADY_EXISTS(HttpStatus.CONFLICT,"해당 유저가 이미 존재합니다."),
     EMAIL_ALREADY_EXISTS(HttpStatus.CONFLICT,"해당 이메일이 이미 존재합니다."),
     NICKNAME_ALREADY_EXISTS(HttpStatus.CONFLICT, "해당 닉네임이 이미 존재합니다.");
+
     /* 410 : GONE : 리소스가 더 이상 유효하지 않음 */
 
     /* 500 INTERNAL_SERVER_ERROR : 서버 내부 에러 */

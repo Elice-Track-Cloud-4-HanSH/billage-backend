@@ -157,4 +157,20 @@ public class UserService {
                 matches ? "비밀번호가 일치합니다" : "비밀번호가 일치하지 않습니다"
         );
     }
+
+    public boolean validateLoginRequest(JwtTokenLoginRequest request) {
+        //아이디 값이 빈값이면 false
+        String userRealId = request.getUserRealId();
+        if (userRealId.isEmpty()) {
+            return false;
+        }
+
+        //패스워드 값이 빈값이면 false
+        String password = request.getPassword();
+        if (password.isEmpty()) {
+            return false;
+        }
+
+        return true;
+    }
 }
