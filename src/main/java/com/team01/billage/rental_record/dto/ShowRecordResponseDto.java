@@ -13,7 +13,6 @@ public class ShowRecordResponseDto {
     private long productId;
     private String productImageUrl;
     private String title;
-    private long userId;
     private String userImageUrl;
     private String nickname;
 }
