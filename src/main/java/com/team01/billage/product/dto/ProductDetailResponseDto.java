@@ -1,10 +1,14 @@
 package com.team01.billage.product.dto;
 
-import com.team01.billage.category.dto.CategoryProductResponseDto;
-import lombok.*;
-
+import com.team01.billage.product_review.dto.ShowReviewResponseDto;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Getter
 @Setter
@@ -13,8 +17,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class ProductDetailResponseDto { // 상품 상세 확인 DTO
 
-    private CategoryProductResponseDto categoryDto;
-    private Long productId;
+    private String categoryName;
     private String title;
     private String description;
     private String rentalStatus;
@@ -24,6 +27,10 @@ public class ProductDetailResponseDto { // 상품 상세 확인 DTO
     private BigDecimal longitude;
     private int viewCount;
     private LocalDateTime updatedAt;
+    private long sellerId;
+    private String sellerNickname;
+    private String sellerImageUrl;
+    private List<ShowReviewResponseDto> reviews;
     // 이미지
 
 }
