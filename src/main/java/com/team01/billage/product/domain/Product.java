@@ -15,6 +15,8 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "products")
@@ -65,6 +67,10 @@ public class Product {
     @Builder.Default
     private int viewCount = 0;
 
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<ProductImage> productImages = new ArrayList<>();
+
     @CreatedDate
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
@@ -95,10 +101,15 @@ public class Product {
 
     public void deleteProduct() {
         this.deletedAt = LocalDateTime.now();
+        this.productImages.clear();
     }
 
     public void increaseViewCount() {
         this.viewCount += 1;
+    }
+
+    public void addProductImage(ProductImage productImage){
+        this.productImages.add(productImage);
     }
 
 }
