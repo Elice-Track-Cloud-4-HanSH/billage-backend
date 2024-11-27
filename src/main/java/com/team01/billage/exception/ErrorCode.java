@@ -30,7 +30,7 @@ public enum ErrorCode {
     /* 409 : CONFLICT : Resource의 현재 상태와 충돌. 보통 중복된 데이터 존재, 조건을 만족하지 못함 */
     USER_ALREADY_EXISTS(HttpStatus.CONFLICT,"해당 유저가 이미 존재합니다."),
     EMAIL_ALREADY_EXISTS(HttpStatus.CONFLICT,"해당 이메일이 이미 존재합니다."),
-    NICKNAME_ALREADY_EXISTS(HttpStatus.CONFLICT, "해당 닉네임이 이미 존재합니다.");
+    NICKNAME_ALREADY_EXISTS(HttpStatus.CONFLICT, "해당 닉네임이 이미 존재합니다."),
 
     /* 410 : GONE : 리소스가 더 이상 유효하지 않음 */
 

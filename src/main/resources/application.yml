@@ -34,6 +34,7 @@ jwt:
     refresh-expires: 604800000 # 7일
     access-expires: 900000 # 15분
 
+
 custom:
   category-image:
-    base-url: "http://localhost:8080"
+    base-url: "http://localhost:8080/"
