@@ -3,10 +3,11 @@ package com.team01.billage.product.repository;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.team01.billage.product.domain.Product;
 import com.team01.billage.product.domain.QProduct;
-import com.team01.billage.product.domain.RentalStatus;
+import com.team01.billage.product.enums.RentalStatus;
 import com.team01.billage.user.domain.QUsers;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
+
+import java.util.List;
 
 @RequiredArgsConstructor
 public class CustomProductRepositoryImpl implements CustomProductRepository {
