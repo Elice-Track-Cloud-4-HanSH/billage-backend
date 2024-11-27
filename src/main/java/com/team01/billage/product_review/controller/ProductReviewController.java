@@ -1,5 +1,6 @@
 package com.team01.billage.product_review.controller;
 
+import com.team01.billage.product_review.dto.ReviewSubjectResponseDto;
 import com.team01.billage.product_review.dto.ShowReviewResponseDto;
 import com.team01.billage.product_review.dto.WriteReviewRequestDto;
 import com.team01.billage.product_review.service.ProductReviewService;
@@ -42,5 +43,14 @@ public class ProductReviewController {
         List<ShowReviewResponseDto> response = productReviewService.readProductReviews(
             userDetails.getUsername());
         return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
+    @GetMapping("/{rentalRecordId}")
+    public ResponseEntity<ReviewSubjectResponseDto> reviewSubject(
+        @PathVariable("rentalRecordId") long id, @AuthenticationPrincipal UserDetails userDetails) {
+
+        ReviewSubjectResponseDto responseDto = productReviewService.getReviewSubject(id,
+            userDetails.getUsername());
+        return ResponseEntity.status(HttpStatus.OK).body(responseDto);
     }
 }
