@@ -4,10 +4,7 @@ import com.team01.billage.category.domain.Category;
 import com.team01.billage.category.repository.CategoryRepository;
 import com.team01.billage.exception.CustomException;
 import com.team01.billage.product.domain.Product;
-import com.team01.billage.product.dto.ProductDeleteCheckDto;
-import com.team01.billage.product.dto.ProductDetailResponseDto;
-import com.team01.billage.product.dto.ProductRequestDto;
-import com.team01.billage.product.dto.ProductResponseDto;
+import com.team01.billage.product.dto.*;
 import com.team01.billage.product.enums.RentalStatus;
 import com.team01.billage.product.repository.ProductRepository;
 import com.team01.billage.product_review.dto.ShowReviewResponseDto;
@@ -53,6 +50,19 @@ public class ProductService {
                         .viewCount(product.getViewCount())
                         .build())
                 .collect(Collectors.toList());
+    }
+
+    public List<OnSaleResponseDto> findAllOnSale(String email) {
+
+        List<Product> products = productRepository.findAllOnSale(email);
+
+        return products.stream()
+                .map(product -> OnSaleResponseDto.builder()
+                        .productId(product.getId())
+                        //.productImageUrl(product.getImageUrl())
+                        .title(product.getTitle())
+                        .build())
+                .toList();
     }
 
     @Transactional
@@ -133,7 +143,6 @@ public class ProductService {
                 .longitude(product.getLongitude())
                 .viewCount(product.getViewCount())
                 .updatedAt(product.getUpdatedAt())
-                .sellerId(seller.getId())
                 .sellerNickname(seller.getNickname())
                 .sellerImageUrl(seller.getImageUrl())
                 .reviews(reviews)

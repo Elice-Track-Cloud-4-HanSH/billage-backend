@@ -48,7 +48,6 @@ public class CustomRentalRecordRepositoryImpl implements CustomRentalRecordRepos
                     rentalRecord.product.id,
                     //rentalRecord.product.imageUrl,
                     rentalRecord.product.title,
-                    userType.id,
                     userType.imageUrl,
                     userType.nickname
                 ))
@@ -61,6 +60,7 @@ public class CustomRentalRecordRepositoryImpl implements CustomRentalRecordRepos
                     .and(isRenting ? rentalRecord.returnDate.isNull()
                         : rentalRecord.returnDate.isNotNull())
             )
+            .orderBy(rentalRecord.createdAt.desc())
             .fetch();
     }
 }

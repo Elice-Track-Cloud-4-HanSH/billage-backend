@@ -6,6 +6,7 @@ import com.team01.billage.product_review.dto.ShowReviewResponseDto;
 import com.team01.billage.user.domain.QUsers;
 import com.team01.billage.user_review.domain.QUserReview;
 import java.util.List;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
@@ -32,11 +33,12 @@ public class CustomUserReviewRepositoryImpl implements CustomUserReviewRepositor
             .from(userReview)
             .join(userReview.author, author)
             .where(author.email.eq(email))
+            .orderBy(userReview.createdAt.desc())
             .fetch();
     }
 
     @Override
-    public List<ShowReviewResponseDto> findByTarget_id(long id) {
+    public List<ShowReviewResponseDto> findByTarget_nickname(String nickname) {
         QUserReview userReview = QUserReview.userReview;
         QUsers target = QUsers.users;
 
@@ -53,7 +55,24 @@ public class CustomUserReviewRepositoryImpl implements CustomUserReviewRepositor
             )
             .from(userReview)
             .join(userReview.target, target)
-            .where(target.id.eq(id))
+            .where(target.nickname.eq(nickname))
+            .orderBy(userReview.createdAt.desc())
             .fetch();
     }
+
+    @Override
+    public Optional<Double> scoreAverage(String nickname) {
+        QUserReview userReview = QUserReview.userReview;
+        QUsers target = QUsers.users;
+
+        Double averageScore = queryFactory
+            .select(userReview.score.avg())
+            .from(userReview)
+            .join(userReview.target, target)
+            .where(target.nickname.eq(nickname))
+            .fetchOne();
+
+        return Optional.ofNullable(averageScore);
+    }
+
 }

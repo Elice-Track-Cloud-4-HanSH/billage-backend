@@ -27,7 +27,6 @@ public class ProductDetailResponseDto { // 상품 상세 확인 DTO
     private BigDecimal longitude;
     private int viewCount;
     private LocalDateTime updatedAt;
-    private Long sellerId;
     private String sellerNickname;
     private String sellerImageUrl;
     private List<ShowReviewResponseDto> reviews;
