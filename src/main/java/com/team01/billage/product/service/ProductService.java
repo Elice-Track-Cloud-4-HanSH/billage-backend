@@ -9,6 +9,7 @@ import com.team01.billage.category.repository.CategoryRepository;
 import com.team01.billage.exception.CustomException;
 import com.team01.billage.product.domain.Product;
 import com.team01.billage.product.domain.RentalStatus;
+import com.team01.billage.product.dto.OnSaleResponseDto;
 import com.team01.billage.product.dto.ProductDeleteCheckDto;
 import com.team01.billage.product.dto.ProductDetailResponseDto;
 import com.team01.billage.product.dto.ProductRequestDto;
@@ -54,6 +55,19 @@ public class ProductService {
                 .viewCount(product.getViewCount())
                 .build())
             .collect(Collectors.toList());
+    }
+
+    public List<OnSaleResponseDto> findAllOnSale(String email) {
+
+        List<Product> products = productRepository.findAllOnSale(email);
+
+        return products.stream()
+            .map(product -> OnSaleResponseDto.builder()
+                .productId(product.getId())
+                //.productImageUrl(product.getImageUrl())
+                .title(product.getTitle())
+                .build())
+            .toList();
     }
 
     @Transactional
