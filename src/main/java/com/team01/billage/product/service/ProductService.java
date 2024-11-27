@@ -4,12 +4,18 @@ import com.team01.billage.category.domain.Category;
 import com.team01.billage.category.repository.CategoryRepository;
 import com.team01.billage.exception.CustomException;
 import com.team01.billage.product.domain.Product;
+import com.team01.billage.product.domain.ProductImage;
 import com.team01.billage.product.dto.*;
 import com.team01.billage.product.enums.RentalStatus;
+import com.team01.billage.product.repository.ProductImageRepository;
 import com.team01.billage.product.repository.ProductRepository;
 import com.team01.billage.product_review.dto.ShowReviewResponseDto;
 import com.team01.billage.product_review.repository.ProductReviewRepository;
+import com.team01.billage.user.domain.Provider;
+import com.team01.billage.user.domain.UserRole;
 import com.team01.billage.user.domain.Users;
+import com.team01.billage.user.repository.UserRepository;
+import com.team01.billage.utils.s3.S3BucketService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +32,10 @@ public class ProductService {
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
     private final ProductReviewRepository productReviewRepository;
+    private final ProductImageRepository productImageRepository;
+    private final S3BucketService s3BucketService;
+    private final ProductImageService productImageService;
+    private final UserRepository userRepository;
 
     @Transactional
     public ProductDetailResponseDto findProduct(Long productId) {
@@ -48,6 +58,10 @@ public class ProductService {
                         .dayPrice(product.getDayPrice())
                         .weekPrice(product.getWeekPrice())
                         .viewCount(product.getViewCount())
+                        .thumbnail(
+                                productImageRepository.findThumbnailByProductId(product.getId())
+                                        .orElseThrow(() -> new CustomException(THUMBNAIL_NOT_FOUND))
+                        )
                         .build())
                 .collect(Collectors.toList());
     }
@@ -71,7 +85,9 @@ public class ProductService {
         Category category = categoryRepository.findById(productRequestDto.getCategoryId())
                 .orElseThrow(() -> new CustomException(CATEGORY_NOT_FOUND));
 
+        // 상품 생성
         Product product = Product.builder()
+                .seller(testUser())
                 .category(category)
                 .title(productRequestDto.getTitle())
                 .description(productRequestDto.getDescription())
@@ -81,6 +97,25 @@ public class ProductService {
                 .longitude(productRequestDto.getLongitude())
                 .build();
 
+        System.out.println("받아온 이미지 개수: " + productRequestDto.getProductImages().size());
+
+        // 상품 이미지 생성
+        for (ProductImageRequestDto imageDto : productRequestDto.getProductImages()) {
+            System.out.println("image: " + imageDto.getImageUrl());
+            ProductImage productImage = ProductImage.builder()
+                    .product(product)
+                    .imageUrl(s3BucketService.upload(imageDto.getImageUrl()))
+                    .thumbnail(imageDto.getThumbnail())
+                    .build();
+
+            System.out.println("이미지 공용 url: " + productImage.getImageUrl());
+            System.out.println("썸네일 여부: " + productImage.getThumbnail());
+
+            // 상품에 상품 이미지 추가
+            product.addProductImage(productImage);
+        }
+
+        // 상품(+상품이미지) 저장
         Product createProduct = productRepository.save(product);
 
         return toDetailDto(createProduct);
@@ -117,6 +152,10 @@ public class ProductService {
             throw new CustomException(PRODUCT_MODIFICATION_NOT_ALLOWED);
         }
 
+        // s3 이미지 삭제
+        productImageService.deleteAll(productId);
+
+        // 상품(soft delete: 삭제일 업데이트, 상품이미지 hard delete)
         product.deleteProduct();
 
         return ProductDeleteCheckDto.builder()
@@ -130,7 +169,21 @@ public class ProductService {
 
         List<ShowReviewResponseDto> reviews = productReviewRepository.findByProduct_id(
                 product.getId());
+
         Users seller = product.getSeller();
+        ProductSellerResponseDto sellerDto = ProductSellerResponseDto.builder()
+                .sellerId(seller.getId())
+                .sellerNickname(seller.getNickname())
+                .sellerImageUrl(seller.getImageUrl())
+                .build();
+
+        List<ProductImage> images = productImageRepository.findByProductId(product.getId());
+        List<ProductImageResponseDto> imageDtos = images.stream()
+                .map(image -> ProductImageResponseDto.builder()
+                        .imageId(image.getId())
+                        .imageUrl(image.getImageUrl())
+                        .thumbnail(image.getThumbnail())
+                        .build()).toList();
 
         return ProductDetailResponseDto.builder()
                 .categoryName(product.getCategory().getName())
@@ -143,11 +196,23 @@ public class ProductService {
                 .longitude(product.getLongitude())
                 .viewCount(product.getViewCount())
                 .updatedAt(product.getUpdatedAt())
-                .sellerNickname(seller.getNickname())
-                .sellerImageUrl(seller.getImageUrl())
+                .seller(sellerDto)
                 .reviews(reviews)
+                .productImages(imageDtos)
                 .build();
 
+    }
+
+    // 테스트용 user (email unique 해제 후 진행)
+    private Users testUser(){
+        Users testUser = Users.builder()
+                .nickname("elice")
+                .email("abc@gmail.com")
+                .role(UserRole.USER)
+                .provider(Provider.NONE)
+                .build();
+
+        return userRepository.save(testUser);
     }
 
 }
