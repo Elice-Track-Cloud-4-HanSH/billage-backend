@@ -6,7 +6,7 @@ import static com.team01.billage.exception.ErrorCode.RENTAL_RECORD_NOT_FOUND;
 import com.team01.billage.chatting.repository.ChatRoomRepository;
 import com.team01.billage.exception.CustomException;
 import com.team01.billage.product.domain.Product;
-import com.team01.billage.product.domain.RentalStatus;
+import com.team01.billage.product.enums.RentalStatus;
 import com.team01.billage.product.repository.ProductRepository;
 import com.team01.billage.rental_record.domain.RentalRecord;
 import com.team01.billage.rental_record.dto.ShowRecordResponseDto;

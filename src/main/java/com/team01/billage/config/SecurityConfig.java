@@ -49,7 +49,8 @@ public class SecurityConfig {
                                 "/swagger-ui.html",
                                 "/webjars/**",
                                 "/api/**",
-                                "/connect/**"
+                                "/connect/**",
+                                "/images/**"
                         ).permitAll()
                         .requestMatchers(PathRequest.toH2Console()).permitAll()
                         .requestMatchers("/api/**").permitAll()  // 공개 API 경로

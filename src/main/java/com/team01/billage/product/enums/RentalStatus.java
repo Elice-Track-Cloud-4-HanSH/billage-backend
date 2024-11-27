@@ -1,4 +1,4 @@
-package com.team01.billage.product.domain;
+package com.team01.billage.product.enums;
 
 public enum RentalStatus {
     AVAILABLE("대여 판매 중"),
