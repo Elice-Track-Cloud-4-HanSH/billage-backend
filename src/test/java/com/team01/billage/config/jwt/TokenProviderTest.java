@@ -14,7 +14,6 @@ import java.time.Duration;
 import static org.junit.jupiter.api.Assertions.*;
 
 class TokenProviderTest {
-
     private TokenProvider tokenProvider;
     private JwtProperties jwtProperties;
     private Users testUser;
@@ -22,9 +21,11 @@ class TokenProviderTest {
     @BeforeEach
     void setUp() {
         // JWT 프로퍼티 설정
-        jwtProperties = new JwtProperties();
-        jwtProperties.setIssuer("test@example.com");
-        jwtProperties.setSecretKey("testsecretkeytestsecretkeytestsecretkeytestsecretkey"); // 최소 32바이트
+        jwtProperties = new JwtProperties(
+                "testsecretkeytestsecretkeytestsecretkeytestsecretkey", // secret
+                3600000L,  // accessExpires (1시간)
+                86400000L  // refreshExpires (24시간)
+        );
 
         tokenProvider = new TokenProvider(jwtProperties);
 
@@ -50,19 +51,18 @@ class TokenProviderTest {
         // then
         assertNotNull(token);
         assertTrue(tokenProvider.validToken(token));
-        System.out.println(token);
     }
 
     @Test
     @DisplayName("만료된 토큰 검증 테스트")
     void validToken_WithExpiredToken_ShouldReturnFalse() {
         // given
-        Duration expiredAt = Duration.ofMillis(1); // 1밀리초 후 만료
+        Duration expiredAt = Duration.ofMillis(1);
         String token = tokenProvider.generateToken(testUser, expiredAt);
 
         // when
         try {
-            Thread.sleep(100); // 토큰 만료 대기
+            Thread.sleep(100);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -82,7 +82,7 @@ class TokenProviderTest {
 
         // then
         assertNotNull(authentication);
-        assertEquals(testUser.getEmail(), authentication.getName());
+        assertEquals(testUser.getId().toString(), authentication.getName());
         assertTrue(authentication.getAuthorities().contains(
                 new SimpleGrantedAuthority("ROLE_" + testUser.getRole().name()))
         );
@@ -95,11 +95,15 @@ class TokenProviderTest {
         String token = tokenProvider.generateToken(testUser, Duration.ofHours(1));
 
         // when
-        Authentication authentication = tokenProvider.getAuthentication(token);
+        var claims = tokenProvider.getClaims(token);
 
         // then
-        assertNotNull(authentication);
-        assertEquals(testUser.getEmail(), authentication.getName());
+        assertNotNull(claims);
+        assertEquals(testUser.getId().toString(), claims.getSubject());
+        assertEquals(testUser.getId(), claims.get("accountId", Long.class));
+        assertEquals(testUser.getEmail(), claims.get("email", String.class));
+        assertEquals(testUser.getRole().name(), claims.get("role", String.class));
+        assertEquals(testUser.getProvider().name(), claims.get("provider", String.class));
     }
 
     @Test
@@ -113,16 +117,5 @@ class TokenProviderTest {
         assertFalse(tokenProvider.validToken(invalidToken));
     }
 
-    @Test
-    @DisplayName("토큰 발급자 검증 테스트")
-    void generateToken_ShouldHaveCorrectIssuer() {
-        // given
-        String token = tokenProvider.generateToken(testUser, Duration.ofHours(1));
-
-        // when
-        String issuer = tokenProvider.getClaims(token).getIssuer();
-
-        // then
-        assertEquals(jwtProperties.getIssuer(), issuer);
-    }
+    // issuer 테스트 제거
 }
