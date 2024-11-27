@@ -209,7 +209,7 @@ public class ProductService {
                 .nickname("elice")
                 .email("abc@gmail.com")
                 .role(UserRole.USER)
-                .provider(Provider.NONE)
+                .provider(Provider.LOCAL)
                 .build();
 
         return userRepository.save(testUser);
