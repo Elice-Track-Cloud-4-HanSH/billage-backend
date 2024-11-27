@@ -32,15 +32,15 @@ import java.util.Set;
 
             return Jwts.builder()
                     .setHeaderParam(Header.TYPE, Header.JWT_TYPE)
-                    .setIssuer(jwtProperties.getIssuer())
                     .setIssuedAt(now)
                     .setExpiration(expiry)
-                    .setSubject(user.getEmail())  // email을 주요 식별자로 사용
-                    .claim("id", user.getId())    // DB ID도 포함
+                    .setSubject(user.getId().toString())  // PK를 주요 식별자로 사용
+                    .claim("accountId", user.getId())     // accountId로 명칭 통일
+                    .claim("email", user.getEmail())      // email도 claims에 포함
                     .claim("nickname", user.getNickname())
                     .claim("role", user.getRole().name())
                     .claim("provider", user.getProvider().name())
-                    .signWith(SignatureAlgorithm.HS256, jwtProperties.getSecretKey())
+                    .signWith(SignatureAlgorithm.HS256, jwtProperties.getSecret())
                     .compact();
         }
 
@@ -49,7 +49,7 @@ import java.util.Set;
             try {
                 // 요청된 토큰을 파싱하여 유효한지 검증
                 Jwts.parser()
-                        .setSigningKey(jwtProperties.getSecretKey())    //비밀키를 사용하여 서명 검증
+                        .setSigningKey(jwtProperties.getSecret())    //비밀키를 사용하여 서명 검증
                         .parseClaimsJws(token);
 
                 return true;    //유효할 경우 true 반환
@@ -76,7 +76,7 @@ import java.util.Set;
         //토큰에서 클레임만 파싱
         public Claims getClaims(String token) {     //TODO: 나중에 Private로
             return Jwts.parser()
-                    .setSigningKey(jwtProperties.getSecretKey())        //비밀키 사용해 토큰 파싱
+                    .setSigningKey(jwtProperties.getSecret())        //비밀키 사용해 토큰 파싱
                     .parseClaimsJws(token)      //토큰에서 JWT의 본문 가져옴
                     .getBody(); //클레임 반환
         }

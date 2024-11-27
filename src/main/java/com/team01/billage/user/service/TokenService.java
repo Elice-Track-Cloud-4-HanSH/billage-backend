@@ -25,6 +25,7 @@ public class TokenService {
     private final TokenRedisRepository tokenRedisRepository;
 
     public JwtTokenDto login(JwtTokenLoginRequest request) {
+        // 이메일로 사용자 찾기
         Users user = userRepository.findByEmail(request.getUserRealId())
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
@@ -36,28 +37,31 @@ public class TokenService {
             throw new CustomException(ErrorCode.PASSWORD_NOT_MATCH);
         }
 
+        // claims에는 모든 필요한 정보를 담습니다
         Map<String, Object> claims = Map.of(
-                "accountId", user.getId(),  //JWT 클래임에 accountId
-                "role", user.getRole(),  //JWT 클래임에 role
-                "provider", user.getProvider(),
-                "email", user.getEmail()   //JWT 클래임에 실제 email 추가
+                "accountId", user.getId(),  // PK
+                "email", user.getEmail(),   // email
+                "role", user.getRole(),     // role
+                "provider", user.getProvider() // provider
         );
 
+        // userId(PK)를 기본 식별자로 사용
         AuthTokenImpl accessToken = jwtProvider.createAccessToken(
-                user.getEmail(),   //토큰에 실제 ID 정보 입력
+                user.getId(),    // email 대신 PK 사용
                 user.getRole(),
                 claims
         );
 
         AuthTokenImpl refreshToken = jwtProvider.createRefreshToken(
-                user.getEmail(),   //토큰에 실제 email 정보 입력
+                user.getId(),    // email 대신 PK 사용
                 user.getRole(),
                 claims
         );
 
-        //리프레시 토큰은 redis 에 저장
+        // Redis에 저장
         tokenRedisRepository.save(
-                new TokenRedis(user.getId(), refreshToken.getToken()));
+                new TokenRedis(user.getId(), refreshToken.getToken())
+        );
 
         return JwtTokenDto.builder()
                 .accessToken(accessToken.getToken())
