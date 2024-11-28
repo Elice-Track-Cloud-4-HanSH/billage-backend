@@ -62,6 +62,8 @@ dependencies {
     implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
     implementation 'io.jsonwebtoken:jjwt-impl:0.11.5'
     implementation 'io.jsonwebtoken:jjwt-jackson:0.11.5'
+    //email
+    implementation 'org.apache.commons:commons-lang3'  // RandomStringUtils 사용을 위해
 }
 
 def generated = 'src/main/generated'

@@ -1,5 +1,7 @@
 package com.team01.billage.user.controller;
 
+import com.team01.billage.user.dto.Request.EmailRequest;
+import com.team01.billage.user.dto.Request.EmailVerificationRequest;
 import com.team01.billage.user.dto.Request.UserPasswordRequestDto;
 import com.team01.billage.user.dto.Response.*;
 import com.team01.billage.user.dto.Request.UserSignupRequestDto;
@@ -135,6 +137,20 @@ public class UserApiController {
         return response.matches()
                 ? ResponseEntity.ok(response)
                 : ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+    }
+
+    // 이메일 인증 코드 발송
+    @PostMapping("/email-verification")
+    public ResponseEntity<String> sendVerificationEmail(@RequestBody EmailRequest request) {
+        userService.sendVerificationEmail(request.getEmail());
+        return ResponseEntity.ok("인증 코드가 이메일로 발송되었습니다.");
+    }
+
+    // 이메일 인증 코드 확인
+    @PostMapping("/verify-email")
+    public ResponseEntity<String> verifyEmail(@RequestBody EmailVerificationRequest request) {
+        userService.verifyEmail(request.getEmail(), request.getCode());
+        return ResponseEntity.ok("이메일 인증이 완료되었습니다.");
     }
 }
 
