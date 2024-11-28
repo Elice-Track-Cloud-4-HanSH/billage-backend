@@ -186,7 +186,7 @@ public class UserService {
 
     public boolean validateLoginRequest(JwtTokenLoginRequest request) {
         //아이디 값이 빈값이면 false
-        String userRealId = request.getUserRealId();
+        String userRealId = request.getEmail();
         if (userRealId.isEmpty()) {
             return false;
         }

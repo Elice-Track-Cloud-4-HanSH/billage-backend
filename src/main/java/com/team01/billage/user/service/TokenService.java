@@ -26,7 +26,7 @@ public class TokenService {
 
     public JwtTokenDto login(JwtTokenLoginRequest request) {
         // 이메일로 사용자 찾기
-        Users user = userRepository.findByEmail(request.getUserRealId())
+        Users user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
         if (user.isDeleted()) {
