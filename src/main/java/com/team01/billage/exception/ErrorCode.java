@@ -11,9 +11,12 @@ public enum ErrorCode {
     PRODUCT_MODIFICATION_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "현재 대여 중인 상품은 수정/삭제할 수 없습니다."),
     USER_ALREADY_DELETED(HttpStatus.BAD_REQUEST, "이미 삭제된 회원입니다."),
     PASSWORD_NOT_MATCH(HttpStatus.BAD_REQUEST, "비밀번호가 올바르지 않습니다."),
-    INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "유효하지 않은 토큰입니다."),
+    EMPTY_LOGIN_REQUEST(HttpStatus.BAD_REQUEST, "이메일 또는 비밀번호가 비어있습니다."),
 
     /* 401 UNAUTHORIZED : 인증되지 않은 사용자 */
+    INVALID_EMAIL_CODE(HttpStatus.UNAUTHORIZED, "잘못된 인증 코드입니다."),
+    EXPIRED_EMAIL_CODE(HttpStatus.UNAUTHORIZED, "만료된 인증 코드입니다."),
+    INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "유효하지 않은 토큰입니다."),
 
     /* 403 FORBIDDEN : 권한이 없는 사용자 */
     WRITE_ACCESS_FORBIDDEN(HttpStatus.FORBIDDEN, "후기 작성 권한이 없습니다."),

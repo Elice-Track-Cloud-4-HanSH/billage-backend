@@ -1,7 +1,5 @@
 package com.team01.billage.user.service;
 
-import static com.team01.billage.exception.ErrorCode.USER_NOT_FOUND;
-
 import com.team01.billage.exception.CustomException;
 import com.team01.billage.exception.ErrorCode;
 import com.team01.billage.product_review.dto.ShowReviewResponseDto;
@@ -18,7 +16,6 @@ import com.team01.billage.user_review.repository.UserReviewRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import jakarta.validation.Valid;
 
 import java.time.Duration;
 import java.util.List;
@@ -142,6 +139,9 @@ public class UserService {
     @Transactional
     public UserDeleteResponseDto deleteUser(String email) {
         Users user = findByEmail(email);
+        if (user.isDeleted()) {
+            throw new CustomException(ErrorCode.USER_ALREADY_DELETED);
+        }
         return user.deleteUser();
     }
 
@@ -150,8 +150,8 @@ public class UserService {
      */
     @Operation(summary = "이메일 중복 확인 API", description = "사용자가 입력한 이메일이 중복인지 확인합니다.")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "사용 가능한 이메일"),
-        @ApiResponse(responseCode = "409", description = "이미 사용 중인 이메일")
+            @ApiResponse(responseCode = "200", description = "사용 가능한 이메일"),
+            @ApiResponse(responseCode = "409", description = "이미 사용 중인 이메일")
     })
     public void validateEmail(String email) {
         if (userRepository.existsByEmail(email)) {
@@ -164,8 +164,8 @@ public class UserService {
      */
     @Operation(summary = "닉네임 중복 확인 API", description = "사용자가 입력한 닉네임이 중복인지 확인합니다.")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "사용 가능한 닉네임"),
-        @ApiResponse(responseCode = "409", description = "이미 사용 중인 닉네임")
+            @ApiResponse(responseCode = "200", description = "사용 가능한 닉네임"),
+            @ApiResponse(responseCode = "409", description = "이미 사용 중인 닉네임")
     })
     public void validateNickname(String nickname) {
         if (userRepository.existsByNickname(nickname)) {
@@ -174,22 +174,21 @@ public class UserService {
     }
 
     public TargetProfileResponseDto showProfile(String nickname) {
-
         Users target = userRepository.findByNickname(nickname)
-            .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
         List<ShowReviewResponseDto> reviews = userReviewRepository.findByTarget_nickname(nickname);
 
         Double avgScore = userReviewRepository.scoreAverage(nickname)
-            .map(score -> Math.round(score * 10) / 10.0).orElse(0.0);
+                .map(score -> Math.round(score * 10) / 10.0).orElse(0.0);
 
         return TargetProfileResponseDto.builder()
-            .imageUrl(target.getImageUrl())
-            .nickname(target.getNickname())
-            .description(target.getDescription())
-            .avgScore(avgScore)
-            .reviews(reviews)
-            .build();
+                .imageUrl(target.getImageUrl())
+                .nickname(target.getNickname())
+                .description(target.getDescription())
+                .avgScore(avgScore)
+                .reviews(reviews)
+                .build();
     }
 
     // Private helper methods
@@ -223,38 +222,30 @@ public class UserService {
 
         // 입력받은 평문 비밀번호와 저장된 암호화된 비밀번호를 비교
         boolean matches = passwordEncoder.matches(rawPassword, user.getPassword());
+        if (!matches) {
+            throw new CustomException(ErrorCode.PASSWORD_NOT_MATCH);
+        }
 
-        return new UserPasswordResponseDto(
-                matches,
-                matches ? "비밀번호가 일치합니다" : "비밀번호가 일치하지 않습니다"
-        );
+        return new UserPasswordResponseDto(true, "비밀번호가 일치합니다");
     }
 
     public boolean validateLoginRequest(JwtTokenLoginRequest request) {
-        //아이디 값이 빈값이면 false
-        String userRealId = request.getEmail();
-        if (userRealId.isEmpty()) {
-            return false;
+        //아이디 값이나 패스워드가 비어있으면 예외 발생
+        if (request.getEmail().isEmpty() || request.getPassword().isEmpty()) {
+            throw new CustomException(ErrorCode.EMPTY_LOGIN_REQUEST);
         }
-
-        //패스워드 값이 빈값이면 false
-        String password = request.getPassword();
-        if (password.isEmpty()) {
-            return false;
-        }
-
-        return true;
+        return false;
     }
 
     // 이메일 인증 코드 검증
     public void verifyEmail(String email, String code) {
         String savedCode = redisTemplate.opsForValue().get("EmailAuth:" + email);
         if (savedCode == null) {
-            throw new RuntimeException("만료된 인증 코드입니다.");
+            throw new CustomException(ErrorCode.EXPIRED_EMAIL_CODE);
         }
 
         if (!savedCode.equals(code)) {
-            throw new RuntimeException("잘못된 인증 코드입니다.");
+            throw new CustomException(ErrorCode.INVALID_EMAIL_CODE);
         }
 
         // 인증 성공 시 Redis에 인증 완료 상태 저장 (회원가입 완료 전까지 30분 유효)
