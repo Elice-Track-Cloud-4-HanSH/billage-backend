@@ -19,9 +19,15 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
+
+import java.time.Duration;
 import java.util.List;
+import java.util.Random;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +40,8 @@ public class UserService {
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder passwordEncoder;
     private final UserReviewRepository userReviewRepository;
+    private final JavaMailSender emailSender;
+    private final RedisTemplate<String, String> redisTemplate;
 
     /**
      * 회원 가입
@@ -42,19 +50,57 @@ public class UserService {
     public UserResponseDto signup(UserSignupRequestDto dto) {
         validateSignupRequest(dto);
 
+        // 이메일 인증 여부 확인
+        String verified = redisTemplate.opsForValue().get("EmailVerified:" + dto.getEmail());
+        if (verified == null) {
+            throw new RuntimeException("이메일 인증이 필요합니다.");
+        }
+
         Users user = Users.builder()
                 .nickname(dto.getNickname())
                 .email(dto.getEmail())
-                // 비밀번호 암호화
                 .password(passwordEncoder.encode(dto.getPassword()))
                 .role(dto.getUserRole())
                 .provider(dto.getProvider())
                 .build();
 
         Users savedUser = userRepository.save(user);
+
+        // Redis에서 인증 정보 삭제
+        redisTemplate.delete("EmailVerified:" + dto.getEmail());
+
         return savedUser.toResponseDto();
     }
 
+
+    // 이메일 인증 코드 발송
+    public void sendVerificationEmail(String email) {
+        // 이메일 중복 체크
+        if (userRepository.existsByEmail(email)) {
+            throw new CustomException(ErrorCode.EMAIL_ALREADY_EXISTS);
+        }
+
+        String verificationCode = generateRandomCode();
+
+        // Redis에 이메일 인증 코드 저장 (30분 유효)
+        redisTemplate.opsForValue().set(
+                "EmailAuth:" + email,
+                verificationCode,
+                Duration.ofMinutes(30)
+        );
+
+        // 이메일 발송
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom("kakaobank0314@naver.com");  // 네이버 계정 이메일 추가
+        message.setTo(email);
+        message.setSubject("[Billage] 이메일 인증");
+        message.setText("인증 코드: " + verificationCode + "\n\n"
+                + "이 코드는 30분 동안 유효합니다.");
+        emailSender.send(message);
+    }
+    private String generateRandomCode() {
+        return String.format("%06d", new Random().nextInt(1000000));
+    }
     /**
      * 회원 정보 조회
      */
@@ -199,4 +245,27 @@ public class UserService {
 
         return true;
     }
+
+    // 이메일 인증 코드 검증
+    public void verifyEmail(String email, String code) {
+        String savedCode = redisTemplate.opsForValue().get("EmailAuth:" + email);
+        if (savedCode == null) {
+            throw new RuntimeException("만료된 인증 코드입니다.");
+        }
+
+        if (!savedCode.equals(code)) {
+            throw new RuntimeException("잘못된 인증 코드입니다.");
+        }
+
+        // 인증 성공 시 Redis에 인증 완료 상태 저장 (회원가입 완료 전까지 30분 유효)
+        redisTemplate.opsForValue().set(
+                "EmailVerified:" + email,
+                "true",
+                Duration.ofMinutes(30)
+        );
+
+        // 기존 인증 코드는 삭제
+        redisTemplate.delete("EmailAuth:" + email);
+    }
+
 }
