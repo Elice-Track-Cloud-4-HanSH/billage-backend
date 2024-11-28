@@ -37,26 +37,9 @@ public class SecurityConfig {
                 session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         // 요청 권한 설정: 특정 URL 패턴에 대한 접근 권한을 설정
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/v2/api-docs",
-                                "/v3/api-docs",
-                                "/v3/api-docs/**",
-                                "/swagger-resources",
-                                "/swagger-resources/**",
-                                "/configuration/ui",
-                                "/configuration/security",
-                                "/swagger-ui/**",
-                                "/swagger-ui.html",
-                                "/webjars/**",
-                                "/api/**",
-                                "/connect/**",
-                                "/images/**"
-                        ).permitAll()
-                        .requestMatchers(PathRequest.toH2Console()).permitAll()
-                        .requestMatchers("/api/**").permitAll()  // 공개 API 경로
-                        .anyRequest().authenticated()
+                        .anyRequest().permitAll()  // 모든 요청에 대해 접근 허용
                 )
-                        .userDetailsService(userDetailsService);
+            .userDetailsService(userDetailsService);
 
         return http.build();
     }
