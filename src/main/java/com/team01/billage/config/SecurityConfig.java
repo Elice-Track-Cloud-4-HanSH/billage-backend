@@ -3,7 +3,10 @@ package com.team01.billage.config;
 import com.team01.billage.config.jwt.JwtFilter;
 import com.team01.billage.config.oauth.OAuth2SuccessHandler;
 import com.team01.billage.user.repository.OAuth2AuthorizationRequestBasedOnCookieRepository;
+import com.team01.billage.user.service.LogoutSuccessHandler;
 import com.team01.billage.user.service.OAuth2UserCustomService;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
@@ -30,6 +33,7 @@ public class SecurityConfig {
     @Value("${app.oauth2.authorized-redirect-urls}")
     private String oauthRedirectPage;
 
+    private final LogoutSuccessHandler logoutSuccessHandler;
     private final OAuth2UserCustomService oAuth2UserCustomService;
     private final OAuth2AuthorizationRequestBasedOnCookieRepository cookieRepository;
     private final OAuth2SuccessHandler successHandler;
@@ -52,7 +56,14 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .anyRequest().permitAll()  // 모든 요청에 대해 접근 허용
                 )
-
+                .logout(logout -> logout
+                        .logoutUrl("/api/users/logout")  // 커스텀 로그아웃 URL 지정
+                        .logoutSuccessUrl("http://localhost:3000/login")
+                        .deleteCookies("JSESSIONID","accessToken")
+                        .invalidateHttpSession(true)
+                        .clearAuthentication(true)
+                        .logoutSuccessHandler(logoutSuccessHandler)
+                )
                 //###### OAuth2 로그인 설정 ########
                 // OAuth2 로그인 설정
                 .oauth2Login(oauth2Login -> oauth2Login
