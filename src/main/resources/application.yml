@@ -37,6 +37,9 @@ spring:
           starttls:
             enable: true
 
+  profiles:
+    include: oauth
+
 
 
 jwt:
@@ -55,3 +58,9 @@ logging:
 custom:
   category-image:
     base-url: "http://localhost:8080"
+
+app:
+  cors:
+    allowed-origins: http://localhost:3000
+  oauth2:
+    authorized-redirect-urls: http://localhost:3000/chat

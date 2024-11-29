@@ -1,5 +1,6 @@
 package com.team01.billage.user.controller;
 
+import com.team01.billage.common.CookieUtil;
 import com.team01.billage.user.dto.Request.EmailRequest;
 import com.team01.billage.user.dto.Request.EmailVerificationRequest;
 import com.team01.billage.user.dto.Request.UserPasswordRequestDto;
@@ -16,6 +17,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
@@ -152,5 +155,6 @@ public class UserApiController {
         userService.verifyEmail(request.getEmail(), request.getCode());
         return ResponseEntity.ok("이메일 인증이 완료되었습니다.");
     }
+
 }
 
