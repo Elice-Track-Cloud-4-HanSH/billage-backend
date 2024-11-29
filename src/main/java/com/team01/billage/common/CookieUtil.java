@@ -5,7 +5,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.util.SerializationUtils;
 
+import java.util.Arrays;
 import java.util.Base64;
+import java.util.Optional;
 
 
 public class CookieUtil {
@@ -23,23 +25,19 @@ public class CookieUtil {
     }
 
     public static void deleteCookie(HttpServletRequest request, HttpServletResponse response, String name) {
-        Cookie[] cookies = request.getCookies();
+        Cookie cookie = new Cookie(name, "");  // 새 쿠키 생성
+        cookie.setPath("/");
+        cookie.setMaxAge(0);
+        cookie.setHttpOnly(true);
+        cookie.setSecure(true);
 
-        if (cookies == null) {
-            return;
-        }
+        // 도메인 설정이 필요한 경우 추가
+        // cookie.setDomain("your-domain.com");
 
-        for (Cookie cookie : cookies) {
-            if (name.equals(cookie.getName())) {
-                cookie.setValue("");
-                cookie.setPath("/");
-                cookie.setMaxAge(0);
-                cookie.setHttpOnly(true);  // HttpOnly 속성 설정
-                cookie.setSecure(true);  // Secure 속성 설정
-                cookie.setAttribute("SameSite", "Lax");
-                response.addCookie(cookie);
-            }
-        }
+        // SameSite 속성 설정 (서블릿 3.0 이상에서만 지원)
+        cookie.setAttribute("SameSite", "Lax");
+
+        response.addCookie(cookie);
     }
 
     public static void deleteTokenCookie(HttpServletResponse response, String name) {
@@ -65,5 +63,32 @@ public class CookieUtil {
                         Base64.getUrlDecoder().decode(cookie.getValue())
                 )
         );
+    }
+
+
+    public static Optional<Cookie> getCookie(HttpServletRequest request, String name) {
+        Cookie[] cookies = request.getCookies();
+
+        if (cookies != null && cookies.length > 0) {
+            return Arrays.stream(cookies)
+                    .filter(cookie -> name.equals(cookie.getName()))
+                    .findFirst();
+        }
+
+        return Optional.empty();
+    }
+
+    public static String getCookieValue(HttpServletRequest request, String name) {
+        Cookie[] cookies = request.getCookies();
+
+        if (cookies != null && cookies.length > 0) {
+            return Arrays.stream(cookies)
+                    .filter(cookie -> name.equals(cookie.getName()))
+                    .findFirst()
+                    .map(Cookie::getValue)
+                    .orElse(null);
+        }
+
+        return null;
     }
 }
