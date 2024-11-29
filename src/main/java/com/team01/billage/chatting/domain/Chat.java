@@ -1,5 +1,6 @@
 package com.team01.billage.chatting.domain;
 
+import com.team01.billage.chatting.dto.ChatResponseDto;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -53,5 +54,14 @@ public class Chat {
             message = null;
         }
         isRead = false;
+    }
+
+    public ChatResponseDto toChatResponse() {
+        return ChatResponseDto.builder()
+                .chatId(this.id)
+                .sender(this.sender)
+                .message(this.message)
+                .createdAt(this.createdAt)
+                .build();
     }
 }
