@@ -64,8 +64,6 @@ dependencies {
     implementation 'io.jsonwebtoken:jjwt-jackson:0.11.5'
     //email
     implementation 'org.apache.commons:commons-lang3'  // RandomStringUtils 사용을 위해
-    //oauth2
-    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
 }
 
 def generated = 'src/main/generated'

@@ -37,9 +37,6 @@ spring:
           starttls:
             enable: true
 
-  profiles:
-    include: oauth
-
 
 
 jwt:

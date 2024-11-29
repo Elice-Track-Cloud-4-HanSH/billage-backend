@@ -1,13 +1,14 @@
 package com.team01.billage.user.repository;
 
-import com.team01.billage.user.domain.TokenRedis;  // 이렇게 변경
+import com.nimbusds.oauth2.sdk.token.RefreshToken;
+
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
 @Repository
-public interface RefreshTokenRepository extends CrudRepository<TokenRedis, String> {
-    Optional<TokenRedis> findByUserId(Long userId);
-    Optional<TokenRedis> findByRefreshToken(String refreshToken);
+public interface RefreshTokenRepository extends CrudRepository<RefreshToken, String> {
+    Optional<RefreshToken> findByUserId(Long userId);    // String -> Long으로 변경, 메서드명 카멜케이스로 수정
+    Optional<RefreshToken> findByRefreshToken(String refreshToken);
 }

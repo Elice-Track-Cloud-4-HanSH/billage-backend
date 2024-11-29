@@ -234,7 +234,7 @@ public class UserService {
         if (request.getEmail().isEmpty() || request.getPassword().isEmpty()) {
             throw new CustomException(ErrorCode.EMPTY_LOGIN_REQUEST);
         }
-        return true;  // 유효성 검사 통과시 true 반환
+        return false;
     }
 
     // 이메일 인증 코드 검증
