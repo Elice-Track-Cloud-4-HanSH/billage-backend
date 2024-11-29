@@ -5,6 +5,8 @@ import static com.team01.billage.exception.ErrorCode.RENTAL_RECORD_NOT_FOUND;
 
 import com.team01.billage.chatting.repository.ChatRoomRepository;
 import com.team01.billage.exception.CustomException;
+import com.team01.billage.product.domain.Product;
+import com.team01.billage.product.enums.RentalStatus;
 import com.team01.billage.product.repository.ProductRepository;
 import com.team01.billage.rental_record.domain.RentalRecord;
 import com.team01.billage.rental_record.dto.ShowRecordResponseDto;
@@ -67,13 +69,16 @@ public class RentalRecordService {
 
         RentalRecord rentalRecord = rentalRecordRepository.findById(rentalRecordId)
             .orElseThrow(() -> new CustomException(RENTAL_RECORD_NOT_FOUND));
+        Product product = rentalRecord.getProduct();
 
         if (!rentalRecord.getSeller().getEmail().equals(email)) {
             throw new CustomException(CHANGE_ACCESS_FORBIDDEN);
         }
 
+        product.updateRentalStatus(RentalStatus.RENTED);
         rentalRecord.productReturn();
 
+        productRepository.save(product);
         rentalRecordRepository.save(rentalRecord);
     }
 }

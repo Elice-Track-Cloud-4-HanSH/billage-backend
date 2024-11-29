@@ -36,6 +36,10 @@ out/
 ### VS Code ###
 .vscode/
 
+#env
+*.env
+
 security.yml
 
 /src/main/generated/
+

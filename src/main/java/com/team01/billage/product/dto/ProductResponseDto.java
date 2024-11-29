@@ -17,7 +17,7 @@ public class ProductResponseDto { // 상품 목록 DTO
     private int dayPrice;
     private Integer weekPrice;
     private int viewCount;
-    // 썸네일 이미지
+    private String thumbnail;
     // 지역
     // 좋아요
 

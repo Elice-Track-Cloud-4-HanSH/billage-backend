@@ -1,8 +1,9 @@
 package com.team01.billage.user.controller;
 
-import static com.team01.billage.config.jwt.UserConstants.ACCESS_TOKEN_TYPE_VALUE;
-import static com.team01.billage.config.jwt.UserConstants.REFRESH_TOKEN_TYPE_VALUE;
-
+import com.team01.billage.user.dto.Request.EmailRequest;
+import com.team01.billage.user.dto.Request.EmailVerificationRequest;
+import com.team01.billage.user.dto.Request.UserPasswordRequestDto;
+import com.team01.billage.user.dto.Response.*;
 import com.team01.billage.user.dto.Request.UserSignupRequestDto;
 import com.team01.billage.user.dto.Response.TargetProfileResponseDto;
 import com.team01.billage.user.dto.Response.UserDeleteResponseDto;
@@ -21,14 +22,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.*;
+
+import static com.team01.billage.config.jwt.UserConstants.ACCESS_TOKEN_TYPE_VALUE;
+import static com.team01.billage.config.jwt.UserConstants.REFRESH_TOKEN_TYPE_VALUE;
 
 @Tag(name = "User", description = "사용자 관련 API")
 @RestController
@@ -118,21 +117,40 @@ public class UserApiController {
         cookie.setMaxAge(0);
         response.addCookie(cookie);
     }
+
+    @Operation(summary = "비밀번호 확인", description = "회원 탈퇴 전 비밀번호를 확인합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "비밀번호 확인 성공"),
+            @ApiResponse(responseCode = "401", description = "비밀번호 불일치"),
+            @ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음")
+    })
+    @PostMapping("/check-password")
+    public ResponseEntity<UserPasswordResponseDto> checkPassword(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @Valid @RequestBody UserPasswordRequestDto requestDto
+    ) {
+        UserPasswordResponseDto response = userService.verifyPassword(
+                userDetails.getUsername(),  // email
+                requestDto.password()
+        );
+
+        return response.matches()
+                ? ResponseEntity.ok(response)
+                : ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+    }
+
+    // 이메일 인증 코드 발송
+    @PostMapping("/email-verification")
+    public ResponseEntity<String> sendVerificationEmail(@RequestBody EmailRequest request) {
+        userService.sendVerificationEmail(request.getEmail());
+        return ResponseEntity.ok("인증 코드가 이메일로 발송되었습니다.");
+    }
+
+    // 이메일 인증 코드 확인
+    @PostMapping("/verify-email")
+    public ResponseEntity<String> verifyEmail(@RequestBody EmailVerificationRequest request) {
+        userService.verifyEmail(request.getEmail(), request.getCode());
+        return ResponseEntity.ok("이메일 인증이 완료되었습니다.");
+    }
 }
 
-// Response classes
-@Schema(description = "이메일 사용 가능 여부 응답")
-record EmailAvailabilityResponse(
-    @Schema(description = "응답 메시지")
-    String message
-) {
-
-}
-
-@Schema(description = "닉네임 사용 가능 여부 응답")
-record NicknameAvailabilityResponse(
-    @Schema(description = "응답 메시지")
-    String message
-) {
-
-}

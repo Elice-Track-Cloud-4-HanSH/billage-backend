@@ -4,7 +4,10 @@ import com.team01.billage.product.dto.*;
 import com.team01.billage.product.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -26,8 +29,15 @@ public class ProductController {
         return ResponseEntity.status(HttpStatus.OK).body(productService.findAllProducts());
     }
 
-    @PostMapping
-    public ResponseEntity<ProductDetailResponseDto> createProduct(@RequestBody ProductRequestDto productRequestDto) {
+    @GetMapping("/on-sale")
+    public ResponseEntity<List<OnSaleResponseDto>> findAllOnSale(
+        @AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.status(HttpStatus.OK)
+            .body(productService.findAllOnSale(userDetails.getUsername()));
+    }
+
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ProductDetailResponseDto> createProduct(@ModelAttribute ProductRequestDto productRequestDto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(productService.createProduct(productRequestDto));
     }
 

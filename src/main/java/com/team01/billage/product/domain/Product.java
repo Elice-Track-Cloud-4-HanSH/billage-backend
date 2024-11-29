@@ -2,20 +2,9 @@ package com.team01.billage.product.domain;
 
 import com.team01.billage.category.domain.Category;
 import com.team01.billage.product.dto.ProductRequestDto;
+import com.team01.billage.product.enums.RentalStatus;
 import com.team01.billage.user.domain.Users;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EntityListeners;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -23,6 +12,11 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "products")
@@ -73,6 +67,10 @@ public class Product {
     @Builder.Default
     private int viewCount = 0;
 
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<ProductImage> productImages = new ArrayList<>();
+
     @CreatedDate
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
@@ -103,10 +101,15 @@ public class Product {
 
     public void deleteProduct() {
         this.deletedAt = LocalDateTime.now();
+        this.productImages.clear();
     }
 
     public void increaseViewCount() {
         this.viewCount += 1;
+    }
+
+    public void addProductImage(ProductImage productImage){
+        this.productImages.add(productImage);
     }
 
 }

@@ -4,7 +4,9 @@ import static com.team01.billage.exception.ErrorCode.RENTAL_RECORD_NOT_FOUND;
 import static com.team01.billage.exception.ErrorCode.WRITE_ACCESS_FORBIDDEN;
 
 import com.team01.billage.exception.CustomException;
+import com.team01.billage.product.domain.Product;
 import com.team01.billage.product_review.domain.ProductReview;
+import com.team01.billage.product_review.dto.ReviewSubjectResponseDto;
 import com.team01.billage.product_review.dto.ShowReviewResponseDto;
 import com.team01.billage.product_review.dto.WriteReviewRequestDto;
 import com.team01.billage.product_review.repository.ProductReviewRepository;
@@ -47,5 +49,18 @@ public class ProductReviewService {
     public List<ShowReviewResponseDto> readProductReviews(String email) {
 
         return productReviewRepository.findByAuthor_email(email);
+    }
+
+    public ReviewSubjectResponseDto getReviewSubject(long id, String email) {
+
+        RentalRecord rentalRecord = rentalRecordRepository.findById(id)
+            .orElseThrow(() -> new CustomException(RENTAL_RECORD_NOT_FOUND));
+
+        Product product = rentalRecord.getProduct();
+
+        return ReviewSubjectResponseDto.builder()
+            //.imageUrl(product.getImageUrl())
+            .subject(product.getTitle())
+            .build();
     }
 }
