@@ -38,7 +38,7 @@ public class TokenApiController {
             HttpServletResponse response,
             @CookieValue(value = "accessToken", required = false) Cookie existingAccessTokenCookie
     ) {
-        return authenticationFacade.handleLogin(request, response, existingAccessTokenCookie);
+            return authenticationFacade.handleLogin(request, response, existingAccessTokenCookie);
     }
 
     @GetMapping("/protected")
