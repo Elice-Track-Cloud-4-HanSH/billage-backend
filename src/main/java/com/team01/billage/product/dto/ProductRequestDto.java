@@ -17,8 +17,8 @@ public class ProductRequestDto {
     private String description;
     private int dayPrice;
     private Integer weekPrice; // 선택값 (null 가능)
-    private BigDecimal latitude;
-    private BigDecimal longitude;
+    private double latitude;
+    private double longitude;
     private List<ProductImageRequestDto> productImages;
 
 }
