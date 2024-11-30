@@ -15,6 +15,9 @@ import com.team01.billage.product_review.repository.ProductReviewRepository;
 import com.team01.billage.user.domain.Users;
 import com.team01.billage.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.Point;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,6 +36,8 @@ public class ProductService {
     private final ProductImageRepository productImageRepository;
     private final ProductImageService productImageService;
     private final UserRepository userRepository;
+
+    private final GeometryFactory geometryFactory = new GeometryFactory();
 
     @Transactional
     public ProductDetailResponseDto findProduct(Long productId) {
@@ -90,8 +95,7 @@ public class ProductService {
                 .description(productRequestDto.getDescription())
                 .dayPrice(productRequestDto.getDayPrice())
                 .weekPrice(productRequestDto.getWeekPrice())
-                .latitude(productRequestDto.getLatitude())
-                .longitude(productRequestDto.getLongitude())
+                .location(toPoint(productRequestDto.getLongitude(), productRequestDto.getLatitude()))
                 .build();
 
         // 상품 이미지 생성
@@ -124,11 +128,12 @@ public class ProductService {
 
         product.updateProductCategory(category);
         product.updateProduct(productUpdateRequestDto);
+        product.updateProductLocation(
+                toPoint(productUpdateRequestDto.getLongitude(), productUpdateRequestDto.getLatitude())
+        );
 
         // 새로 추가한 상품 이미지 저장 (상품 이미지 생성)
         if (productUpdateRequestDto.getProductImages() != null) {
-            System.out.println("새로 받아온 이미지 개수: " + productUpdateRequestDto.getProductImages().size());
-
             for (ProductImageRequestDto imageDto : productUpdateRequestDto.getProductImages()) {
                 productImageService.createProductImage(product, imageDto);
             }
@@ -199,8 +204,8 @@ public class ProductService {
                 .rentalStatus(product.getRentalStatus().getDisplayName())
                 .dayPrice(product.getDayPrice())
                 .weekPrice(product.getWeekPrice())
-                .latitude(product.getLatitude())
-                .longitude(product.getLongitude())
+                .latitude(product.getLocation().getY())
+                .longitude(product.getLocation().getX())
                 .viewCount(product.getViewCount())
                 .updatedAt(product.getUpdatedAt())
                 .seller(sellerDto)
@@ -236,6 +241,11 @@ public class ProductService {
             }
 
         }
+    }
+
+    // Point(경도, 위도) 변환
+    private Point toPoint(double longitude, double latitude){
+        return geometryFactory.createPoint(new Coordinate(longitude, latitude));
     }
 
 }

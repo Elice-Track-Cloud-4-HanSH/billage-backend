@@ -68,7 +68,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
     //spatial
     implementation 'org.hibernate.orm:hibernate-spatial:6.2.9.Final'
-
+    // geometry
     implementation 'org.locationtech.jts:jts-core:1.19.0'
 }
 
