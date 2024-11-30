@@ -1,7 +1,7 @@
 package com.team01.billage.product.domain;
 
 import com.team01.billage.category.domain.Category;
-import com.team01.billage.product.dto.ProductRequestDto;
+import com.team01.billage.product.dto.ProductUpdateRequestDto;
 import com.team01.billage.product.enums.RentalStatus;
 import com.team01.billage.user.domain.Users;
 import jakarta.persistence.*;
@@ -82,7 +82,7 @@ public class Product {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
-    public void updateProduct(ProductRequestDto dto) {
+    public void updateProduct(ProductUpdateRequestDto dto) {
         this.title = dto.getTitle();
         this.description = dto.getDescription();
         this.dayPrice = dto.getDayPrice();
@@ -108,7 +108,7 @@ public class Product {
         this.viewCount += 1;
     }
 
-    public void addProductImage(ProductImage productImage){
+    public void addProductImage(ProductImage productImage) {
         this.productImages.add(productImage);
     }
 
