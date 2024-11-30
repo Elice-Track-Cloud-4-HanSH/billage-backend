@@ -29,6 +29,8 @@ public enum ErrorCode {
     RENTAL_RECORD_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 대여기록을 찾을 수 없습니다."),
     CHATROOM_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 채팅방을 찾을 수 없습니다."),
     THUMBNAIL_NOT_FOUND(HttpStatus.NOT_FOUND, "썸네일 이미지를 찾을 수 없습니다."),
+    EMD_AREA_NOT_FOUND(HttpStatus.NOT_FOUND, "행정 구역을 찾을 수 없습니다."),
+    ACTIVITY_AREA_NOT_FOUND(HttpStatus.NOT_FOUND, "활동 지역을 찾을 수 없습니다."),
 
     /* 409 : CONFLICT : Resource의 현재 상태와 충돌. 보통 중복된 데이터 존재, 조건을 만족하지 못함 */
     USER_ALREADY_EXISTS(HttpStatus.CONFLICT,"해당 유저가 이미 존재합니다."),
@@ -40,6 +42,8 @@ public enum ErrorCode {
     /* 500 INTERNAL_SERVER_ERROR : 서버 내부 에러 */
     PUT_OBJECT_EXCEPTION(HttpStatus.INTERNAL_SERVER_ERROR, "S3 업로드 중 오류가 발생했습니다."),
     IO_EXCEPTION_ON_FILE_DELETE(HttpStatus.INTERNAL_SERVER_ERROR, "이미지 삭제 중 오류가 발생했습니다.");
+
+
 
     private final HttpStatus httpStatus;
     private final String message;
