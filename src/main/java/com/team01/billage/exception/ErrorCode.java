@@ -29,6 +29,7 @@ public enum ErrorCode {
     RENTAL_RECORD_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 대여기록을 찾을 수 없습니다."),
     CHATROOM_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 채팅방을 찾을 수 없습니다."),
     THUMBNAIL_NOT_FOUND(HttpStatus.NOT_FOUND, "썸네일 이미지를 찾을 수 없습니다."),
+    PRODUCT_IMAGE_NOT_FOUND(HttpStatus.NOT_FOUND,"해당 상품 이미지를 찾을 수 없습니다."),
     EMD_AREA_NOT_FOUND(HttpStatus.NOT_FOUND, "행정 구역을 찾을 수 없습니다."),
     ACTIVITY_AREA_NOT_FOUND(HttpStatus.NOT_FOUND, "활동 지역을 찾을 수 없습니다."),
 

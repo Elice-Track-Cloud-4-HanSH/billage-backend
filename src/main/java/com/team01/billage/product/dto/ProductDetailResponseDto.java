@@ -1,5 +1,6 @@
 package com.team01.billage.product.dto;
 
+import com.team01.billage.category.dto.CategoryProductResponseDto;
 import com.team01.billage.product_review.dto.ShowReviewResponseDto;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -17,7 +18,8 @@ import lombok.Setter;
 @AllArgsConstructor
 public class ProductDetailResponseDto { // 상품 상세 확인 DTO
 
-    private String categoryName;
+    private Long productId;
+    private CategoryProductResponseDto category;
     private String title;
     private String description;
     private String rentalStatus;
