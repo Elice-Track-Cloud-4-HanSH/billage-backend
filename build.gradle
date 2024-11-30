@@ -64,8 +64,11 @@ dependencies {
     implementation 'io.jsonwebtoken:jjwt-jackson:0.11.5'
     //spatial
     implementation 'org.hibernate.orm:hibernate-spatial:6.2.9.Final'
-
     implementation 'org.locationtech.jts:jts-core:1.19.0'
+    //email
+    implementation 'org.apache.commons:commons-lang3'  // RandomStringUtils 사용을 위해
+    //oauth
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
 }
 
 def generated = 'src/main/generated'

@@ -25,6 +25,21 @@ spring:
         format_sql: true
         show_sql: true
 
+  mail:
+    host: smtp.naver.com
+    port: 587
+    username: ${NAVER_MAIL}
+    password: ${NAVER_MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+  profiles:
+    include: oauth
+
 
 
 jwt:
@@ -33,7 +48,19 @@ jwt:
     refresh-expires: 604800000 # 7일
     access-expires: 900000 # 15분
 
+logging:
+  level:
+    org:
+      springframework:
+        security: DEBUG
+
 
 custom:
   category-image:
     base-url: "http://localhost:8080"
+
+app:
+  cors:
+    allowed-origins: http://localhost:3000
+  oauth2:
+    authorized-redirect-urls: http://localhost:3000/chat
