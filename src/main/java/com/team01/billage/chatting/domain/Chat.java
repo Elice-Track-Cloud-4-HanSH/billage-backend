@@ -32,7 +32,7 @@ public class Chat {
     @JoinColumn(name = "sender_id")
     private TestUser sender;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length=1000)
     private String message;
 
     @Column(nullable = false)
