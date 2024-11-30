@@ -4,6 +4,7 @@ import com.team01.billage.chatting.domain.Chat;
 import com.team01.billage.chatting.domain.ChatRoom;
 import com.team01.billage.chatting.domain.TestUser;
 import com.team01.billage.chatting.dto.ChatMessage;
+import com.team01.billage.chatting.dto.ChatResponseDto;
 import com.team01.billage.chatting.repository.ChatRepository;
 import com.team01.billage.chatting.repository.ChatRoomRepository;
 import com.team01.billage.chatting.repository.TestUserRepository;
@@ -15,8 +16,6 @@ import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.stereotype.Controller;
 
-import java.security.Principal;
-
 @Controller
 @RequiredArgsConstructor
 public class ChatController {
@@ -27,13 +26,11 @@ public class ChatController {
 
     @MessageMapping("/chat/{chatroomId}")
     @SendTo("/sub/chat/{chatroomId}")
-    public ChatMessage chat(
+    public ChatResponseDto chat(
             @DestinationVariable Long chatroomId,
             SimpMessageHeaderAccessor headerAccessor,
             ChatMessage message
     ) {
-        System.out.println(message);
-
         String sessionId = headerAccessor.getSessionId();
         Long senderId = WebSocketSessionStore.get(sessionId);
 
@@ -47,6 +44,11 @@ public class ChatController {
 
         chatRepository.save(chat);
 
-        return message;
+        return chat.toChatResponse();
+    }
+
+    @MessageMapping("/chat/chatting/{chatId}")
+    public void ack(@DestinationVariable Long chatId) {
+        chatRepository.markAsRead(chatId);
     }
 }
