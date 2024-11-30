@@ -33,7 +33,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
         registry.enableSimpleBroker("/sub");    // 구독 endpoint 접두사
-        registry.setApplicationDestinationPrefixes("/pub");     // 발행 endpoint 접두사
+        registry.setApplicationDestinationPrefixes("/pub", "/ack");     // 발행 endpoint 접두사
     }
 
     @Override

@@ -55,9 +55,10 @@ public class ChatRoomController {
 
     // 특정 채팅방의 이전 채팅 목록가져오기
     @GetMapping("/api/chatroom/{chatroomId}")
-    public ResponseEntity<List<ChatsResponseDto>> getAllChats(
+    public ResponseEntity<List<ChatResponseDto>> getAllChats(
             @PathVariable("chatroomId") Long chatroomId,
             @RequestParam("page") int page,
+            @RequestParam(name = "lastLoadChatId", required = false, defaultValue = "" + Long.MAX_VALUE) Long lastLoadChatId,
             @RequestHeader("token") String token
     ) {
         Long userId = Long.parseLong(token);
@@ -65,7 +66,7 @@ public class ChatRoomController {
         return chatRoomService.getChatRoom(chatroomId)
                 .filter(chatroom -> Objects.equals(chatroom.getBuyer().getId(), userId) || Objects.equals(chatroom.getSeller().getId(), userId))
                 .map(chatroom -> {
-                    List<ChatsResponseDto> chatsResponseDto = chatService.getPagenatedChat(chatroomId, page);
+                    List<ChatResponseDto> chatsResponseDto = chatService.getPagenatedChat(chatroomId, lastLoadChatId, page);
                     return ResponseEntity.ok(chatsResponseDto);
                 })
                 .orElseGet(() -> ResponseEntity.badRequest().build());
