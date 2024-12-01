@@ -5,10 +5,8 @@ import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.team01.billage.chatting.dao.ChatRoomWithLastChat;
-import com.team01.billage.chatting.domain.ChatRoom;
 import com.team01.billage.chatting.domain.QChat;
 import com.team01.billage.chatting.domain.QChatRoom;
-import com.team01.billage.chatting.domain.QTestUser;
 import com.team01.billage.chatting.enums.ChatType;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -50,7 +48,7 @@ public class ChatRoomQueryDSL {
                                 .from(chat2)
                                 .where(chat2.chatRoom.eq(chatroom))
                 ))
-                .orderBy(chatroom.id.desc(), chat.createdAt.desc())
+                .orderBy(chat.createdAt.desc(), chatroom.id.desc())
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();

@@ -1,5 +1,7 @@
 package com.team01.billage.chatting.domain;
 
+import com.team01.billage.product.domain.Product;
+import com.team01.billage.user.domain.Users;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -29,17 +31,17 @@ public class ChatRoom {
     // 구매자 ID
     @ManyToOne
     @JoinColumn(name = "buyer_id")
-    private TestUser buyer;
+    private Users buyer;
 
     // 판매자 ID
     @ManyToOne
     @JoinColumn(name = "seller_id")
-    private TestUser seller;
+    private Users seller;
 
     // 물품
     @ManyToOne
     @JoinColumn(name = "product_id")
-    private TestProduct product;
+    private Product product;
 
     @Column(columnDefinition = "TIMESTAMP")
     private LocalDateTime createdAt;
@@ -62,7 +64,7 @@ public class ChatRoom {
         chats.add(chat);
     }
 
-    public ChatRoom(TestUser buyer, TestUser seller, TestProduct product) {
+    public ChatRoom(Users buyer, Users seller, Product product) {
         this.buyer = buyer;
         this.seller = seller;
         this.product = product;
