@@ -61,21 +61,8 @@ public class ProductService {
     }
 
     public List<ProductResponseDto> findAllProducts() {
-        List<Product> products = productRepository.findAllByDeletedAtIsNull();
-        return products.stream()
-            .map(product -> ProductResponseDto.builder()
-                .productId(product.getId())
-                .title(product.getTitle())
-                .updatedAt(product.getUpdatedAt())
-                .dayPrice(product.getDayPrice())
-                .weekPrice(product.getWeekPrice())
-                .viewCount(product.getViewCount())
-                .thumbnail(
-                    productImageRepository.findThumbnailByProductId(product.getId())
-                        .orElseThrow(() -> new CustomException(THUMBNAIL_NOT_FOUND))
-                )
-                .build())
-            .collect(Collectors.toList());
+
+        return productRepository.findAllProducts();
     }
 
     public List<OnSaleResponseDto> findAllOnSale(String email) {

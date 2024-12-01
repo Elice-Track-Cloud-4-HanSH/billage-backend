@@ -5,6 +5,7 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.team01.billage.product.domain.QProduct;
 import com.team01.billage.product.domain.QProductImage;
 import com.team01.billage.product.dto.OnSaleResponseDto;
+import com.team01.billage.product.dto.ProductResponseDto;
 import com.team01.billage.product.enums.RentalStatus;
 import com.team01.billage.user.domain.QUsers;
 import java.util.List;
@@ -39,5 +40,30 @@ public class CustomProductRepositoryImpl implements CustomProductRepository {
             .orderBy(product.updatedAt.desc())
             //.limit()
             .fetch();
+    }
+
+    @Override
+    public List<ProductResponseDto> findAllProducts() {
+        QProduct product = QProduct.product;
+        QProductImage productImage = QProductImage.productImage;
+
+        return queryFactory
+                .select(Projections.constructor(
+                        ProductResponseDto.class,
+                        product.id,
+                        product.title,
+                        product.updatedAt,
+                        product.dayPrice,
+                        product.weekPrice,
+                        product.viewCount,
+                        productImage.imageUrl
+                ))
+                .from(product)
+                .leftJoin(productImage)
+                .on(product.id.eq(productImage.product.id).
+                        and(productImage.thumbnail.eq("Y")))
+                .where(product.deletedAt.isNull())
+                .orderBy(product.updatedAt.desc())
+                .fetch();
     }
 }
