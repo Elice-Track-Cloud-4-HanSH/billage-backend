@@ -1,15 +1,19 @@
 package com.team01.billage.product.service;
 
 import static com.team01.billage.exception.ErrorCode.CATEGORY_NOT_FOUND;
+import static com.team01.billage.exception.ErrorCode.PRODUCT_IMAGE_NOT_FOUND;
 import static com.team01.billage.exception.ErrorCode.PRODUCT_MODIFICATION_NOT_ALLOWED;
 import static com.team01.billage.exception.ErrorCode.PRODUCT_NOT_FOUND;
 import static com.team01.billage.exception.ErrorCode.THUMBNAIL_NOT_FOUND;
+import static com.team01.billage.exception.ErrorCode.USER_NOT_FOUND;
 
 import com.team01.billage.category.domain.Category;
+import com.team01.billage.category.dto.CategoryProductResponseDto;
 import com.team01.billage.category.repository.CategoryRepository;
 import com.team01.billage.exception.CustomException;
 import com.team01.billage.product.domain.Product;
 import com.team01.billage.product.domain.ProductImage;
+import com.team01.billage.product.dto.ExistProductImageRequestDto;
 import com.team01.billage.product.dto.OnSaleResponseDto;
 import com.team01.billage.product.dto.ProductDeleteCheckDto;
 import com.team01.billage.product.dto.ProductDetailResponseDto;
@@ -18,17 +22,18 @@ import com.team01.billage.product.dto.ProductImageResponseDto;
 import com.team01.billage.product.dto.ProductRequestDto;
 import com.team01.billage.product.dto.ProductResponseDto;
 import com.team01.billage.product.dto.ProductSellerResponseDto;
+import com.team01.billage.product.dto.ProductUpdateRequestDto;
 import com.team01.billage.product.enums.RentalStatus;
 import com.team01.billage.product.repository.ProductImageRepository;
 import com.team01.billage.product.repository.ProductRepository;
-import com.team01.billage.user.domain.Provider;
-import com.team01.billage.user.domain.UserRole;
 import com.team01.billage.user.domain.Users;
 import com.team01.billage.user.repository.UserRepository;
-import com.team01.billage.utils.s3.S3BucketService;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.Point;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,9 +44,10 @@ public class ProductService {
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
     private final ProductImageRepository productImageRepository;
-    private final S3BucketService s3BucketService;
     private final ProductImageService productImageService;
     private final UserRepository userRepository;
+
+    private final GeometryFactory geometryFactory = new GeometryFactory();
 
     @Transactional
     public ProductDetailResponseDto findProduct(Long productId) {
@@ -91,26 +97,14 @@ public class ProductService {
             .description(productRequestDto.getDescription())
             .dayPrice(productRequestDto.getDayPrice())
             .weekPrice(productRequestDto.getWeekPrice())
-            .latitude(productRequestDto.getLatitude())
-            .longitude(productRequestDto.getLongitude())
+            .location(toPoint(productRequestDto.getLongitude(), productRequestDto.getLatitude()))
             .build();
 
-        System.out.println("받아온 이미지 개수: " + productRequestDto.getProductImages().size());
-
         // 상품 이미지 생성
-        for (ProductImageRequestDto imageDto : productRequestDto.getProductImages()) {
-            System.out.println("image: " + imageDto.getImageUrl());
-            ProductImage productImage = ProductImage.builder()
-                .product(product)
-                .imageUrl(s3BucketService.upload(imageDto.getImageUrl()))
-                .thumbnail(imageDto.getThumbnail())
-                .build();
-
-            System.out.println("이미지 공용 url: " + productImage.getImageUrl());
-            System.out.println("썸네일 여부: " + productImage.getThumbnail());
-
-            // 상품에 상품 이미지 추가
-            product.addProductImage(productImage);
+        if (productRequestDto.getProductImages() != null) {
+            for (ProductImageRequestDto imageDto : productRequestDto.getProductImages()) {
+                productImageService.createProductImage(product, imageDto);
+            }
         }
 
         // 상품(+상품이미지) 저장
@@ -122,7 +116,7 @@ public class ProductService {
 
     @Transactional
     public ProductDetailResponseDto updateProduct(Long productId,
-        ProductRequestDto productRequestDto) {
+        ProductUpdateRequestDto productUpdateRequestDto) {
 
         Product product = productRepository.findByIdAndDeletedAtIsNull(productId)
             .orElseThrow(() -> new CustomException(PRODUCT_NOT_FOUND));
@@ -131,11 +125,27 @@ public class ProductService {
             throw new CustomException(PRODUCT_MODIFICATION_NOT_ALLOWED);
         }
 
-        Category category = categoryRepository.findById(productRequestDto.getCategoryId())
+        // 카테고리 새로 저장
+        Category category = categoryRepository.findById(productUpdateRequestDto.getCategoryId())
             .orElseThrow(() -> new CustomException(CATEGORY_NOT_FOUND));
 
         product.updateProductCategory(category);
-        product.updateProduct(productRequestDto);
+        product.updateProduct(productUpdateRequestDto);
+        product.updateProductLocation(
+            toPoint(productUpdateRequestDto.getLongitude(), productUpdateRequestDto.getLatitude())
+        );
+
+        // 새로 추가한 상품 이미지 저장 (상품 이미지 생성)
+        if (productUpdateRequestDto.getProductImages() != null) {
+            for (ProductImageRequestDto imageDto : productUpdateRequestDto.getProductImages()) {
+                productImageService.createProductImage(product, imageDto);
+            }
+        }
+
+        // 기존 이미지 썸네일 변경 여부 체크 및 저장
+        if (productUpdateRequestDto.getExistProductImages() != null) {
+            updateThumbnail(productUpdateRequestDto.getExistProductImages());
+        }
 
         return toDetailDto(product);
 
@@ -181,15 +191,21 @@ public class ProductService {
                 .thumbnail(image.getThumbnail())
                 .build()).toList();
 
-        return ProductDetailResponseDto.builder()
+        CategoryProductResponseDto category = CategoryProductResponseDto.builder()
+            .categoryId(product.getCategory().getId())
             .categoryName(product.getCategory().getName())
+            .build();
+
+        return ProductDetailResponseDto.builder()
+            .productId(product.getId())
+            .category(category)
             .title(product.getTitle())
             .description(product.getDescription())
             .rentalStatus(product.getRentalStatus().getDisplayName())
             .dayPrice(product.getDayPrice())
             .weekPrice(product.getWeekPrice())
-            .latitude(product.getLatitude())
-            .longitude(product.getLongitude())
+            .latitude(product.getLocation().getY())
+            .longitude(product.getLocation().getX())
             .viewCount(product.getViewCount())
             .updatedAt(product.getUpdatedAt())
             .seller(sellerDto)
@@ -198,16 +214,37 @@ public class ProductService {
 
     }
 
-    // 테스트용 user (email unique 해제 후 진행)
+    // 테스트용 user
     private Users testUser() {
-        Users testUser = Users.builder()
-            .nickname("elice")
-            .email("abc@gmail.com")
-            .role(UserRole.USER)
-            .provider(Provider.LOCAL)
-            .build();
+        return userRepository.findById(1L)
+            .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
+    }
 
-        return userRepository.save(testUser);
+    // 기존 이미지의 썸네일 변경 여부 확인 및 업데이트
+    private void updateThumbnail(List<ExistProductImageRequestDto> imageDtos) {
+        List<ProductImage> dbImages = productImageRepository.findAllById(
+            imageDtos.stream()
+                .map(ExistProductImageRequestDto::getImageId)
+                .collect(Collectors.toList())
+        );
+
+        for (ProductImage dbImg : dbImages) {
+            ExistProductImageRequestDto updateDto = imageDtos.stream()
+                .filter(img -> img.getImageId().equals(dbImg.getId()))
+                .findFirst()
+                .orElseThrow(() -> new CustomException(PRODUCT_IMAGE_NOT_FOUND));
+
+            // 썸네일 값이 다른 경우에만 업데이트
+            if (!dbImg.getThumbnail().equals(updateDto.getThumbnail())) {
+                dbImg.updateThumbnail(updateDto.getThumbnail());
+            }
+
+        }
+    }
+
+    // Point(경도, 위도) 변환
+    private Point toPoint(double longitude, double latitude) {
+        return geometryFactory.createPoint(new Coordinate(longitude, latitude));
     }
 
 }

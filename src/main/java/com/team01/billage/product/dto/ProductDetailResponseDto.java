@@ -1,6 +1,6 @@
 package com.team01.billage.product.dto;
 
-import java.math.BigDecimal;
+import com.team01.billage.category.dto.CategoryProductResponseDto;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -16,14 +16,15 @@ import lombok.Setter;
 @AllArgsConstructor
 public class ProductDetailResponseDto { // 상품 상세 확인 DTO
 
-    private String categoryName;
+    private Long productId;
+    private CategoryProductResponseDto category;
     private String title;
     private String description;
     private String rentalStatus;
     private int dayPrice;
     private Integer weekPrice;
-    private BigDecimal latitude;
-    private BigDecimal longitude;
+    private double latitude;
+    private double longitude;
     private int viewCount;
     private LocalDateTime updatedAt;
     private ProductSellerResponseDto seller;

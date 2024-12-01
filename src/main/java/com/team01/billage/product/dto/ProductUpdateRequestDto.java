@@ -1,16 +1,13 @@
 package com.team01.billage.product.dto;
 
-import lombok.*;
+import lombok.Getter;
+import lombok.Setter;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 @Getter
 @Setter
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class ProductRequestDto {
+public class ProductUpdateRequestDto {
 
     private Long categoryId;
     private String title;
@@ -19,6 +16,7 @@ public class ProductRequestDto {
     private Integer weekPrice; // 선택값 (null 가능)
     private double latitude;
     private double longitude;
-    private List<ProductImageRequestDto> productImages;
+    private List<ProductImageRequestDto> productImages; // 추가하는 이미지
+    private List<ExistProductImageRequestDto> existProductImages; // 기존 이미지
 
 }

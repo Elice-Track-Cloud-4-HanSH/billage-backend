@@ -1,30 +1,28 @@
 package com.team01.billage.chatting.service;
 
 import com.team01.billage.chatting.domain.Chat;
-import com.team01.billage.chatting.domain.ChatRoom;
-import com.team01.billage.chatting.domain.TestUser;
-import com.team01.billage.chatting.dto.ChatsResponseDto;
+import com.team01.billage.chatting.dto.ChatResponseDto;
 import com.team01.billage.chatting.repository.ChatRepository;
-import com.team01.billage.chatting.repository.ChatRoomRepository;
+import com.team01.billage.user.domain.Users;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class ChatService {
     private final ChatRepository chatRepository;
 
-    public List<ChatsResponseDto> getPagenatedChat(Long chatroomId, int page) {
+    public List<ChatResponseDto> getPagenatedChat(Long chatroomId, Long chatId, int page) {
         Pageable pageable = PageRequest.of(page, 50);
-        List<Chat> chats = chatRepository.getPagenatedChatsInChatroom(chatroomId, pageable);
+        List<Chat> chats = chatRepository.getPagenatedChatsInChatroom(chatroomId, chatId, pageable);
 
         return chats.stream()
-                .map(chat -> new ChatsResponseDto(
+                .map(chat -> new ChatResponseDto(
+                        chat.getId(),
                         chat.getSender(),
                         chat.getMessage(),
                         chat.isRead(),
@@ -32,12 +30,7 @@ public class ChatService {
                 .toList();
     }
 
-    public void markAsRead(Long chatroomId, TestUser user) {
-        Pageable getOne = PageRequest.of(0, 1);
-//
-//        Optional<Chat> lastReadChats = chatRepository.getLastReadChat(chatroomId, user.getId());
-//        Chat lastReadChat = lastReadChats.isEmpty() ? getFirstChat(chatroomId, user.getId()) : lastReadChats.get(0);
-
+    public void markAsRead(Long chatroomId, Users user) {
         Chat lastReadChat = chatRepository.getLastReadChat(chatroomId, user.getId())
                 .orElseGet(() -> chatRepository.getFirstChat(chatroomId, user.getId()).orElse(null));
 

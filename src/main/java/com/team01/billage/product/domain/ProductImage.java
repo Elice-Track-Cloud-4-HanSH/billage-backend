@@ -27,4 +27,8 @@ public class ProductImage {
 
     private String thumbnail; // Y/N
 
+    public void updateThumbnail(String thumbnail){
+        this.thumbnail = thumbnail;
+    }
+
 }
