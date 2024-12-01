@@ -2,6 +2,7 @@ package com.team01.billage.chatting.repository;
 
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Projections;
+import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.team01.billage.chatting.dao.ChatRoomWithLastChat;
@@ -26,16 +27,22 @@ public class ChatRoomQueryDSL {
         QChat chat = QChat.chat;
         QChat chat2 = new QChat("chat2");
 
-        switch (type) {
-            case LENT -> builder.and(chatroom.seller.id.eq(userId));
-            case RENT -> builder.and(chatroom.buyer.id.eq(userId));
+        BooleanExpression userCondition = switch (type) {
+            case LENT -> getSellerCondition(chatroom, userId);
+            case RENT -> getBuyerCondition(chatroom, userId);
             case PR -> {
                     if (productId == null) throw new RuntimeException("해당 조회건은 상품 id가 필수입니다");
-                    builder.and(chatroom.product.id.eq(productId)).and(chatroom.seller.id.eq(userId));
+                    BooleanExpression sellerCondition = getSellerCondition(chatroom, userId);
+                    yield chatroom.product.id.eq(productId).and(sellerCondition);
             }
             // TYPE = ALL
-            default -> builder.and(chatroom.seller.id.eq(userId).or(chatroom.buyer.id.eq(userId)));
-        }
+            default -> {
+                BooleanExpression buyerCondition = getBuyerCondition(chatroom, userId);
+                BooleanExpression sellerCondition = getSellerCondition(chatroom, userId);
+                yield sellerCondition.or(buyerCondition);
+            }
+        };
+        builder.and(userCondition);
 
         return queryFactory
                 .select(Projections.constructor(ChatRoomWithLastChat.class, chatroom, chat))
@@ -52,5 +59,13 @@ public class ChatRoomQueryDSL {
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
+    }
+
+    private BooleanExpression getSellerCondition(QChatRoom chatroom, Long userId) {
+        return chatroom.seller.id.eq(userId).and(chatroom.sellerExitAt.isNull());
+    }
+
+    private BooleanExpression getBuyerCondition(QChatRoom chatroom, Long userId) {
+        return chatroom.buyer.id.eq(userId).and(chatroom.buyerExitAt.isNull());
     }
 }
