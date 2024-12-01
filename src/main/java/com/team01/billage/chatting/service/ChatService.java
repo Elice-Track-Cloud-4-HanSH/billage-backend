@@ -1,9 +1,9 @@
 package com.team01.billage.chatting.service;
 
 import com.team01.billage.chatting.domain.Chat;
-import com.team01.billage.chatting.domain.TestUser;
 import com.team01.billage.chatting.dto.ChatResponseDto;
 import com.team01.billage.chatting.repository.ChatRepository;
+import com.team01.billage.user.domain.Users;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -30,9 +30,7 @@ public class ChatService {
                 .toList();
     }
 
-    public void markAsRead(Long chatroomId, TestUser user) {
-        Pageable getOne = PageRequest.of(0, 1);
-
+    public void markAsRead(Long chatroomId, Users user) {
         Chat lastReadChat = chatRepository.getLastReadChat(chatroomId, user.getId())
                 .orElseGet(() -> chatRepository.getFirstChat(chatroomId, user.getId()).orElse(null));
 

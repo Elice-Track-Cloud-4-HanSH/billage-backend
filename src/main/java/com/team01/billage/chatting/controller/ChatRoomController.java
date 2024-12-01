@@ -1,16 +1,18 @@
 package com.team01.billage.chatting.controller;
 
 import com.team01.billage.chatting.domain.ChatRoom;
-import com.team01.billage.chatting.domain.TestUser;
 import com.team01.billage.chatting.dto.*;
 import com.team01.billage.chatting.enums.ChatType;
 import com.team01.billage.chatting.exception.ChatRoomNotFoundException;
 import com.team01.billage.chatting.exception.NotInChatRoomException;
-import com.team01.billage.chatting.repository.TestUserRepository;
 import com.team01.billage.chatting.service.ChatRoomService;
 import com.team01.billage.chatting.service.ChatService;
+import com.team01.billage.user.domain.Users;
+import com.team01.billage.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,10 +26,12 @@ import java.util.Optional;
 public class ChatRoomController {
     // 추후 토큰 헤더는 SecurityContext에서 가져오도록 수정
     // 일단은 더미데이터로 token에 id값을 받아와서 테스트
-    private final TestUserRepository testUserRepository;
+//    private final TestUserRepository testUserRepository;
 
     private final ChatRoomService chatRoomService;
     private final ChatService chatService;
+
+    private final UserRepository userRepository;
 
     // 채팅방들 불러오기
     // 요청 전 type이 pr일 때 productId가 존재하는지 파악 필요
@@ -36,9 +40,8 @@ public class ChatRoomController {
             @RequestParam(value = "type", required = false) ChatType type,
             @RequestParam(value = "productId", required = false) Long productId,
             @RequestParam(value = "page", required = false) int page,
-            @RequestHeader("token") String token) {
-        Long userId = Long.parseLong(token);
-//        List<ChatroomResponseDto> responseDto = chatRoomService.getAllChatRooms(type, userId);
+            @AuthenticationPrincipal UserDetails userDetails) {
+        Long userId = determineUserId(userDetails);
         List<ChatroomResponseDto> responseDto = chatRoomService.getAllChatroomsWithDSL(type, page, userId, productId);
         return ResponseEntity.ok(responseDto);
     }
@@ -59,9 +62,9 @@ public class ChatRoomController {
             @PathVariable("chatroomId") Long chatroomId,
             @RequestParam("page") int page,
             @RequestParam(name = "lastLoadChatId", required = false, defaultValue = "" + Long.MAX_VALUE) Long lastLoadChatId,
-            @RequestHeader("token") String token
+            @AuthenticationPrincipal UserDetails userDetails
     ) {
-        Long userId = Long.parseLong(token);
+        Long userId = determineUserId(userDetails);
 
         return chatRoomService.getChatRoom(chatroomId)
                 .filter(chatroom -> Objects.equals(chatroom.getBuyer().getId(), userId) || Objects.equals(chatroom.getSeller().getId(), userId))
@@ -74,12 +77,10 @@ public class ChatRoomController {
 
     @Transactional
     @PostMapping("/api/chatroom/{chatroomId}")
-    public ResponseEntity<Object> markAsRead(@PathVariable("chatroomId") Long chatroomId, @RequestHeader("token") String token) {
-        Long userId = Long.parseLong(token);
-        TestUser user = testUserRepository.findById(userId).orElse(null);
-        if (user == null) {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<Object> markAsRead(@PathVariable("chatroomId") Long chatroomId, @AuthenticationPrincipal UserDetails userDetails) {
+        Long userId = determineUserId(userDetails);
+        Users user = userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("Invalid user: User not found."));
+//        TestUser user = testUserRepository.findById(userId).orElse(null);
 
         chatService.markAsRead(chatroomId, user);
         return ResponseEntity.ok().build();
@@ -89,8 +90,10 @@ public class ChatRoomController {
     // TODO: 예외 처리 필수!
     @Transactional
     @PostMapping("/api/chatroom")
-    public ResponseEntity<Object> createChatRoom(Principal principal, @RequestBody CreateChatRoomDto createChatRoomDto) {
-        Long buyerId = Long.parseLong(principal.getName());
+    public ResponseEntity<Object> createChatRoom( @AuthenticationPrincipal UserDetails userDetails, @RequestBody CreateChatRoomDto createChatRoomDto) {
+        Long buyerId = determineUserId(userDetails);
+
+//        Long buyerId = Long.parseLong(principal.getName());
         CheckValidChatroomResponseDto responseDto = chatRoomService.createChatRoom(
                 new CheckValidChatroomRequestDto(
                         buyerId,
@@ -104,8 +107,9 @@ public class ChatRoomController {
 
     @Transactional
     @DeleteMapping("/api/chatroom/{chatRoomId}")
-    public ResponseEntity<Object> exitChatRoom(Principal principal, @PathVariable("chatRoomId") Long chatroomId) {
-        long userId = Long.parseLong(principal.getName());
+    public ResponseEntity<Object> exitChatRoom(@AuthenticationPrincipal UserDetails userDetails, @PathVariable("chatRoomId") Long chatroomId) {
+        Long userId = determineUserId(userDetails);
+        //        long userId = Long.parseLong(principal.getName());
         try {
             chatRoomService.exitFromChatRoom(chatroomId, userId);
         } catch (ChatRoomNotFoundException e) {
@@ -116,5 +120,15 @@ public class ChatRoomController {
             return ResponseEntity.internalServerError().build();
         }
         return ResponseEntity.noContent().build();
+    }
+
+    private Long determineUserId(UserDetails userDetails) {
+        try {
+            return Long.parseLong(userDetails.getUsername());
+        } catch (Exception e) {
+            return userRepository.findByEmail(userDetails.getUsername())
+                    .orElseThrow(() -> new IllegalArgumentException("없는 이메일..."))
+                    .getId();
+        }
     }
 }

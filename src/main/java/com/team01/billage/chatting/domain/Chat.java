@@ -1,6 +1,7 @@
 package com.team01.billage.chatting.domain;
 
 import com.team01.billage.chatting.dto.ChatResponseDto;
+import com.team01.billage.user.domain.Users;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -30,7 +31,7 @@ public class Chat {
     // 발신 회원
     @ManyToOne
     @JoinColumn(name = "sender_id")
-    private TestUser sender;
+    private Users sender;
 
     @Column(nullable = false, length=1000)
     private String message;
@@ -42,7 +43,7 @@ public class Chat {
     @Column(columnDefinition = "TIMESTAMP(0)", updatable = false)
     private LocalDateTime createdAt;
 
-    public Chat(ChatRoom chatRoom, TestUser sender, String message) {
+    public Chat(ChatRoom chatRoom, Users sender, String message) {
         this.chatRoom = chatRoom;
         this.sender = sender;
         this.message = message;
