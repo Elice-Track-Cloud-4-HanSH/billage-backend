@@ -1,6 +1,7 @@
 package com.team01.billage.rental_record.controller;
 
 import com.team01.billage.product.service.ProductService;
+import com.team01.billage.rental_record.dto.PurchasersResponseDto;
 import com.team01.billage.rental_record.dto.ShowRecordResponseDto;
 import com.team01.billage.rental_record.dto.StartRentalRequestDto;
 import com.team01.billage.rental_record.service.RentalRecordService;
@@ -38,10 +39,20 @@ public class RentalRecordController {
     }
 
     @GetMapping
-    public ResponseEntity<List<ShowRecordResponseDto>> showRentalRecord(@RequestParam String type,
+    public ResponseEntity<List<ShowRecordResponseDto>> showRentalRecord(
+        @RequestParam(name = "type") String type,
         @AuthenticationPrincipal UserDetails userDetails) {
 
         List<ShowRecordResponseDto> responseDtos = rentalRecordService.readRentalRecords(type,
+            userDetails.getUsername());
+        return ResponseEntity.status(HttpStatus.OK).body(responseDtos);
+    }
+
+    @GetMapping("/set-to-rented")
+    public ResponseEntity<List<PurchasersResponseDto>> showPurchasers(
+        @AuthenticationPrincipal UserDetails userDetails) {
+
+        List<PurchasersResponseDto> responseDtos = rentalRecordService.readPurchasers(
             userDetails.getUsername());
         return ResponseEntity.status(HttpStatus.OK).body(responseDtos);
     }
