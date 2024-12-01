@@ -1,5 +1,7 @@
 package com.team01.billage.user.domain;
 
+import com.team01.billage.exception.CustomException;
+import com.team01.billage.exception.ErrorCode;
 import com.team01.billage.user.dto.Response.UserDeleteResponseDto;
 import com.team01.billage.user.dto.Response.UserResponseDto;
 import jakarta.persistence.*;
@@ -34,7 +36,7 @@ public class Users extends BaseTimeEntity implements UserDetails {
     @Column
     private String password;
 
-    @Column(name = "image_url", nullable = false)
+    @Column(name = "image_url", nullable = true)
     private String imageUrl;
 
     @Column(length = 1000)
@@ -49,12 +51,6 @@ public class Users extends BaseTimeEntity implements UserDetails {
     @Column(name = "deleted_at")
     private java.sql.Timestamp deletedAt;
 
-    @PrePersist
-    public void setDefaultImageUrl() {
-        if (this.imageUrl == null || this.imageUrl.isEmpty()) {
-            this.imageUrl = "https://default-image.url/default-profile.png";
-        }
-    }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -82,10 +78,6 @@ public class Users extends BaseTimeEntity implements UserDetails {
         return true; // 비밀번호 만료 로직을 정의하지 않을 경우 true
     }
 
-    @Override
-    public boolean isEnabled() {
-        return deletedAt == null; // deletedAt이 null이면 활성화된 계정으로 간주
-    }
 
     // Users 클래스 내부에 추가
     public UserResponseDto toResponseDto() {
@@ -101,17 +93,20 @@ public class Users extends BaseTimeEntity implements UserDetails {
     }
 
 
+    // 삭제 여부 확인 메서드
+    public boolean isDeleted() {
+        return this.deletedAt != null; // deletedAt이 null이 아니면 삭제된 상태
+    }
+
+    // 회원 삭제 메서드
     public UserDeleteResponseDto deleteUser() {
         // 이미 삭제된 경우
-        if (this.getDeletedAt() != null) {
-            return UserDeleteResponseDto.builder()
-                    .isDeleted(true)
-                    .message("이미 삭제된 회원입니다.")
-                    .build();
+        if (this.isDeleted()) { // isDeleted 메서드를 활용
+            throw new CustomException(ErrorCode.USER_ALREADY_DELETED);
         }
 
-        // 삭제 처리: deletedAt에 현재 시간 저장 (BaseTimeEntity 활용)
-        this.setDeletedAt(Timestamp.valueOf(LocalDateTime.now()));
+        // 삭제 처리: deletedAt에 현재 시간 저장
+        this.deletedAt = Timestamp.valueOf(LocalDateTime.now());
 
         return UserDeleteResponseDto.builder()
                 .isDeleted(true)

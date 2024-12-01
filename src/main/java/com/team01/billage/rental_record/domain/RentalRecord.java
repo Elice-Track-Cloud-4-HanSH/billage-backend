@@ -42,12 +42,6 @@ public class RentalRecord {
     @Column
     private LocalDate returnDate;
 
-    @Column
-    private String imageUrl;
-
-    @Column
-    private String title;
-
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -63,4 +57,8 @@ public class RentalRecord {
     @ManyToOne
     @JoinColumn(name = "seller_id", nullable = false)
     private Users seller;
+
+    public void productReturn() {
+        this.returnDate = LocalDate.now();
+    }
 }

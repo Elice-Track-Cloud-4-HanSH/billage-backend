@@ -1,10 +1,14 @@
 package com.team01.billage.product.controller;
 
 import com.team01.billage.product.dto.*;
+import com.team01.billage.product.service.ProductImageService;
 import com.team01.billage.product.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,44 +19,49 @@ import java.util.List;
 public class ProductController {
 
     private final ProductService productService;
+    private final ProductImageService productImageService;
 
     @GetMapping("/{productId}")
     public ResponseEntity<ProductDetailResponseDto> findProduct(@PathVariable("productId") Long productId) {
-        ProductDetailResponseDto response = productService.findProduct(productId);
-        return ResponseEntity.status(HttpStatus.OK).body(response);
+        return ResponseEntity.status(HttpStatus.OK).body(productService.findProduct(productId));
     }
 
     @GetMapping
     public ResponseEntity<List<ProductResponseDto>> findAllProducts() {
-        List<ProductResponseDto> response = productService.findAllProducts();
-        return ResponseEntity.status(HttpStatus.OK).body(response);
+        return ResponseEntity.status(HttpStatus.OK).body(productService.findAllProducts());
     }
 
-    @PostMapping
-    public ResponseEntity<ProductDetailResponseDto> createProduct(@RequestBody ProductRequestDto request) {
-        ProductDetailResponseDto response = productService.createProduct(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    @GetMapping("/on-sale")
+    public ResponseEntity<List<OnSaleResponseDto>> findAllOnSale(
+        @AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.status(HttpStatus.OK)
+            .body(productService.findAllOnSale(userDetails.getUsername()));
     }
 
-    @PutMapping("/{productId}")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ProductDetailResponseDto> createProduct(@ModelAttribute ProductRequestDto productRequestDto) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(productService.createProduct(productRequestDto));
+    }
+
+    @PutMapping(value = "/{productId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ProductDetailResponseDto> updateProduct(
-            @PathVariable("productId") Long productId, @RequestBody ProductRequestDto request) {
-        ProductDetailResponseDto response = productService.updateProduct(productId, request);
-        return ResponseEntity.status(HttpStatus.OK).body(response);
+            @PathVariable("productId") Long productId,
+            @ModelAttribute ProductUpdateRequestDto productUpdateRequestDto) {
+        return ResponseEntity.status(HttpStatus.OK).
+                body(productService.updateProduct(productId, productUpdateRequestDto));
     }
 
-    @PatchMapping("/{productId}/status")
-    public ResponseEntity<RentalStatusResponseDto> updateProductRentalStatus(
-            @PathVariable("productId") Long productId,
-            @RequestBody RentalStatusUpdateRequestDto request) {
-        RentalStatusResponseDto response = productService.updateProductRentalStatus(productId, request);
-        return ResponseEntity.status(HttpStatus.OK).body(response);
+    // 상품 이미지 삭제
+    @DeleteMapping("/images")
+    public ResponseEntity<Void> deleteProductImages(
+            @RequestBody List<ProductImageDeleteRequestDto> productImageDeleteRequestDtos){
+        productImageService.deleteProductImages(productImageDeleteRequestDtos);
+        return ResponseEntity.status(HttpStatus.OK).build();
     }
 
     @DeleteMapping("/{productId}")
-    public ResponseEntity<String> deleteProduct(@PathVariable("productId") Long productId) {
-        productService.deleteProduct(productId);
-        return ResponseEntity.status(HttpStatus.OK).body("대여 상품 삭제 완료: " + productId);
+    public ResponseEntity<ProductDeleteCheckDto> deleteProduct(@PathVariable("productId") Long productId) {
+        return ResponseEntity.status(HttpStatus.OK).body(productService.deleteProduct(productId));
     }
 
 }
