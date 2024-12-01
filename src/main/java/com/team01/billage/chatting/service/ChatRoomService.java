@@ -1,14 +1,20 @@
 package com.team01.billage.chatting.service;
 
 import com.team01.billage.chatting.dao.ChatRoomWithLastChat;
-import com.team01.billage.chatting.domain.*;
+import com.team01.billage.chatting.domain.ChatRoom;
 import com.team01.billage.chatting.dto.ChatroomResponseDto;
 import com.team01.billage.chatting.dto.CheckValidChatroomRequestDto;
 import com.team01.billage.chatting.dto.CheckValidChatroomResponseDto;
 import com.team01.billage.chatting.enums.ChatType;
 import com.team01.billage.chatting.exception.ChatRoomNotFoundException;
 import com.team01.billage.chatting.exception.NotInChatRoomException;
-import com.team01.billage.chatting.repository.*;
+import com.team01.billage.chatting.repository.ChatRepository;
+import com.team01.billage.chatting.repository.ChatRoomQueryDSL;
+import com.team01.billage.chatting.repository.ChatRoomRepository;
+import com.team01.billage.product.domain.Product;
+import com.team01.billage.product.repository.ProductRepository;
+import com.team01.billage.user.domain.Users;
+import com.team01.billage.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -22,9 +28,8 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 public class ChatRoomService {
-
-    private final TestUserRepository testUserRepository;
-    private final TestProductRepository testProductRepository;
+    private final UserRepository userRepository;
+    private final ProductRepository productRepository;
     private final ChatRoomRepository chatRoomRepository;
     private final ChatRepository chatRepository;
     private final ChatRoomQueryDSL chatRoomQueryDsl;
@@ -58,9 +63,9 @@ public class ChatRoomService {
     }
 
     public CheckValidChatroomResponseDto createChatRoom(CheckValidChatroomRequestDto checkValidChatroomDto) {
-        TestUser buyer = testUserRepository.findById(checkValidChatroomDto.getBuyerId()).orElseThrow(() -> new RuntimeException("해당 ID의 유저가 존재하지 않습니다."));
-        TestUser seller = testUserRepository.findById(checkValidChatroomDto.getSellerId()).orElseThrow(() -> new RuntimeException("해당 ID의 유저가 존재하지 않습니다."));
-        TestProduct product = testProductRepository.findById(checkValidChatroomDto.getProductId()).orElseThrow(() -> new RuntimeException("제품이 존재하지 않습니다."));
+        Users buyer = userRepository.findById(checkValidChatroomDto.getBuyerId()).orElseThrow(() -> new RuntimeException("해당 ID의 유저가 존재하지 않습니다."));
+        Users seller = userRepository.findById(checkValidChatroomDto.getSellerId()).orElseThrow(() -> new RuntimeException("해당 ID의 유저가 존재하지 않습니다."));
+        Product product = productRepository.findById(checkValidChatroomDto.getProductId()).orElseThrow(() -> new RuntimeException("제품이 존재하지 않습니다."));
 
         ChatRoom chatRoom = ChatRoom.builder()
                 .buyer(buyer)

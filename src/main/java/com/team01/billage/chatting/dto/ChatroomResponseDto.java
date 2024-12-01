@@ -2,9 +2,8 @@ package com.team01.billage.chatting.dto;
 
 import com.team01.billage.chatting.domain.Chat;
 import com.team01.billage.chatting.domain.ChatRoom;
-import com.team01.billage.chatting.domain.TestProduct;
-import com.team01.billage.chatting.domain.TestUser;
 import com.team01.billage.product.domain.Product;
+import com.team01.billage.user.domain.Users;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -16,24 +15,28 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class ChatroomResponseDto {
     private Long chatroomId;
-    private TestUser buyer;
-    private TestUser seller;
+    private CustomChatResponseUser buyer;
+    private CustomChatResponseUser seller;
     private CustomChatResponse lastChat;
-    private CustomProductResponse product;
+    private CustomChatResponseProduct product;
 
     public ChatroomResponseDto(ChatRoom chatroom, Chat lastChat) {
         this.chatroomId = chatroom.getId();
-        this.buyer = chatroom.getBuyer();
-        this.seller = chatroom.getSeller();
+        this.buyer = new CustomChatResponseUser(chatroom.getBuyer());
+        this.seller = new CustomChatResponseUser(chatroom.getSeller());
         this.lastChat = new CustomChatResponse(lastChat);
-        this.product = new CustomProductResponse(chatroom.getProduct());
+        this.product = new CustomChatResponseProduct(chatroom.getProduct());
     }
+}
 
-    public ChatroomResponseDto(Long chatroomId, TestUser buyer, TestUser seller, Chat lastChat) {
-        this.chatroomId = chatroomId;
-        this.buyer = buyer;
-        this.seller = seller;
-        this.lastChat = new CustomChatResponse(lastChat);
+@Getter
+class CustomChatResponseUser {
+    private final Long id;
+    private final String nickname;
+
+    public CustomChatResponseUser(Users user) {
+        this.id = user.getId();
+        this.nickname = user.getNickname();
     }
 }
 
@@ -49,12 +52,12 @@ class CustomChatResponse {
 }
 
 @Getter
-class CustomProductResponse {
-    private final Long productId;
-    private final String productName;
+class CustomChatResponseProduct {
+    private final Long id;
+    private final String name;
 
-    public CustomProductResponse(TestProduct product) {
-        this.productId = product.getId();
-        this.productName = product.getName();
+    public CustomChatResponseProduct(Product product) {
+        this.id = product.getId();
+        this.name = product.getTitle();
     }
 }
