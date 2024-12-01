@@ -1,5 +1,6 @@
 package com.team01.billage.product.repository;
 
+import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.team01.billage.product.domain.QProduct;
@@ -43,9 +44,17 @@ public class CustomProductRepositoryImpl implements CustomProductRepository {
     }
 
     @Override
-    public List<ProductResponseDto> findAllProducts() {
+    public List<ProductResponseDto> findAllProductsByCategoryId(Long categoryId) {
         QProduct product = QProduct.product;
         QProductImage productImage = QProductImage.productImage;
+
+        // 동적 조건 처리
+        BooleanBuilder builder = new BooleanBuilder();
+        builder.and(product.deletedAt.isNull());
+
+        if(categoryId != 1L){
+            builder.and(product.category.id.eq(categoryId));
+        }
 
         return queryFactory
                 .select(Projections.constructor(
@@ -62,7 +71,7 @@ public class CustomProductRepositoryImpl implements CustomProductRepository {
                 .leftJoin(productImage)
                 .on(product.id.eq(productImage.product.id).
                         and(productImage.thumbnail.eq("Y")))
-                .where(product.deletedAt.isNull())
+                .where(builder)
                 .orderBy(product.updatedAt.desc())
                 .fetch();
     }

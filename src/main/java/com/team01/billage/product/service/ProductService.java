@@ -60,9 +60,11 @@ public class ProductService {
         return toDetailDto(product);
     }
 
-    public List<ProductResponseDto> findAllProducts() {
+    public List<ProductResponseDto> findAllProducts(String categoryId) {
 
-        return productRepository.findAllProducts();
+        Long categoryIdToLong = (categoryId == null) ? 1L : Long.parseLong(categoryId);
+
+        return productRepository.findAllProductsByCategoryId(categoryIdToLong);
     }
 
     public List<OnSaleResponseDto> findAllOnSale(String email) {
