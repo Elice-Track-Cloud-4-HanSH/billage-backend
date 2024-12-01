@@ -1,4 +1,4 @@
-package com.team01.billage.product_review.dto;
+package com.team01.billage.rental_record.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -7,12 +7,9 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ShowReviewResponseDto {
+public class PurchasersResponseDto {
 
-    private long reviewId;
-    private int score;
-    private String content;
     private long id;
     private String imageUrl;
-    private String subject;
+    private String nickname;
 }

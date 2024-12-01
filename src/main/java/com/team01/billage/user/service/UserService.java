@@ -2,7 +2,6 @@ package com.team01.billage.user.service;
 
 import com.team01.billage.exception.CustomException;
 import com.team01.billage.exception.ErrorCode;
-import com.team01.billage.product_review.dto.ShowReviewResponseDto;
 import com.team01.billage.user.domain.Users;
 import com.team01.billage.user.dto.Request.JwtTokenLoginRequest;
 import com.team01.billage.user.dto.Request.UserSignupRequestDto;
@@ -16,7 +15,6 @@ import com.team01.billage.user_review.repository.UserReviewRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-
 import java.time.Duration;
 import java.util.List;
 import java.util.Random;
@@ -54,12 +52,12 @@ public class UserService {
         }
 
         Users user = Users.builder()
-                .nickname(dto.getNickname())
-                .email(dto.getEmail())
-                .password(passwordEncoder.encode(dto.getPassword()))
-                .role(dto.getUserRole())
-                .provider(dto.getProvider())
-                .build();
+            .nickname(dto.getNickname())
+            .email(dto.getEmail())
+            .password(passwordEncoder.encode(dto.getPassword()))
+            .role(dto.getUserRole())
+            .provider(dto.getProvider())
+            .build();
 
         Users savedUser = userRepository.save(user);
 
@@ -81,9 +79,9 @@ public class UserService {
 
         // Redis에 이메일 인증 코드 저장 (30분 유효)
         redisTemplate.opsForValue().set(
-                "EmailAuth:" + email,
-                verificationCode,
-                Duration.ofMinutes(30)
+            "EmailAuth:" + email,
+            verificationCode,
+            Duration.ofMinutes(30)
         );
 
         // 이메일 발송
@@ -92,12 +90,14 @@ public class UserService {
         message.setTo(email);
         message.setSubject("[Billage] 이메일 인증");
         message.setText("인증 코드: " + verificationCode + "\n\n"
-                + "이 코드는 30분 동안 유효합니다.");
+            + "이 코드는 30분 동안 유효합니다.");
         emailSender.send(message);
     }
+
     private String generateRandomCode() {
         return String.format("%06d", new Random().nextInt(1000000));
     }
+
     /**
      * 회원 정보 조회
      */
@@ -150,8 +150,8 @@ public class UserService {
      */
     @Operation(summary = "이메일 중복 확인 API", description = "사용자가 입력한 이메일이 중복인지 확인합니다.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "사용 가능한 이메일"),
-            @ApiResponse(responseCode = "409", description = "이미 사용 중인 이메일")
+        @ApiResponse(responseCode = "200", description = "사용 가능한 이메일"),
+        @ApiResponse(responseCode = "409", description = "이미 사용 중인 이메일")
     })
     public void validateEmail(String email) {
         if (userRepository.existsByEmail(email)) {
@@ -164,8 +164,8 @@ public class UserService {
      */
     @Operation(summary = "닉네임 중복 확인 API", description = "사용자가 입력한 닉네임이 중복인지 확인합니다.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "사용 가능한 닉네임"),
-            @ApiResponse(responseCode = "409", description = "이미 사용 중인 닉네임")
+        @ApiResponse(responseCode = "200", description = "사용 가능한 닉네임"),
+        @ApiResponse(responseCode = "409", description = "이미 사용 중인 닉네임")
     })
     public void validateNickname(String nickname) {
         if (userRepository.existsByNickname(nickname)) {
@@ -175,20 +175,17 @@ public class UserService {
 
     public TargetProfileResponseDto showProfile(String nickname) {
         Users target = userRepository.findByNickname(nickname)
-                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
-
-        List<ShowReviewResponseDto> reviews = userReviewRepository.findByTarget_nickname(nickname);
+            .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
         Double avgScore = userReviewRepository.scoreAverage(nickname)
-                .map(score -> Math.round(score * 10) / 10.0).orElse(0.0);
+            .map(score -> Math.round(score * 10) / 10.0).orElse(0.0);
 
         return TargetProfileResponseDto.builder()
-                .imageUrl(target.getImageUrl())
-                .nickname(target.getNickname())
-                .description(target.getDescription())
-                .avgScore(avgScore)
-                .reviews(reviews)
-                .build();
+            .imageUrl(target.getImageUrl())
+            .nickname(target.getNickname())
+            .description(target.getDescription())
+            .avgScore(avgScore)
+            .build();
     }
 
     // Private helper methods
@@ -250,9 +247,9 @@ public class UserService {
 
         // 인증 성공 시 Redis에 인증 완료 상태 저장 (회원가입 완료 전까지 30분 유효)
         redisTemplate.opsForValue().set(
-                "EmailVerified:" + email,
-                "true",
-                Duration.ofMinutes(30)
+            "EmailVerified:" + email,
+            "true",
+            Duration.ofMinutes(30)
         );
 
         // 기존 인증 코드는 삭제

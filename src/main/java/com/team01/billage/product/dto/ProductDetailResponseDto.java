@@ -1,7 +1,6 @@
 package com.team01.billage.product.dto;
 
 import com.team01.billage.category.dto.CategoryProductResponseDto;
-import com.team01.billage.product_review.dto.ShowReviewResponseDto;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -29,7 +28,6 @@ public class ProductDetailResponseDto { // 상품 상세 확인 DTO
     private int viewCount;
     private LocalDateTime updatedAt;
     private ProductSellerResponseDto seller;
-    private List<ShowReviewResponseDto> reviews;
     private List<ProductImageResponseDto> productImages;
 
 }
