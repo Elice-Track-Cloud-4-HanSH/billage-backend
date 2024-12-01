@@ -2,7 +2,11 @@ package com.team01.billage.rental_record.dto;
 
 import java.time.LocalDate;
 import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
+@Getter
+@NoArgsConstructor
 @AllArgsConstructor
 public class ShowRecordResponseDto {
 
@@ -13,7 +17,6 @@ public class ShowRecordResponseDto {
     private long productId;
     private String productImageUrl;
     private String title;
-    private long userId;
     private String userImageUrl;
     private String nickname;
 }

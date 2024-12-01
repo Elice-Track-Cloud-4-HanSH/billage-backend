@@ -1,5 +1,7 @@
 package com.team01.billage.chatting.domain;
 
+import com.team01.billage.product.domain.Product;
+import com.team01.billage.user.domain.Users;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -7,6 +9,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -23,22 +26,22 @@ public class ChatRoom {
     private Long id;
 
     @OneToMany(mappedBy = "chatRoom", cascade = CascadeType.ALL)
-    private List<Chat> chats;
+    private List<Chat> chats = new ArrayList<>();
 
     // 구매자 ID
     @ManyToOne
     @JoinColumn(name = "buyer_id")
-    private TestUser buyer;
+    private Users buyer;
 
     // 판매자 ID
     @ManyToOne
     @JoinColumn(name = "seller_id")
-    private TestUser seller;
+    private Users seller;
 
     // 물품
     @ManyToOne
     @JoinColumn(name = "product_id")
-    private TestProduct product;
+    private Product product;
 
     @Column(columnDefinition = "TIMESTAMP")
     private LocalDateTime createdAt;
@@ -55,5 +58,15 @@ public class ChatRoom {
 
     public void setSellerExitAt() {
         sellerExitAt = LocalDateTime.now();
+    }
+
+    public void addTestChat(Chat chat) {
+        chats.add(chat);
+    }
+
+    public ChatRoom(Users buyer, Users seller, Product product) {
+        this.buyer = buyer;
+        this.seller = seller;
+        this.product = product;
     }
 }

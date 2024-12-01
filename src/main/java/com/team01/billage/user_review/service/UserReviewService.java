@@ -5,6 +5,7 @@ import static com.team01.billage.exception.ErrorCode.USER_NOT_FOUND;
 import static com.team01.billage.exception.ErrorCode.WRITE_ACCESS_FORBIDDEN;
 
 import com.team01.billage.exception.CustomException;
+import com.team01.billage.product_review.dto.ReviewSubjectResponseDto;
 import com.team01.billage.product_review.dto.ShowReviewResponseDto;
 import com.team01.billage.product_review.dto.WriteReviewRequestDto;
 import com.team01.billage.rental_record.domain.RentalRecord;
@@ -55,5 +56,29 @@ public class UserReviewService {
     public List<ShowReviewResponseDto> readUserReviews(String email) {
 
         return userReviewRepository.findByAuthor_email(email);
+    }
+
+    public List<ShowReviewResponseDto> readTargetReviews(String nickname) {
+
+        return userReviewRepository.findByTarget_nickname(nickname);
+    }
+
+    public ReviewSubjectResponseDto getReviewSubject(long id, String email) {
+
+        RentalRecord rentalRecord = rentalRecordRepository.findById(id)
+            .orElseThrow(() -> new CustomException(RENTAL_RECORD_NOT_FOUND));
+
+        Users subject;
+
+        if (rentalRecord.getSeller().getEmail().equals(email)) {
+            subject = rentalRecord.getBuyer();
+        } else {
+            subject = rentalRecord.getSeller();
+        }
+
+        return ReviewSubjectResponseDto.builder()
+            .imageUrl(subject.getImageUrl())
+            .subject(subject.getNickname())
+            .build();
     }
 }
