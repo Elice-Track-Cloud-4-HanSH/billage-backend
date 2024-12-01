@@ -5,6 +5,7 @@ import static com.team01.billage.exception.ErrorCode.WRITE_ACCESS_FORBIDDEN;
 
 import com.team01.billage.exception.CustomException;
 import com.team01.billage.product.domain.Product;
+import com.team01.billage.product.domain.ProductImage;
 import com.team01.billage.product_review.domain.ProductReview;
 import com.team01.billage.product_review.dto.ReviewSubjectResponseDto;
 import com.team01.billage.product_review.dto.ShowReviewResponseDto;
@@ -51,15 +52,25 @@ public class ProductReviewService {
         return productReviewRepository.findByAuthor_email(email);
     }
 
-    public ReviewSubjectResponseDto getReviewSubject(long id, String email) {
+    public List<ShowReviewResponseDto> readProductReviews(long id) {
+
+        return productReviewRepository.findByProduct_id(id);
+    }
+
+    public ReviewSubjectResponseDto getReviewSubject(long id) {
 
         RentalRecord rentalRecord = rentalRecordRepository.findById(id)
             .orElseThrow(() -> new CustomException(RENTAL_RECORD_NOT_FOUND));
 
         Product product = rentalRecord.getProduct();
+        String imageUrl = product.getProductImages().stream()
+            .filter(pi -> pi.getThumbnail().equals("Y"))
+            .map(ProductImage::getImageUrl)
+            .findFirst()
+            .orElse(null);
 
         return ReviewSubjectResponseDto.builder()
-            //.imageUrl(product.getImageUrl())
+            .imageUrl(imageUrl)
             .subject(product.getTitle())
             .build();
     }

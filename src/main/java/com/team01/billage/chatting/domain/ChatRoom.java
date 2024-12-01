@@ -1,14 +1,25 @@
 package com.team01.billage.chatting.domain;
 
-import jakarta.persistence.*;
+import com.team01.billage.product.domain.Product;
+import com.team01.billage.user.domain.Users;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Getter
@@ -16,9 +27,10 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(
-        uniqueConstraints = @UniqueConstraint(columnNames = {"buyer_id", "seller_id", "product_id"})
+    uniqueConstraints = @UniqueConstraint(columnNames = {"buyer_id", "seller_id", "product_id"})
 )
 public class ChatRoom {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -29,17 +41,17 @@ public class ChatRoom {
     // 구매자 ID
     @ManyToOne
     @JoinColumn(name = "buyer_id")
-    private TestUser buyer;
+    private Users buyer;
 
     // 판매자 ID
     @ManyToOne
     @JoinColumn(name = "seller_id")
-    private TestUser seller;
+    private Users seller;
 
     // 물품
     @ManyToOne
     @JoinColumn(name = "product_id")
-    private TestProduct product;
+    private Product product;
 
     @Column(columnDefinition = "TIMESTAMP")
     private LocalDateTime createdAt;
