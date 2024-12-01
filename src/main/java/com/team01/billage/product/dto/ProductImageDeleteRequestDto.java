@@ -5,8 +5,9 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class RentalStatusUpdateRequestDto {
+public class ProductImageDeleteRequestDto {
 
-    private String rentalStatus; // AVAILABLE, RENTED
+    private Long imageId;
+    private String imageUrl;
 
 }

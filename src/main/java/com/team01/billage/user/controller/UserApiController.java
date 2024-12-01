@@ -1,21 +1,32 @@
 package com.team01.billage.user.controller;
 
+import com.team01.billage.common.CookieUtil;
+import com.team01.billage.user.dto.Request.EmailRequest;
+import com.team01.billage.user.dto.Request.EmailVerificationRequest;
+import com.team01.billage.user.dto.Request.UserPasswordRequestDto;
 import com.team01.billage.user.dto.Response.*;
 import com.team01.billage.user.dto.Request.UserSignupRequestDto;
+import com.team01.billage.user.dto.Response.TargetProfileResponseDto;
+import com.team01.billage.user.dto.Response.UserDeleteResponseDto;
+import com.team01.billage.user.dto.Response.UserResponseDto;
+import com.team01.billage.user.dto.Response.UserSignupResponseDto;
 import com.team01.billage.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import static com.team01.billage.config.jwt.UserConstants.ACCESS_TOKEN_TYPE_VALUE;
@@ -32,52 +43,52 @@ public class UserApiController {
 
     @Operation(summary = "회원가입", description = "새로운 사용자를 등록합니다.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "회원가입 성공"),
-            @ApiResponse(responseCode = "400", description = "잘못된 요청"),
-            @ApiResponse(responseCode = "409", description = "이메일 또는 닉네임 중복")
+        @ApiResponse(responseCode = "201", description = "회원가입 성공"),
+        @ApiResponse(responseCode = "400", description = "잘못된 요청"),
+        @ApiResponse(responseCode = "409", description = "이메일 또는 닉네임 중복")
     })
     @PostMapping("/signup")
     public ResponseEntity<UserSignupResponseDto> signup(
-            @Valid @RequestBody UserSignupRequestDto signupRequest) {
+        @Valid @RequestBody UserSignupRequestDto signupRequest) {
         UserResponseDto userResponse = userService.signup(signupRequest);
         return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(new UserSignupResponseDto("회원가입이 완료되었습니다."));
+            .status(HttpStatus.CREATED)
+            .body(new UserSignupResponseDto("회원가입이 완료되었습니다."));
     }
 
     @Operation(summary = "이메일 중복 확인", description = "이메일 중복 여부를 확인합니다.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "사용 가능한 이메일"),
-            @ApiResponse(responseCode = "409", description = "중복된 이메일")
+        @ApiResponse(responseCode = "200", description = "사용 가능한 이메일"),
+        @ApiResponse(responseCode = "409", description = "중복된 이메일")
     })
     @GetMapping("/signup/check-email")
     public ResponseEntity<EmailAvailabilityResponse> checkEmailAvailability(
-            @RequestParam String email) {
+        @RequestParam String email) {
         userService.validateEmail(email);
         return ResponseEntity.ok(new EmailAvailabilityResponse("사용 가능한 이메일입니다."));
     }
 
     @Operation(summary = "닉네임 중복 확인", description = "닉네임 중복 여부를 확인합니다.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "사용 가능한 닉네임"),
-            @ApiResponse(responseCode = "409", description = "중복된 닉네임")
+        @ApiResponse(responseCode = "200", description = "사용 가능한 닉네임"),
+        @ApiResponse(responseCode = "409", description = "중복된 닉네임")
     })
     @GetMapping("/signup/check-nickname")
     public ResponseEntity<NicknameAvailabilityResponse> checkNicknameAvailability(
-            @RequestParam String nickname) {
+        @RequestParam String nickname) {
         userService.validateNickname(nickname);
         return ResponseEntity.ok(new NicknameAvailabilityResponse("사용 가능한 닉네임입니다."));
     }
 
     @Operation(summary = "회원 탈퇴", description = "회원 정보를 소프트 삭제처리합니다.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "탈퇴 처리 성공"),
-            @ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음")
+        @ApiResponse(responseCode = "200", description = "탈퇴 처리 성공"),
+        @ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음")
     })
     @DeleteMapping("/{email}")
     public ResponseEntity<UserDeleteResponseDto> deleteUser(
-            @PathVariable String email,
-            HttpServletResponse response) {
+        @PathVariable String email,
+        HttpServletResponse response) {
         UserDeleteResponseDto deleteResponse = userService.deleteUser(email);
 
         if (deleteResponse.isDeleted()) {
@@ -86,6 +97,13 @@ public class UserApiController {
         }
 
         return ResponseEntity.badRequest().body(deleteResponse);
+    }
+
+    @GetMapping("/profile")
+    public ResponseEntity<TargetProfileResponseDto> targetProfile(@RequestParam String nickname) {
+
+        TargetProfileResponseDto responseDto = userService.showProfile(nickname);
+        return ResponseEntity.status(HttpStatus.OK).body(responseDto);
     }
 
     private void clearAuthCookies(HttpServletResponse response) {
@@ -102,17 +120,41 @@ public class UserApiController {
         cookie.setMaxAge(0);
         response.addCookie(cookie);
     }
+
+    @Operation(summary = "비밀번호 확인", description = "회원 탈퇴 전 비밀번호를 확인합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "비밀번호 확인 성공"),
+            @ApiResponse(responseCode = "401", description = "비밀번호 불일치"),
+            @ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음")
+    })
+    @PostMapping("/check-password")
+    public ResponseEntity<UserPasswordResponseDto> checkPassword(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @Valid @RequestBody UserPasswordRequestDto requestDto
+    ) {
+        UserPasswordResponseDto response = userService.verifyPassword(
+                userDetails.getUsername(),  // email
+                requestDto.password()
+        );
+
+        return response.matches()
+                ? ResponseEntity.ok(response)
+                : ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+    }
+
+    // 이메일 인증 코드 발송
+    @PostMapping("/email-verification")
+    public ResponseEntity<String> sendVerificationEmail(@RequestBody EmailRequest request) {
+        userService.sendVerificationEmail(request.getEmail());
+        return ResponseEntity.ok("인증 코드가 이메일로 발송되었습니다.");
+    }
+
+    // 이메일 인증 코드 확인
+    @PostMapping("/verify-email")
+    public ResponseEntity<String> verifyEmail(@RequestBody EmailVerificationRequest request) {
+        userService.verifyEmail(request.getEmail(), request.getCode());
+        return ResponseEntity.ok("이메일 인증이 완료되었습니다.");
+    }
+
 }
 
-// Response classes
-@Schema(description = "이메일 사용 가능 여부 응답")
-record EmailAvailabilityResponse(
-        @Schema(description = "응답 메시지")
-        String message
-) {}
-
-@Schema(description = "닉네임 사용 가능 여부 응답")
-record NicknameAvailabilityResponse(
-        @Schema(description = "응답 메시지")
-        String message
-) {}
