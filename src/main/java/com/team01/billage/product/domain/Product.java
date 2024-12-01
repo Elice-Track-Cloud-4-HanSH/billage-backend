@@ -1,7 +1,7 @@
 package com.team01.billage.product.domain;
 
 import com.team01.billage.category.domain.Category;
-import com.team01.billage.product.dto.ProductRequestDto;
+import com.team01.billage.product.dto.ProductUpdateRequestDto;
 import com.team01.billage.product.enums.RentalStatus;
 import com.team01.billage.user.domain.Users;
 import jakarta.persistence.*;
@@ -9,11 +9,11 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.locationtech.jts.geom.Point;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,7 +38,7 @@ public class Product {
     // 판매지역
 
     @ManyToOne
-    @JoinColumn(name = "category_id")
+    @JoinColumn(name = "category_id", nullable = false)
     private Category category;
 
     @Column(nullable = false)
@@ -57,11 +57,8 @@ public class Product {
 
     private Integer weekPrice; // 선택값 (null 가능)
 
-    @Column(precision = 10, scale = 8)
-    private BigDecimal latitude;
-
-    @Column(precision = 11, scale = 8)
-    private BigDecimal longitude;
+    @Column(columnDefinition = "GEOMETRY")
+    private Point location; // (경도, 위도)
 
     @Column(name = "view_count", nullable = false)
     @Builder.Default
@@ -82,17 +79,19 @@ public class Product {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
-    public void updateProduct(ProductRequestDto dto) {
+    public void updateProduct(ProductUpdateRequestDto dto) {
         this.title = dto.getTitle();
         this.description = dto.getDescription();
         this.dayPrice = dto.getDayPrice();
         this.weekPrice = dto.getWeekPrice();
-        this.latitude = dto.getLatitude();
-        this.longitude = dto.getLongitude();
     }
 
     public void updateProductCategory(Category category) {
         this.category = category;
+    }
+
+    public void updateProductLocation(Point location){
+        this.location = location;
     }
 
     public void updateRentalStatus(RentalStatus status) {
@@ -108,7 +107,7 @@ public class Product {
         this.viewCount += 1;
     }
 
-    public void addProductImage(ProductImage productImage){
+    public void addProductImage(ProductImage productImage) {
         this.productImages.add(productImage);
     }
 

@@ -66,6 +66,10 @@ dependencies {
     implementation 'org.apache.commons:commons-lang3'  // RandomStringUtils 사용을 위해
     //oauth
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+    //spatial
+    implementation 'org.hibernate.orm:hibernate-spatial:6.2.9.Final'
+    // geometry
+    implementation 'org.locationtech.jts:jts-core:1.19.0'
 }
 
 def generated = 'src/main/generated'
