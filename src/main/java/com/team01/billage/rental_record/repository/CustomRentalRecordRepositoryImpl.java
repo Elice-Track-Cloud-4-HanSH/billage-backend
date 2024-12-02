@@ -77,9 +77,8 @@ public class CustomRentalRecordRepositoryImpl implements CustomRentalRecordRepos
     }
 
     @Override
-    public List<PurchasersResponseDto> loadPurchasersList(String email) {
+    public List<PurchasersResponseDto> loadPurchasersList(String email, long productId) {
 
-        QUsers seller = QUsers.users;
         QUsers buyer = QUsers.users;
         QChatRoom chatRoom = QChatRoom.chatRoom;
 
@@ -91,9 +90,9 @@ public class CustomRentalRecordRepositoryImpl implements CustomRentalRecordRepos
                     buyer.nickname
                 )
             ).from(chatRoom)
-            .join(chatRoom.seller, seller)
             .join(chatRoom.buyer, buyer)
-            .where(chatRoom.seller.email.eq(email))
+            .where(chatRoom.seller.email.eq(email)
+                .and(chatRoom.product.id.eq(productId)))
             .fetch();
     }
 }

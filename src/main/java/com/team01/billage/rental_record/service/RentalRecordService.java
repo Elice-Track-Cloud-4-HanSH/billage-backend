@@ -45,7 +45,7 @@ public class RentalRecordService {
 
         RentalRecord rentalRecord = RentalRecord.builder()
             .startDate(startRentalRequestDto.getStartDate())
-            .expectedReturnDate(startRentalRequestDto.getExpectedRentalDate())
+            .expectedReturnDate(startRentalRequestDto.getExpectedReturnDate())
             .seller(chatRoom.getSeller())
             .buyer(chatRoom.getBuyer())
             .product(product)
@@ -55,9 +55,9 @@ public class RentalRecordService {
         rentalRecordRepository.save(rentalRecord);
     }
 
-    public List<PurchasersResponseDto> readPurchasers(String email) {
+    public List<PurchasersResponseDto> readPurchasers(String email, long productId) {
 
-        return rentalRecordRepository.loadPurchasersList(email);
+        return rentalRecordRepository.loadPurchasersList(email, productId);
     }
 
     public List<ShowRecordResponseDto> readRentalRecords(String type, String email) {
