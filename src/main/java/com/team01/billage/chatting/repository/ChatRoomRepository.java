@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
     @Modifying
@@ -30,4 +31,11 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
 
     @Query(value = "SELECT cr FROM ChatRoom cr JOIN cr.chats c WHERE cr.buyer.id = :userId ORDER BY c.createdAt")
     List<ChatRoom> getToBuyChatroom(@Param("userId") Long userId, Pageable pageable);
+
+    @Query(value = "SELECT cr FROM ChatRoom cr " +
+            "JOIN FETCH cr.seller s " +
+            "JOIN FETCH cr.buyer b " +
+            "JOIN FETCH cr.product p " +
+            "WHERE s.id = :sellerId AND b.id = :buyerId AND p.id = :productId")
+    Optional<ChatRoom> checkChatroomIsExist(@Param("sellerId") Long sellerId, @Param("buyerId") Long buyerId, @Param("productId") Long productId);
 }

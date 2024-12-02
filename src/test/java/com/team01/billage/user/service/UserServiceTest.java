@@ -1,12 +1,18 @@
 package com.team01.billage.user.service;
 
+import com.team01.billage.exception.CustomException;
+import com.team01.billage.exception.ErrorCode;
 import com.team01.billage.user.domain.Provider;
 import com.team01.billage.user.domain.UserRole;
 import com.team01.billage.user.domain.Users;
-import com.team01.billage.user.dto.Response.UserResponseDto;
 import com.team01.billage.user.dto.Request.UserSignupRequestDto;
+import com.team01.billage.user.dto.Request.UserUpdateRequestDto;
+import com.team01.billage.user.dto.Response.UserDeleteResponseDto;
+import com.team01.billage.user.dto.Response.UserResponseDto;
 import com.team01.billage.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -14,134 +20,217 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.AssertionsForClassTypes.catchThrowable;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
-import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
-public class UserServiceTest {
+class UserServiceTest {
 
     @Mock
-    private UserRepository userRepository; // UserRepository를 Mocking
+    private UserRepository userRepository;
 
     @Mock
-    private BCryptPasswordEncoder bCryptPasswordEncoder; // BCryptPasswordEncoder를 Mocking
+    private BCryptPasswordEncoder passwordEncoder;
 
     @InjectMocks
-    private UserService userService; // UserService를 Mock 객체들과 함께 주입
+    private UserService userService;
 
-    private UserSignupRequestDto dto;
-    private UserSignupRequestDto dto2;
+    private UserSignupRequestDto signupRequestDto;
+    private Users mockUser;
 
     @BeforeEach
-    public void setup() {
-        // 테스트 전에 DTO 객체 설정
-        dto = new UserSignupRequestDto("nickname", "email@example.com", "password123",UserRole.USER,Provider.NONE);
-        dto2 = new UserSignupRequestDto("ppp", "google@example.com", "password456",UserRole.ADMIN,Provider.GOOGLE);
-    }
+    void setUp() {
+        signupRequestDto = UserSignupRequestDto.builder()
+                .email("test@example.com")
+                .password("password123")
+                .nickname("testUser")
+                .userRole(UserRole.USER)
+                .provider(Provider.LOCAL)
+                .build();
 
-    @Test
-    public void testSave_UserDoesNotExist() {
-        // given
-        when(userRepository.existsByEmail(dto.getEmail())).thenReturn(false);  // 이메일이 이미 존재하지 않음
-        when(bCryptPasswordEncoder.encode(dto.getPassword())).thenReturn("encodedPassword");  // 비밀번호 암호화
-
-        // 가짜로 저장될 Users 객체 생성 및 반환 설정
-        Users mockUser = Users.builder()
-                .nickname(dto.getNickname())
-                .email(dto.getEmail())
+        mockUser = Users.builder()
+                .id(1L)
+                .email("test@example.com")
                 .password("encodedPassword")
+                .nickname("testUser")
                 .role(UserRole.USER)
-                .provider(Provider.NONE)
+                .provider(Provider.LOCAL)
                 .build();
-
-        when(userRepository.save(any(Users.class))).thenReturn(mockUser);  // save 호출 시 mockUser 반환
-
-        // when
-        Users savedUser = userService.save(dto);
-
-        // then
-        assertNotNull(savedUser);  // 저장된 사용자 객체가 null이 아님을 확인
-        assertEquals(dto.getEmail(), savedUser.getEmail());  // 이메일이 같음을 확인
-        assertEquals(dto.getNickname(), savedUser.getNickname());  // 닉네임이 같음을 확인
-        assertEquals("encodedPassword", savedUser.getPassword());  // 암호화된 비밀번호가 맞는지 확인
-        assertEquals(UserRole.USER, savedUser.getRole());  // 역할이 USER인지를 확인
-        assertEquals(Provider.NONE, savedUser.getProvider());  // provider가 NONE인지 확인
-
-        // Mock 메서드 호출 확인
-        verify(userRepository).existsByEmail(dto.getEmail());  // existsByEmail 호출 확인
-        verify(userRepository).save(any(Users.class));  // save 호출 확인
     }
 
-    @Test
-    public void testSave_UserAlreadyExists() {
-        // given
-        when(userRepository.existsByEmail(dto.getEmail())).thenReturn(true);  // 이메일이 이미 존재한다고 설정
+    @Nested
+    @DisplayName("회원가입 테스트")
+    class SignupTest {
 
-        // when & then
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            userService.save(dto);
-        });
-        assertEquals("이미 존재하는 이메일입니다.", exception.getMessage());  // 예외 메시지가 정확한지 확인
+        @Test
+        @DisplayName("정상적인 회원가입 성공")
+        void signupSuccess() {
+            // given
+            given(userRepository.existsByEmail(anyString())).willReturn(false);
+            given(userRepository.existsByNickname(anyString())).willReturn(false);
+            given(passwordEncoder.encode(anyString())).willReturn("encodedPassword");
+            given(userRepository.save(any(Users.class))).willReturn(mockUser);
+
+            // when
+            UserResponseDto result = userService.signup(signupRequestDto);
+
+            // then
+            assertThat(result).isNotNull();
+            assertThat(result.getEmail()).isEqualTo(signupRequestDto.getEmail());
+            assertThat(result.getNickname()).isEqualTo(signupRequestDto.getNickname());
+            verify(userRepository).save(any(Users.class));
+        }
+
+        @Test
+        @DisplayName("중복된 이메일로 회원가입 실패")
+        void signupFailWithDuplicateEmail() {
+            // given
+            given(userRepository.existsByEmail(anyString())).willReturn(true);
+
+            // when & then
+            assertThatThrownBy(() -> userService.signup(signupRequestDto))
+                    .isInstanceOf(CustomException.class)
+                    .hasFieldOrPropertyWithValue("errorCode", ErrorCode.EMAIL_ALREADY_EXISTS);
+        }
     }
 
-    @Test
-    void findAll() {
-        //given
-        Users user1 = Users.builder()
-                .nickname(dto.getNickname())
-                .email(dto.getEmail())
-                .password("encodedPassword1")
-                .role(dto.getUserRole()) // Enum을 String으로 변환
-                .provider(dto.getProvider()) // Enum을 String으로 변환
-                .imageUrl("https://example.com/user1.png")
-                .description("Test user 1 description")
-                .build();
+    @Nested
+    @DisplayName("회원 조회 테스트")
+    class FindUserTest {
 
-        Users user2 = Users.builder()
-                .nickname(dto2.getNickname())
-                .email(dto2.getEmail())
-                .password("encodedPassword2")
-                .role(dto2.getUserRole()) // Enum을 String으로 변환
-                .provider(dto2.getProvider()) // Enum을 String으로 변환
-                .imageUrl("https://example.com/user2.png")
-                .description("Test user 2 description")
-                .build();
+        @Test
+        @DisplayName("이메일로 회원 조회 성공")
+        void findByEmailSuccess() {
+            // given
+            given(userRepository.findByEmailAndDeletedAtIsNull(anyString()))
+                    .willReturn(Optional.of(mockUser));
 
-        // Mock 데이터 설정
-        List<Users> mockUsers = Arrays.asList(user1, user2);
-        when(userRepository.findAll()).thenReturn(mockUsers); // userRepository의 findAll 호출 시 mockUsers 반환
+            // when
+            Users result = userService.findByEmail("test@example.com");
 
-        // when
-        List<UserResponseDto> result = userService.findAll(); // 테스트 대상 메서드 호출
+            // then
+            assertThat(result).isNotNull();
+            assertThat(result.getEmail()).isEqualTo(mockUser.getEmail());
+        }
 
-        // then
-        assertEquals(2, result.size()); // 반환된 결과의 크기 확인
+        @Test
+        @DisplayName("전체 회원 조회 성공")
+        void findAllSuccess() {
+            // given
+            Users user1 = mockUser;
+            Users user2 = Users.builder()
+                    .id(2L)
+                    .email("test2@example.com")
+                    .nickname("testUser2")
+                    .build();
+            given(userRepository.findAll()).willReturn(Arrays.asList(user1, user2));
 
-        // 첫 번째 UserResponseDto 확인
-        UserResponseDto response1 = result.get(0);
-        assertEquals(dto.getNickname(), response1.getNickname());
-        assertEquals(dto.getEmail(), response1.getEmail());
-        assertEquals(UserRole.USER, response1.getRole());
-        assertEquals(Provider.NONE, response1.getProvider());
-        assertEquals("https://example.com/user1.png", response1.getImageUrl());
-        assertEquals("Test user 1 description", response1.getDescription());
+            // when
+            List<UserResponseDto> results = userService.findAll();
 
-        // 두 번째 UserResponseDto 확인
-        UserResponseDto response2 = result.get(1);
-        assertEquals(dto2.getNickname(), response2.getNickname());
-        assertEquals(dto2.getEmail(), response2.getEmail());
-        assertEquals(UserRole.ADMIN, response2.getRole());
-        assertEquals(Provider.GOOGLE, response2.getProvider());
-        assertEquals("https://example.com/user2.png", response2.getImageUrl());
-        assertEquals("Test user 2 description", response2.getDescription());
-
-        // Mock 메서드 호출 확인
-        verify(userRepository).findAll(); // findAll이 호출되었는지 확인
-
+            // then
+            assertThat(results).hasSize(2);
+            assertThat(results.get(0).getEmail()).isEqualTo(user1.getEmail());
+            assertThat(results.get(1).getEmail()).isEqualTo(user2.getEmail());
+        }
     }
 
+    @Nested
+    @DisplayName("회원 정보 수정 테스트")
+    class UpdateUserTest {
 
+        @Test
+        @DisplayName("회원 정보 수정 성공")
+        void updateUserSuccess() {
+            // given
+            UserUpdateRequestDto updateDto = UserUpdateRequestDto.builder()
+                    .nickname("newNickname")
+                    .password("newPassword")
+                    .description("new description")
+                    .build();
+
+            given(userRepository.findById(anyLong())).willReturn(Optional.of(mockUser));
+            given(userRepository.existsByNickname(anyString())).willReturn(false);
+            given(passwordEncoder.encode(anyString())).willReturn("newEncodedPassword");
+            given(userRepository.save(any(Users.class))).willReturn(mockUser);
+
+            // when
+            UserResponseDto result = userService.updateUser(1L, updateDto);
+
+            // then
+            assertThat(result).isNotNull();
+            verify(userRepository).save(any(Users.class));
+        }
+    }
+
+    @Nested
+    @DisplayName("회원 삭제 테스트")
+    class DeleteUserTest {
+
+        @Test
+        @DisplayName("회원 소프트 삭제 성공")
+        void deleteUserSuccess() {
+            // given
+            given(userRepository.findByEmailAndDeletedAtIsNull(anyString()))
+                    .willReturn(Optional.of(mockUser));
+
+            // when
+            UserDeleteResponseDto result = userService.deleteUser("test@example.com");
+
+            // then
+            assertThat(result.isDeleted()).isTrue();
+            assertThat(result.getMessage()).isEqualTo("회원 삭제 성공");
+        }
+
+        @Test
+        @DisplayName("이미 삭제된 회원 삭제 시도")
+        void deleteAlreadyDeletedUser() {
+            // given
+            mockUser.setDeletedAt(Timestamp.valueOf(LocalDateTime.now()));
+            given(userRepository.findByEmailAndDeletedAtIsNull(anyString()))
+                    .willThrow(new CustomException(ErrorCode.USER_NOT_FOUND));
+
+            // when & then
+            assertThatThrownBy(() -> userService.deleteUser("test@example.com"))
+                    .isInstanceOf(CustomException.class)
+                    .hasFieldOrPropertyWithValue("errorCode", ErrorCode.USER_NOT_FOUND);
+        }
+    }
+
+    @Nested
+    @DisplayName("유효성 검사 테스트")
+    class ValidationTest {
+
+        @Test
+        @DisplayName("이메일 중복 검사 성공")
+        void validateEmailSuccess() {
+            // given
+            given(userRepository.existsByEmail(anyString())).willReturn(false);
+
+            // when & then
+            assertThat(catchThrowable(() -> userService.validateEmail("test@example.com")))
+                    .isNull();
+        }
+
+        @Test
+        @DisplayName("닉네임 중복 검사 성공")
+        void validateNicknameSuccess() {
+            // given
+            given(userRepository.existsByNickname(anyString())).willReturn(false);
+
+            // when & then
+            assertThat(catchThrowable(() -> userService.validateNickname("testUser")))
+                    .isNull();
+        }
+    }
 }

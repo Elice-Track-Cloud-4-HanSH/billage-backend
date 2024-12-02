@@ -1,25 +1,66 @@
 spring:
+  config:
+    import:
+      - s3bucket.yml
+
   sql:
     init:
       mode: always
 
   datasource:
-    driver-class-name: org.h2.Driver
-#    url: jdbc:h2:mem:billage
-    url: jdbc:h2:tcp://localhost/~/billage
-    username: sa
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    #    url: jdbc:h2:mem:billage
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
 
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
 
   jpa:
-    database-platform: org.hibernate.dialect.H2Dialect
+    database-platform: org.hibernate.spatial.dialect.mysql.MySQLSpatialDialect # Spatial Dialect 설정
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: update
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.H2Dialect
+        dialect: org.hibernate.spatial.dialect.mysql.MySQLSpatialDialect # Spatial Dialect 설정
         format_sql: true
         show_sql: true
+
+  mail:
+    host: smtp.naver.com
+    port: 587
+    username: ${NAVER_MAIL}
+    password: ${NAVER_MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+  profiles:
+    include: oauth
+
+
+
+jwt:
+  secret: "HvFnEFgEYYrlEcJFPP/I+MB7kDyelh0j3+/Tz9uhLWYp119Aph+FlfLCz7YVI7DdEjtWQqQ4KZ+fdxEC+kNSpw==" ##임시 키
+  token:
+    refresh-expires: 604800000 # 7일
+    access-expires: 900000 # 15분
+
+logging:
+  level:
+    org:
+      springframework:
+        security: DEBUG
+
+
+custom:
+  category-image:
+    base-url: "http://localhost:8080"
+
+app:
+  cors:
+    allowed-origins: http://localhost:3000
+  oauth2:
+    authorized-redirect-urls: http://localhost:3000/chat

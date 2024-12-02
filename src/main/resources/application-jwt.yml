@@ -1,0 +1,9 @@
+jwt:
+  secret: "HvFnEFgEYYrlEcJFPP/I+MB7kDyelh0j3+/Tz9uhLWYp119Aph+FlfLCz7YVI7DdEjtWQqQ4KZ+fdxEC+kNSpw==" ##임시 키
+  redis:
+    host: localhost
+    port: 6379
+  token:
+    refresh-expires: 604800000 # 7일
+    access-expires: 900000 # 15분
+

@@ -3,6 +3,7 @@ package com.team01.billage.product.dto;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Getter
 @Setter
@@ -16,8 +17,8 @@ public class ProductRequestDto {
     private String description;
     private int dayPrice;
     private Integer weekPrice; // 선택값 (null 가능)
-    private BigDecimal latitude;
-    private BigDecimal longitude;
-    //이미지 리스트
+    private double latitude;
+    private double longitude;
+    private List<ProductImageRequestDto> productImages;
 
 }

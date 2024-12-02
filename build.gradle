@@ -45,7 +45,8 @@ dependencies {
     // Swagger UI
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.0.2'
     // s3
-    implementation 'software.amazon.awssdk:s3:2.20.96'
+    implementation 'org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE'
+    //implementation 'software.amazon.awssdk:s3:2.20.96'
     implementation 'software.amazon.awssdk:sts:2.20.96'
     implementation 'org.mockito:mockito-core:4.8.0'
     // QueryDSL
@@ -57,6 +58,18 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-websocket'
 	implementation 'org.webjars:sockjs-client:1.5.1'
 	implementation 'org.webjars:stomp-websocket:2.3.4'
+    //JWT
+    implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+    implementation 'io.jsonwebtoken:jjwt-impl:0.11.5'
+    implementation 'io.jsonwebtoken:jjwt-jackson:0.11.5'
+    //email
+    implementation 'org.apache.commons:commons-lang3'  // RandomStringUtils 사용을 위해
+    //oauth
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+    //spatial
+    implementation 'org.hibernate.orm:hibernate-spatial:6.2.9.Final'
+    // geometry
+    implementation 'org.locationtech.jts:jts-core:1.19.0'
 }
 
 def generated = 'src/main/generated'

@@ -1,6 +1,7 @@
 package com.team01.billage.rental_record.controller;
 
 import com.team01.billage.product.service.ProductService;
+import com.team01.billage.rental_record.dto.PurchasersResponseDto;
 import com.team01.billage.rental_record.dto.ShowRecordResponseDto;
 import com.team01.billage.rental_record.dto.StartRentalRequestDto;
 import com.team01.billage.rental_record.service.RentalRecordService;
@@ -12,6 +13,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -36,11 +39,29 @@ public class RentalRecordController {
     }
 
     @GetMapping
-    public ResponseEntity<List<ShowRecordResponseDto>> showRentalRecord(@RequestParam String type,
+    public ResponseEntity<List<ShowRecordResponseDto>> showRentalRecord(
+        @RequestParam(name = "type") String type,
         @AuthenticationPrincipal UserDetails userDetails) {
 
         List<ShowRecordResponseDto> responseDtos = rentalRecordService.readRentalRecords(type,
             userDetails.getUsername());
         return ResponseEntity.status(HttpStatus.OK).body(responseDtos);
+    }
+
+    @GetMapping("/set-to-rented")
+    public ResponseEntity<List<PurchasersResponseDto>> showPurchasers(
+        @AuthenticationPrincipal UserDetails userDetails) {
+
+        List<PurchasersResponseDto> responseDtos = rentalRecordService.readPurchasers(
+            userDetails.getUsername());
+        return ResponseEntity.status(HttpStatus.OK).body(responseDtos);
+    }
+
+    @PatchMapping("{rentalRecordId}")
+    public ResponseEntity<Void> returnCompleted(@PathVariable("rentalRecordId") long rentalRecordId,
+        @AuthenticationPrincipal UserDetails userDetails) {
+
+        rentalRecordService.updateRentalRecord(rentalRecordId, userDetails.getUsername());
+        return ResponseEntity.status(HttpStatus.OK).build();
     }
 }
