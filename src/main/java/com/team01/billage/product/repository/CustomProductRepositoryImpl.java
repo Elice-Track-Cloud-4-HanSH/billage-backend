@@ -1,13 +1,16 @@
 package com.team01.billage.product.repository;
 
+import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import com.team01.billage.product.domain.Product;
 import com.team01.billage.product.domain.QProduct;
+import com.team01.billage.product.domain.QProductImage;
+import com.team01.billage.product.dto.OnSaleResponseDto;
+import com.team01.billage.product.dto.ProductResponseDto;
 import com.team01.billage.product.enums.RentalStatus;
 import com.team01.billage.user.domain.QUsers;
-import lombok.RequiredArgsConstructor;
-
 import java.util.List;
+import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 public class CustomProductRepositoryImpl implements CustomProductRepository {
@@ -15,17 +18,61 @@ public class CustomProductRepositoryImpl implements CustomProductRepository {
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public List<Product> findAllOnSale(String email) {
+    public List<OnSaleResponseDto> findAllOnSale(String email) {
         QProduct product = QProduct.product;
         QUsers seller = QUsers.users;
+        QProductImage productImage = QProductImage.productImage;
 
         return queryFactory
-            .selectFrom(product)
+            .select(Projections.constructor(
+                OnSaleResponseDto.class,
+                product.id,
+                productImage.imageUrl,
+                product.title
+            ))
+            .from(product)
             .join(product.seller, seller)
+            .leftJoin(productImage)
+            .on(productImage.product.eq(product)
+                .and(productImage.thumbnail.eq("Y")))
             .where(seller.email.eq(email)
                 .and(product.rentalStatus.eq(RentalStatus.AVAILABLE))
                 .and(product.deletedAt.isNull()))
             .orderBy(product.updatedAt.desc())
+            //.limit()
             .fetch();
+    }
+
+    @Override
+    public List<ProductResponseDto> findAllProductsByCategoryId(Long categoryId) {
+        QProduct product = QProduct.product;
+        QProductImage productImage = QProductImage.productImage;
+
+        // 동적 조건 처리
+        BooleanBuilder builder = new BooleanBuilder();
+        builder.and(product.deletedAt.isNull());
+
+        if(categoryId != 1L){
+            builder.and(product.category.id.eq(categoryId));
+        }
+
+        return queryFactory
+                .select(Projections.constructor(
+                        ProductResponseDto.class,
+                        product.id,
+                        product.title,
+                        product.updatedAt,
+                        product.dayPrice,
+                        product.weekPrice,
+                        product.viewCount,
+                        productImage.imageUrl
+                ))
+                .from(product)
+                .leftJoin(productImage)
+                .on(product.id.eq(productImage.product.id).
+                        and(productImage.thumbnail.eq("Y")))
+                .where(builder)
+                .orderBy(product.updatedAt.desc())
+                .fetch();
     }
 }

@@ -42,12 +42,6 @@ public class RentalRecord {
     @Column
     private LocalDate returnDate;
 
-    @Column
-    private String imageUrl;
-
-    @Column
-    private String title;
-
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;

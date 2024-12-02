@@ -26,14 +26,15 @@ public class CustomUserReviewRepositoryImpl implements CustomUserReviewRepositor
                     userReview.score,
                     userReview.content,
                     author.id,
-                    author.nickname,
-                    author.imageUrl
+                    author.imageUrl,
+                    author.nickname
                 )
             )
             .from(userReview)
             .join(userReview.author, author)
             .where(author.email.eq(email))
             .orderBy(userReview.createdAt.desc())
+            //.limit()
             .fetch();
     }
 
@@ -49,14 +50,15 @@ public class CustomUserReviewRepositoryImpl implements CustomUserReviewRepositor
                     userReview.score,
                     userReview.content,
                     target.id,
-                    target.nickname,
-                    target.imageUrl
+                    target.imageUrl,
+                    target.nickname
                 )
             )
             .from(userReview)
             .join(userReview.target, target)
             .where(target.nickname.eq(nickname))
             .orderBy(userReview.createdAt.desc())
+            //.limit()
             .fetch();
     }
 

@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -52,5 +53,12 @@ public class UserReviewController {
         ReviewSubjectResponseDto responseDto = userReviewService.getReviewSubject(id,
             userDetails.getUsername());
         return ResponseEntity.status(HttpStatus.OK).body(responseDto);
+    }
+
+    @GetMapping("/target")
+    public ResponseEntity<List<ShowReviewResponseDto>> targetReview(@RequestParam String nickname) {
+
+        List<ShowReviewResponseDto> responseDtos = userReviewService.readTargetReviews(nickname);
+        return ResponseEntity.status(HttpStatus.OK).body(responseDtos);
     }
 }
