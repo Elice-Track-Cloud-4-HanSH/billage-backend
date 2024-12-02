@@ -14,7 +14,8 @@ public class ChatResponseDto {
     private Long chatId;
     private CustomChatResponseUser sender;
     private String message;
-    private boolean isRead;
+    private boolean read;
+    private boolean mine;
 
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime createdAt;
@@ -23,8 +24,13 @@ public class ChatResponseDto {
         this.chatId = chatId;
         this.sender = new CustomChatResponseUser(sender);
         this.message = message;
-        this.isRead = isRead;
+        this.read = isRead;
         this.createdAt = createdAt;
+    }
+
+    public ChatResponseDto(Long chatId, Users sender, String message, boolean isRead, LocalDateTime createdAt, boolean mine) {
+        this(chatId, sender, message, isRead, createdAt);
+        this.mine = mine;
     }
 
     // builder 패턴
@@ -33,8 +39,9 @@ public class ChatResponseDto {
         this.chatId = builder.chatId;
         this.sender = builder.sender;
         this.message = builder.message;
-        this.isRead = builder.isRead;
+        this.read = builder.read;
         this.createdAt = builder.createdAt;
+        this.mine = builder.mine;
     }
 
     public static Builder builder() {
@@ -45,7 +52,8 @@ public class ChatResponseDto {
         private Long chatId;
         private CustomChatResponseUser sender;
         private String message;
-        private boolean isRead;
+        private boolean read;
+        private boolean mine;
 
         private LocalDateTime createdAt;
 
@@ -61,12 +69,17 @@ public class ChatResponseDto {
             this.message = message;
             return this;
         }
-        public Builder isRead(boolean isRead) {
-            this.isRead = isRead;
+        public Builder isRead(boolean read) {
+            this.read = read;
             return this;
         }
         public Builder createdAt(LocalDateTime createdAt) {
             this.createdAt = createdAt;
+            return this;
+        }
+
+        public Builder isMine(boolean mine) {
+            this.mine = mine;
             return this;
         }
 
