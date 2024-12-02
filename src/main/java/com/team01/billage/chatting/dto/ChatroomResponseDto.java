@@ -2,13 +2,12 @@ package com.team01.billage.chatting.dto;
 
 import com.team01.billage.chatting.domain.Chat;
 import com.team01.billage.chatting.domain.ChatRoom;
-import com.team01.billage.product.domain.Product;
-import com.team01.billage.user.domain.Users;
+import com.team01.billage.chatting.dto.object.CustomChatResponse;
+import com.team01.billage.chatting.dto.object.CustomChatResponseProduct;
+import com.team01.billage.chatting.dto.object.CustomChatResponseUser;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -29,35 +28,4 @@ public class ChatroomResponseDto {
     }
 }
 
-@Getter
-class CustomChatResponseUser {
-    private final Long id;
-    private final String nickname;
 
-    public CustomChatResponseUser(Users user) {
-        this.id = user.getId();
-        this.nickname = user.getNickname();
-    }
-}
-
-@Getter
-class CustomChatResponse {
-    private final String message;
-    private final LocalDateTime lastSentTime;
-
-    public CustomChatResponse(Chat lastChat) {
-        this.message = lastChat.getMessage();
-        this.lastSentTime = lastChat.getCreatedAt();
-    }
-}
-
-@Getter
-class CustomChatResponseProduct {
-    private final Long id;
-    private final String name;
-
-    public CustomChatResponseProduct(Product product) {
-        this.id = product.getId();
-        this.name = product.getTitle();
-    }
-}
