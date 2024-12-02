@@ -27,6 +27,7 @@ public enum ErrorCode {
     CHANGE_ACCESS_FORBIDDEN(HttpStatus.FORBIDDEN, "변경 권한이 없습니다."),
     CHATROOM_ACCESS_FORBIDDEN(HttpStatus.FORBIDDEN, "채팅방에 참여 중이지 않습니다."),
     NOT_PRODUCT_OWNER(HttpStatus.FORBIDDEN, "상품의 주인이 아닙니다."),
+    UNAUTHORIZED_WEBSOCKET_CONNECTION(HttpStatus.FORBIDDEN, "웹소켓 연결을 다시 확인해주세요. 토큰이 있나요?"),
     ACCESS_DENIED(HttpStatus.FORBIDDEN, "접근 권한이 없습니다."),
 
     /* 404 NOT_FOUND : Resource를 찾을 수 없음 */
