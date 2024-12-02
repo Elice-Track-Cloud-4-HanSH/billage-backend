@@ -14,5 +14,5 @@ public interface CustomRentalRecordRepository {
 
     List<ShowRecordResponseDto> findByBuyerRecord(String emaill);
 
-    List<PurchasersResponseDto> loadPurchasersList(String email);
+    List<PurchasersResponseDto> loadPurchasersList(String email, long productId);
 }

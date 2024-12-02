@@ -48,16 +48,17 @@ public class RentalRecordController {
         return ResponseEntity.status(HttpStatus.OK).body(responseDtos);
     }
 
-    @GetMapping("/set-to-rented")
+    @GetMapping("/set-to-rented/{productId}")
     public ResponseEntity<List<PurchasersResponseDto>> showPurchasers(
-        @AuthenticationPrincipal UserDetails userDetails) {
+        @AuthenticationPrincipal UserDetails userDetails,
+        @PathVariable("productId") long productId) {
 
         List<PurchasersResponseDto> responseDtos = rentalRecordService.readPurchasers(
-            userDetails.getUsername());
+            userDetails.getUsername(), productId);
         return ResponseEntity.status(HttpStatus.OK).body(responseDtos);
     }
 
-    @PatchMapping("{rentalRecordId}")
+    @PatchMapping("/{rentalRecordId}")
     public ResponseEntity<Void> returnCompleted(@PathVariable("rentalRecordId") long rentalRecordId,
         @AuthenticationPrincipal UserDetails userDetails) {
 
