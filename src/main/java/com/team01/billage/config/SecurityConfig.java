@@ -1,9 +1,12 @@
 package com.team01.billage.config;
 
 import com.team01.billage.config.jwt.JwtFilter;
+import com.team01.billage.config.oauth.OAuth2SuccessHandler;
 import com.team01.billage.exception.CustomException;
 import com.team01.billage.exception.ErrorCode;
 import com.team01.billage.user.repository.OAuth2AuthorizationRequestBasedOnCookieRepository;
+import com.team01.billage.user.service.LogoutSuccessHandler;
+import com.team01.billage.user.service.OAuth2UserCustomService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -35,10 +38,6 @@ import java.io.IOException;
 public class SecurityConfig {
 
 
-    @Value("${app.oauth2.authorized-redirect-urls}")
-    private String oauthRedirectPage;
-
-
     private final PermitAllUrlConfig permitAllUrlConfig;
     private final UserDetailsService userDetailsService;
     private final JwtFilter jwtFilter;
@@ -53,10 +52,7 @@ public class SecurityConfig {
 
     private final LogoutSuccessHandler logoutSuccessHandler;
     private final OAuth2UserCustomService oAuth2UserCustomService;
-    private final OAuth2AuthorizationRequestBasedOnCookieRepository cookieRepository;
     private final OAuth2SuccessHandler successHandler;
-    private final JwtFilter jwtFilter;
-
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
