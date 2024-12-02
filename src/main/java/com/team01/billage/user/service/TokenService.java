@@ -11,6 +11,7 @@ import com.team01.billage.user.dto.Request.JwtTokenLoginRequest;
 import com.team01.billage.user.repository.TokenRedisRepository;
 import com.team01.billage.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -23,6 +24,9 @@ public class TokenService {
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final JwtProviderImpl jwtProvider;
     private final TokenRedisRepository tokenRedisRepository;
+
+    @Value("${REDIS_TOKEN_TTL}")
+    private Long redisTokenTtl;
 
     public JwtTokenDto login(JwtTokenLoginRequest request) {
         // 이메일로 사용자 찾기
@@ -60,7 +64,7 @@ public class TokenService {
 
         // Redis에 저장
         tokenRedisRepository.save(
-                new TokenRedis(user.getId(), refreshToken.getToken())
+                new TokenRedis(user.getId(), refreshToken.getToken(),redisTokenTtl )
         );
 
         return JwtTokenDto.builder()
