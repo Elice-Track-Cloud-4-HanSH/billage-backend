@@ -31,28 +31,18 @@ import java.util.Optional;
 public class ChatRoomService {
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
-    private final ChatRoomRepository chatRoomRepository;
-    private final ChatRoomQueryDSL chatRoomQueryDsl;
+    private final ChatRoomRepository chatroomRepository;
+    private final ChatRoomQueryDSL chatroomQueryDsl;
     private final ChatService chatService;
 
-    public Users determineUser(String username) {
-        try {
-            Long userId = Long.parseLong(username);
-            return userRepository.findById(userId).orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
-        } catch (NumberFormatException e) {
-            return userRepository.findByEmail(username)
-                    .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
-        }
-    }
-
     public ChatRoom isChatroomExists(Long chatroomId) {
-        return chatRoomRepository.findById(chatroomId).orElseThrow(() ->
+        return chatroomRepository.findById(chatroomId).orElseThrow(() ->
                 new CustomException(ErrorCode.CHATROOM_NOT_FOUND));
     }
 
     public List<ChatroomResponseDto> getAllChatroomsWithDSL(ChatType type, int page, Long userId, Long productId) {
         Pageable pageable = PageRequest.of(page, 20);
-        List<ChatRoomWithLastChat> results = chatRoomQueryDsl.getChatrooms(type, userId, productId, pageable);
+        List<ChatRoomWithLastChat> results = chatroomQueryDsl.getChatrooms(type, userId, productId, pageable);
 
         return results.stream()
                 .map(result -> new ChatroomResponseDto(
@@ -62,18 +52,29 @@ public class ChatRoomService {
                 .toList();
     }
 
-    public CheckValidChatroomResponseDto checkValidChatroom(CheckValidChatroomRequestDto checkValidChatroomDto) {
-        Optional<ChatRoom> chatroomOpt = chatRoomRepository.checkChatroomIsExist(
+    public CheckValidChatroomResponseDto checkValidChatroom(CheckValidChatroomRequestDto checkValidChatroomDto, Long userId) {
+        Optional<ChatRoom> chatroomOpt = chatroomRepository.checkChatroomIsExist(
                 checkValidChatroomDto.getSellerId(),
                 checkValidChatroomDto.getBuyerId(),
                 checkValidChatroomDto.getProductId()
         );
-        return chatroomOpt.map(chatRoom -> new CheckValidChatroomResponseDto(chatRoom.getId()))
+        return chatroomOpt.map(chatroom -> {
+                    if (userId.equals(checkValidChatroomDto.getSellerId())) {
+                        if (chatroom.getSellerExitAt() != null) {
+                            chatroom.setSellerJoinAt();
+                        }
+                    } else {
+                        if (chatroom.getBuyerExitAt() != null) {
+                            chatroom.setBuyerJoinAt();
+                        }
+                    }
+                    return new CheckValidChatroomResponseDto(chatroom.getId());
+                })
                 .orElseGet(() -> createChatRoom(checkValidChatroomDto));
     }
 
     public List<ChatResponseDto> getChatsInChatroom(Long chatroomId, Long userId, int page, Long lastChatId) {
-        ChatRoom chatroom = chatRoomRepository.findById(chatroomId).orElseThrow(() -> new CustomException(ErrorCode.CHATROOM_NOT_FOUND));
+        ChatRoom chatroom = chatroomRepository.findById(chatroomId).orElseThrow(() -> new CustomException(ErrorCode.CHATROOM_NOT_FOUND));
 
         if (!(userId.equals(chatroom.getSeller().getId()) || userId.equals(chatroom.getBuyer().getId()))) {
             throw new CustomException(ErrorCode.CHATROOM_ACCESS_FORBIDDEN);
@@ -85,43 +86,41 @@ public class ChatRoomService {
     public CheckValidChatroomResponseDto createChatRoom(CheckValidChatroomDao checkValidChatroomDao) {
         Users buyer = checkValidChatroomDao.getBuyer();
         Users seller = userRepository.findById(checkValidChatroomDao.getSellerId()).orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
-        Product product = productRepository.findById(checkValidChatroomDao.getProductId()).orElseThrow(() -> new CustomException(ErrorCode.PRODUCT_NOT_FOUND));
+        Product product = productRepository.findByIdAndSellerId(checkValidChatroomDao.getProductId(), checkValidChatroomDao.getSellerId()).orElseThrow(() -> new CustomException(ErrorCode.PRODUCT_NOT_FOUND));
 
-        ChatRoom chatRoom = ChatRoom.builder()
+        ChatRoom chatroom = ChatRoom.builder()
                 .buyer(buyer)
                 .seller(seller)
                 .product(product)
                 .createdAt(LocalDateTime.now())
                 .build();
-        chatRoomRepository.save(chatRoom);
-        System.out.println(chatRoom.getId());
+        chatroomRepository.save(chatroom);
 
-        return new CheckValidChatroomResponseDto(chatRoom.getId());
+        return new CheckValidChatroomResponseDto(chatroom.getId());
     }
 
     public CheckValidChatroomResponseDto createChatRoom(CheckValidChatroomRequestDto checkValidChatroomRequestDto) {
         Users buyer = userRepository.findById(checkValidChatroomRequestDto.getSellerId()).orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
         Users seller = userRepository.findById(checkValidChatroomRequestDto.getSellerId()).orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
-        Product product = productRepository.findById(checkValidChatroomRequestDto.getProductId()).orElseThrow(() -> new CustomException(ErrorCode.PRODUCT_NOT_FOUND));
+        Product product = productRepository.findByIdAndSellerId(checkValidChatroomRequestDto.getProductId(), checkValidChatroomRequestDto.getSellerId()).orElseThrow(() -> new CustomException(ErrorCode.PRODUCT_NOT_FOUND));
 
-        ChatRoom chatRoom = ChatRoom.builder()
+        ChatRoom chatroom = ChatRoom.builder()
                 .buyer(buyer)
                 .seller(seller)
                 .product(product)
                 .createdAt(LocalDateTime.now())
                 .build();
-        chatRoomRepository.save(chatRoom);
-        System.out.println(chatRoom.getId());
+        chatroomRepository.save(chatroom);
 
-        return new CheckValidChatroomResponseDto(chatRoom.getId());
+        return new CheckValidChatroomResponseDto(chatroom.getId());
     }
 
     public void exitFromChatRoom(Long chatroomId, Long userId) {
         ChatRoom chatroom = isChatroomExists(chatroomId);
 
-        if (Objects.equals(chatroom.getBuyer().getId(), userId)) {
+        if (userId.equals(chatroom.getBuyer().getId())) {
             chatroom.setBuyerExitAt();
-        } else if (Objects.equals(chatroom.getSeller().getId(), userId)) {
+        } else if (userId.equals(chatroom.getSeller().getId())) {
             chatroom.setSellerExitAt();
         } else {
             throw new CustomException(ErrorCode.CHATROOM_ACCESS_FORBIDDEN);
