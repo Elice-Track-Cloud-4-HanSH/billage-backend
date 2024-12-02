@@ -1,6 +1,8 @@
 package com.team01.billage.config.jwt.impl;
 
 import com.team01.billage.config.jwt.JwtProperties;
+import com.team01.billage.exception.CustomException;
+import com.team01.billage.exception.ErrorCode;
 import com.team01.billage.user.domain.Provider;
 import com.team01.billage.user.domain.TokenRedis;
 import com.team01.billage.user.domain.UserRole;
@@ -12,6 +14,7 @@ import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.web.servlet.error.ErrorMvcAutoConfiguration;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -32,6 +35,7 @@ import static com.team01.billage.config.jwt.UserConstants.*;
 public class JwtProviderImpl {
     private final TokenRedisRepository tokenRedisRepository;
     private final JwtProperties jwtProperties;
+    private final ErrorMvcAutoConfiguration errorMvcAutoConfiguration;
     @Value("${jwt.secret}")
     private String secret;
 
@@ -92,7 +96,7 @@ public class JwtProviderImpl {
 
     public String generateAccessTokenFromRefreshToken(String refreshToken) {
         if (!validateToken(refreshToken)) {
-            throw new RuntimeException("Invalid refresh token");
+            throw new CustomException(ErrorCode.INVALID_REFRESH_TOKEN);
         }
 
         Claims claims = extractAllClaims(refreshToken);
@@ -131,10 +135,8 @@ public class JwtProviderImpl {
             String roleStr = claims.get("role", String.class);
             UserRole role = UserRole.valueOf(roleStr);
             return UserRole.ADMIN == role;
-        } catch (SignatureException e) {
-            throw new RuntimeException("Invalid JWT signature");
         } catch (Exception e) {
-            throw new RuntimeException("Token validation error: " + e.getMessage());
+            throw new CustomException(ErrorCode.INVALID_TOKEN);
         }
     }
 
