@@ -31,7 +31,6 @@ public class ChatRoomQueryDSL {
             case LENT -> getSellerCondition(chatroom, userId);
             case RENT -> getBuyerCondition(chatroom, userId);
             case PR -> {
-                    if (productId == null) throw new RuntimeException("해당 조회건은 상품 id가 필수입니다");
                     BooleanExpression sellerCondition = getSellerCondition(chatroom, userId);
                     yield chatroom.product.id.eq(productId).and(sellerCondition);
             }

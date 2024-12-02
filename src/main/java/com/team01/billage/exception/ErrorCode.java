@@ -12,6 +12,8 @@ public enum ErrorCode {
     USER_ALREADY_DELETED(HttpStatus.BAD_REQUEST, "이미 삭제된 회원입니다."),
     PASSWORD_NOT_MATCH(HttpStatus.BAD_REQUEST, "비밀번호가 올바르지 않습니다."),
     EMPTY_LOGIN_REQUEST(HttpStatus.BAD_REQUEST, "이메일 또는 비밀번호가 비어있습니다."),
+    PRODUCT_ID_REQUIRED(HttpStatus.BAD_REQUEST, "상품 ID는 필수입니다."),
+    CHATROOM_VALIDATE_FAILED(HttpStatus.BAD_REQUEST, "구매자 또는 판매자가 토큰의 값과 다릅니다."),
 
     /* 401 UNAUTHORIZED : 인증되지 않은 사용자 */
     INVALID_EMAIL_CODE(HttpStatus.UNAUTHORIZED, "잘못된 인증 코드입니다."),
@@ -23,6 +25,8 @@ public enum ErrorCode {
     /* 403 FORBIDDEN : 권한이 없는 사용자 */
     WRITE_ACCESS_FORBIDDEN(HttpStatus.FORBIDDEN, "후기 작성 권한이 없습니다."),
     CHANGE_ACCESS_FORBIDDEN(HttpStatus.FORBIDDEN, "변경 권한이 없습니다."),
+    CHATROOM_ACCESS_FORBIDDEN(HttpStatus.FORBIDDEN, "채팅방에 참여 중이지 않습니다."),
+    NOT_PRODUCT_OWNER(HttpStatus.FORBIDDEN, "상품의 주인이 아닙니다."),
     ACCESS_DENIED(HttpStatus.FORBIDDEN, "접근 권한이 없습니다."),
 
     /* 404 NOT_FOUND : Resource를 찾을 수 없음 */

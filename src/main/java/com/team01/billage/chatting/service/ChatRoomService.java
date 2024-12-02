@@ -1,16 +1,17 @@
 package com.team01.billage.chatting.service;
 
 import com.team01.billage.chatting.dao.ChatRoomWithLastChat;
+import com.team01.billage.chatting.dao.CheckValidChatroomDao;
 import com.team01.billage.chatting.domain.ChatRoom;
+import com.team01.billage.chatting.dto.ChatResponseDto;
 import com.team01.billage.chatting.dto.ChatroomResponseDto;
 import com.team01.billage.chatting.dto.CheckValidChatroomRequestDto;
 import com.team01.billage.chatting.dto.CheckValidChatroomResponseDto;
 import com.team01.billage.chatting.enums.ChatType;
-import com.team01.billage.chatting.exception.ChatRoomNotFoundException;
-import com.team01.billage.chatting.exception.NotInChatRoomException;
-import com.team01.billage.chatting.repository.ChatRepository;
 import com.team01.billage.chatting.repository.ChatRoomQueryDSL;
 import com.team01.billage.chatting.repository.ChatRoomRepository;
+import com.team01.billage.exception.CustomException;
+import com.team01.billage.exception.ErrorCode;
 import com.team01.billage.product.domain.Product;
 import com.team01.billage.product.repository.ProductRepository;
 import com.team01.billage.user.domain.Users;
@@ -31,11 +32,22 @@ public class ChatRoomService {
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
     private final ChatRoomRepository chatRoomRepository;
-    private final ChatRepository chatRepository;
     private final ChatRoomQueryDSL chatRoomQueryDsl;
+    private final ChatService chatService;
+
+    public Users determineUser(String username) {
+        try {
+            Long userId = Long.parseLong(username);
+            return userRepository.findById(userId).orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        } catch (NumberFormatException e) {
+            return userRepository.findByEmail(username)
+                    .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        }
+    }
 
     public ChatRoom isChatroomExists(Long chatroomId) {
-        return chatRoomRepository.findById(chatroomId).orElseThrow(() -> new ChatRoomNotFoundException("해당 id를 가진 채팅방은 없습니다."));
+        return chatRoomRepository.findById(chatroomId).orElseThrow(() ->
+                new CustomException(ErrorCode.CHATROOM_NOT_FOUND));
     }
 
     public List<ChatroomResponseDto> getAllChatroomsWithDSL(ChatType type, int page, Long userId, Long productId) {
@@ -50,22 +62,30 @@ public class ChatRoomService {
                 .toList();
     }
 
-    public Optional<ChatRoom> getChatRoom(Long chatroomId) {
-        return chatRoomRepository.findById(chatroomId);
-    }
-
-    public Optional<ChatRoom> checkValidChatroom(CheckValidChatroomRequestDto checkValidChatroomDto) {
-        return chatRoomRepository.checkChatroomIsExist(
+    public CheckValidChatroomResponseDto checkValidChatroom(CheckValidChatroomRequestDto checkValidChatroomDto) {
+        Optional<ChatRoom> chatroomOpt = chatRoomRepository.checkChatroomIsExist(
                 checkValidChatroomDto.getSellerId(),
                 checkValidChatroomDto.getBuyerId(),
                 checkValidChatroomDto.getProductId()
         );
+        return chatroomOpt.map(chatRoom -> new CheckValidChatroomResponseDto(chatRoom.getId()))
+                .orElseGet(() -> createChatRoom(checkValidChatroomDto));
     }
 
-    public CheckValidChatroomResponseDto createChatRoom(CheckValidChatroomRequestDto checkValidChatroomDto) {
-        Users buyer = userRepository.findById(checkValidChatroomDto.getBuyerId()).orElseThrow(() -> new RuntimeException("해당 ID의 유저가 존재하지 않습니다."));
-        Users seller = userRepository.findById(checkValidChatroomDto.getSellerId()).orElseThrow(() -> new RuntimeException("해당 ID의 유저가 존재하지 않습니다."));
-        Product product = productRepository.findById(checkValidChatroomDto.getProductId()).orElseThrow(() -> new RuntimeException("제품이 존재하지 않습니다."));
+    public List<ChatResponseDto> getChatsInChatroom(Long chatroomId, Long userId, int page, Long lastChatId) {
+        ChatRoom chatroom = chatRoomRepository.findById(chatroomId).orElseThrow(() -> new CustomException(ErrorCode.CHATROOM_NOT_FOUND));
+
+        if (!(userId.equals(chatroom.getSeller().getId()) || userId.equals(chatroom.getBuyer().getId()))) {
+            throw new CustomException(ErrorCode.CHATROOM_ACCESS_FORBIDDEN);
+        }
+
+        return chatService.getPagenatedChat(chatroomId, lastChatId, userId, page);
+    }
+
+    public CheckValidChatroomResponseDto createChatRoom(CheckValidChatroomDao checkValidChatroomDao) {
+        Users buyer = checkValidChatroomDao.getBuyer();
+        Users seller = userRepository.findById(checkValidChatroomDao.getSellerId()).orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        Product product = productRepository.findById(checkValidChatroomDao.getProductId()).orElseThrow(() -> new CustomException(ErrorCode.PRODUCT_NOT_FOUND));
 
         ChatRoom chatRoom = ChatRoom.builder()
                 .buyer(buyer)
@@ -79,7 +99,24 @@ public class ChatRoomService {
         return new CheckValidChatroomResponseDto(chatRoom.getId());
     }
 
-    public void exitFromChatRoom(Long chatroomId, Long userId) throws Exception {
+    public CheckValidChatroomResponseDto createChatRoom(CheckValidChatroomRequestDto checkValidChatroomRequestDto) {
+        Users buyer = userRepository.findById(checkValidChatroomRequestDto.getSellerId()).orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        Users seller = userRepository.findById(checkValidChatroomRequestDto.getSellerId()).orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        Product product = productRepository.findById(checkValidChatroomRequestDto.getProductId()).orElseThrow(() -> new CustomException(ErrorCode.PRODUCT_NOT_FOUND));
+
+        ChatRoom chatRoom = ChatRoom.builder()
+                .buyer(buyer)
+                .seller(seller)
+                .product(product)
+                .createdAt(LocalDateTime.now())
+                .build();
+        chatRoomRepository.save(chatRoom);
+        System.out.println(chatRoom.getId());
+
+        return new CheckValidChatroomResponseDto(chatRoom.getId());
+    }
+
+    public void exitFromChatRoom(Long chatroomId, Long userId) {
         ChatRoom chatroom = isChatroomExists(chatroomId);
 
         if (Objects.equals(chatroom.getBuyer().getId(), userId)) {
@@ -87,7 +124,7 @@ public class ChatRoomService {
         } else if (Objects.equals(chatroom.getSeller().getId(), userId)) {
             chatroom.setSellerExitAt();
         } else {
-            throw new NotInChatRoomException("해당 채팅방에 있는 유저가 아닙니다.");
+            throw new CustomException(ErrorCode.CHATROOM_ACCESS_FORBIDDEN);
         }
     }
 }
