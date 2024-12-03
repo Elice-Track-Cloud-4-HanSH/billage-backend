@@ -28,7 +28,8 @@ public class ChatService {
                         chat.getSender(),
                         chat.getMessage(),
                         chat.isRead(),
-                        chat.getCreatedAt()))
+                        chat.getCreatedAt()
+                ))
                 .toList();
     }
 
@@ -42,7 +43,8 @@ public class ChatService {
                         chat.getSender(),
                         chat.getMessage(),
                         chat.isRead(),
-                        chat.getCreatedAt()))
+                        chat.getCreatedAt()
+                ))
                 .toList();
     }
 
