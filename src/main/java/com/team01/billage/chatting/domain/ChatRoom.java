@@ -56,8 +56,16 @@ public class ChatRoom {
         buyerExitAt = LocalDateTime.now();
     }
 
+    public void setBuyerJoinAt() {
+        buyerExitAt = null;
+    }
+
     public void setSellerExitAt() {
         sellerExitAt = LocalDateTime.now();
+    }
+
+    public void setSellerJoinAt() {
+        sellerExitAt = null;
     }
 
     public void addTestChat(Chat chat) {
