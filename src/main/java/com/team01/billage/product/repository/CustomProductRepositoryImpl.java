@@ -1,8 +1,13 @@
 package com.team01.billage.product.repository;
 
 import com.querydsl.core.BooleanBuilder;
+import com.querydsl.core.types.ExpressionUtils;
 import com.querydsl.core.types.Projections;
+import com.querydsl.core.types.dsl.NumberExpression;
+import com.querydsl.jpa.JPAExpressions;
+import com.querydsl.jpa.JPQLQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import com.team01.billage.product.domain.QFavoriteProduct;
 import com.team01.billage.product.domain.QProduct;
 import com.team01.billage.product.domain.QProductImage;
 import com.team01.billage.product.dto.OnSaleResponseDto;
@@ -44,9 +49,10 @@ public class CustomProductRepositoryImpl implements CustomProductRepository {
     }
 
     @Override
-    public List<ProductResponseDto> findAllProductsByCategoryId(Long categoryId) {
+    public List<ProductResponseDto> findAllProductsByCategoryId(Long categoryId, Long userId) {
         QProduct product = QProduct.product;
         QProductImage productImage = QProductImage.productImage;
+        QFavoriteProduct favoriteProduct = QFavoriteProduct.favoriteProduct;
 
         // 동적 조건 처리
         BooleanBuilder builder = new BooleanBuilder();
@@ -56,21 +62,31 @@ public class CustomProductRepositoryImpl implements CustomProductRepository {
             builder.and(product.category.id.eq(categoryId));
         }
 
+        // 서브쿼리로 좋아요 개수 가져오기
+        JPQLQuery<Long> favoriteCnt = JPAExpressions.select(favoriteProduct.count())
+                .from(favoriteProduct)
+                .where(favoriteProduct.product.id.eq(product.id));
+
         return queryFactory
-                .select(Projections.constructor(
+                .select(Projections.fields(
                         ProductResponseDto.class,
-                        product.id,
+                        product.id.as("productId"),
                         product.title,
                         product.updatedAt,
                         product.dayPrice,
                         product.weekPrice,
                         product.viewCount,
-                        productImage.imageUrl
+                        productImage.imageUrl.as("thumbnailUrl"),
+                        favoriteProduct.id.isNotNull().as("favorite"),
+                        ExpressionUtils.as(favoriteCnt, "favoriteCnt")
                 ))
                 .from(product)
                 .leftJoin(productImage)
                 .on(product.id.eq(productImage.product.id).
                         and(productImage.thumbnail.eq("Y")))
+                .leftJoin(favoriteProduct)
+                .on(product.id.eq(favoriteProduct.product.id).
+                        and(favoriteProduct.user.id.eq(userId)))
                 .where(builder)
                 .orderBy(product.updatedAt.desc())
                 .fetch();

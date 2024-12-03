@@ -18,7 +18,8 @@ public class ProductResponseDto { // 상품 목록 DTO
     private Integer weekPrice;
     private int viewCount;
     private String thumbnailUrl;
+    private boolean favorite;
+    private Long favoriteCnt;
     // 지역
-    // 좋아요
 
 }

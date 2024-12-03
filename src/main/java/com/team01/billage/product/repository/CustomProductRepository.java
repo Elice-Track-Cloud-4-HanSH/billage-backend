@@ -9,5 +9,5 @@ public interface CustomProductRepository {
 
     List<OnSaleResponseDto> findAllOnSale(String email);
 
-    List<ProductResponseDto> findAllProductsByCategoryId(Long categoryId);
+    List<ProductResponseDto> findAllProductsByCategoryId(Long categoryId, Long userId);
 }
