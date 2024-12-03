@@ -2,6 +2,7 @@ spring:
   config:
     import:
       - s3bucket.yml
+      - redis.yml
 
   sql:
     init:
@@ -63,3 +64,9 @@ app:
     allowed-origins: http://localhost:3000
   oauth2:
     authorized-redirect-urls: http://localhost:3000/chat
+
+server:
+  servlet:
+    session:
+      cookie:
+        same-site: none
