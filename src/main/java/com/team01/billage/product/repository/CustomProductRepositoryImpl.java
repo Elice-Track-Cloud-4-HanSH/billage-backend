@@ -49,7 +49,7 @@ public class CustomProductRepositoryImpl implements CustomProductRepository {
     }
 
     @Override
-    public List<ProductResponseDto> findAllProductsByCategoryId(Long categoryId, Long userId) {
+    public List<ProductResponseDto> findAllProducts(Long userId, Long categoryId, String rentalStatus) {
         QProduct product = QProduct.product;
         QProductImage productImage = QProductImage.productImage;
         QFavoriteProduct favoriteProduct = QFavoriteProduct.favoriteProduct;
@@ -60,6 +60,10 @@ public class CustomProductRepositoryImpl implements CustomProductRepository {
 
         if(categoryId != 1L){
             builder.and(product.category.id.eq(categoryId));
+        }
+
+        if(rentalStatus.equals(RentalStatus.AVAILABLE.name())){
+            builder.and(product.rentalStatus.eq(RentalStatus.AVAILABLE));
         }
 
         // 서브쿼리로 좋아요 개수 가져오기

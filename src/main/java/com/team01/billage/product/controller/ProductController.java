@@ -28,8 +28,9 @@ public class ProductController {
 
     @GetMapping
     public ResponseEntity<List<ProductResponseDto>> findAllProducts(
-            @RequestParam(value = "categoryId", required = false, defaultValue = "1") String categoryId) {
-        return ResponseEntity.status(HttpStatus.OK).body(productService.findAllProducts(categoryId));
+            @RequestParam(value = "categoryId", required = false, defaultValue = "1") String categoryId,
+            @RequestParam(value = "rentalStatus", required = false, defaultValue = "ALL") String rentalStatus) {
+        return ResponseEntity.status(HttpStatus.OK).body(productService.findAllProducts(categoryId, rentalStatus));
     }
 
     @GetMapping("/on-sale")

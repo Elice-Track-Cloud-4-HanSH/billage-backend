@@ -55,9 +55,12 @@ public class ProductService {
         return toDetailDto(product);
     }
 
-    public List<ProductResponseDto> findAllProducts(String categoryId) {
+    public List<ProductResponseDto> findAllProducts(String categoryId, String rentalStatus) {
 
-        return productRepository.findAllProductsByCategoryId(Long.parseLong(categoryId), testUser().getId());
+        return productRepository.findAllProducts(
+                testUser().getId(),
+                Long.parseLong(categoryId),
+                rentalStatus);
     }
 
     public List<OnSaleResponseDto> findAllOnSale(String email) {
