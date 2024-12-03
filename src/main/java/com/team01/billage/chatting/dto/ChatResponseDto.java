@@ -15,7 +15,7 @@ public class ChatResponseDto {
     private CustomChatResponseUser sender;
     private String message;
     private boolean read;
-    private boolean mine;
+    private String nickname;
 
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime createdAt;
@@ -28,11 +28,6 @@ public class ChatResponseDto {
         this.createdAt = createdAt;
     }
 
-    public ChatResponseDto(Long chatId, Users sender, String message, boolean isRead, LocalDateTime createdAt, boolean mine) {
-        this(chatId, sender, message, isRead, createdAt);
-        this.mine = mine;
-    }
-
     // builder 패턴
 
     public ChatResponseDto(Builder builder) {
@@ -41,7 +36,6 @@ public class ChatResponseDto {
         this.message = builder.message;
         this.read = builder.read;
         this.createdAt = builder.createdAt;
-        this.mine = builder.mine;
     }
 
     public static Builder builder() {
@@ -53,7 +47,6 @@ public class ChatResponseDto {
         private CustomChatResponseUser sender;
         private String message;
         private boolean read;
-        private boolean mine;
 
         private LocalDateTime createdAt;
 
@@ -75,11 +68,6 @@ public class ChatResponseDto {
         }
         public Builder createdAt(LocalDateTime createdAt) {
             this.createdAt = createdAt;
-            return this;
-        }
-
-        public Builder isMine(boolean mine) {
-            this.mine = mine;
             return this;
         }
 

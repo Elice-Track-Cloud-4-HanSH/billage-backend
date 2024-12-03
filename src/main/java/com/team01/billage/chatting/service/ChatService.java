@@ -43,8 +43,7 @@ public class ChatService {
                         chat.getSender(),
                         chat.getMessage(),
                         chat.isRead(),
-                        chat.getCreatedAt(),
-                        userId.equals(chat.getSender().getId())
+                        chat.getCreatedAt()
                 ))
                 .toList();
     }

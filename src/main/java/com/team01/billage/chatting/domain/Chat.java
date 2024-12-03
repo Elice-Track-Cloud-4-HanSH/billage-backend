@@ -74,7 +74,6 @@ public class Chat {
                 .message(this.message)
                 .createdAt(this.createdAt)
                 .isRead(this.isRead)
-                .isMine(userId.equals(this.sender.getId()))
                 .build();
     }
 }

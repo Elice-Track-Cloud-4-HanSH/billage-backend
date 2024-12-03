@@ -18,13 +18,17 @@ public class ChatroomResponseDto {
     private CustomChatResponseUser seller;
     private CustomChatResponse lastChat;
     private CustomChatResponseProduct product;
+    private CustomChatResponseUser opponent;
 
-    public ChatroomResponseDto(ChatRoom chatroom, Chat lastChat) {
+    public ChatroomResponseDto(ChatRoom chatroom, Chat lastChat, Long userId) {
         this.chatroomId = chatroom.getId();
         this.buyer = new CustomChatResponseUser(chatroom.getBuyer());
         this.seller = new CustomChatResponseUser(chatroom.getSeller());
         this.lastChat = new CustomChatResponse(lastChat);
         this.product = new CustomChatResponseProduct(chatroom.getProduct());
+        this.opponent = userId.equals(chatroom.getBuyer().getId())
+                ? new CustomChatResponseUser(chatroom.getSeller())
+                : new CustomChatResponseUser(chatroom.getBuyer());
     }
 }
 
