@@ -19,8 +19,9 @@ public class ChatroomResponseDto {
     private CustomChatResponse lastChat;
     private CustomChatResponseProduct product;
     private CustomChatResponseUser opponent;
+    private Long unreadCount;
 
-    public ChatroomResponseDto(ChatRoom chatroom, Chat lastChat, Long userId) {
+    public ChatroomResponseDto(ChatRoom chatroom, Chat lastChat, Long userId, Long unreadCount) {
         this.chatroomId = chatroom.getId();
         this.buyer = new CustomChatResponseUser(chatroom.getBuyer());
         this.seller = new CustomChatResponseUser(chatroom.getSeller());
@@ -29,6 +30,7 @@ public class ChatroomResponseDto {
         this.opponent = userId.equals(chatroom.getBuyer().getId())
                 ? new CustomChatResponseUser(chatroom.getSeller())
                 : new CustomChatResponseUser(chatroom.getBuyer());
+        this.unreadCount = unreadCount;
     }
 }
 

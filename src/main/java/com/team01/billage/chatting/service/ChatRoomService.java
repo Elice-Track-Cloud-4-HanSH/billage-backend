@@ -25,6 +25,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -34,6 +35,7 @@ public class ChatRoomService {
     private final ChatRoomRepository chatroomRepository;
     private final ChatRoomQueryDSL chatroomQueryDsl;
     private final ChatService chatService;
+    private final ChatRedisService chatRedisService;
 
     public ChatRoom isChatroomExists(Long chatroomId) {
         return chatroomRepository.findById(chatroomId).orElseThrow(() ->
@@ -45,11 +47,26 @@ public class ChatRoomService {
         List<ChatRoomWithLastChat> results = chatroomQueryDsl.getChatrooms(type, userId, productId, pageable);
 
         return results.stream()
-                .map(result -> new ChatroomResponseDto(
-                        result.getChatRoom(),
-                        result.getLastChat()
-                ))
+                .map(result -> {
+                    Long chatroomId = result.getChatRoom().getId();
+                    String unreadKey = getUnreadChatKey(chatroomId, userId);
+                    Long unreadCount = chatRedisService.getUnreadChatCount(unreadKey);
+                    System.out.println(unreadKey + " " + unreadCount);
+                    return new ChatroomResponseDto(
+                            result.getChatRoom(),
+                            result.getLastChat(),
+                            userId,
+                            unreadCount
+                    );
+                })
                 .toList();
+    }
+
+    private String getUnreadChatKey(Long chatroomId, Long userId) {
+        Set<String> keys = chatRedisService.getKeysByPattern(chatroomId.toString(), 2);
+        return keys.stream().filter((key) ->
+                Long.parseLong(key.split("_")[1]) != userId
+        ).findFirst().orElse(null);
     }
 
     public CheckValidChatroomResponseDto checkValidChatroom(CheckValidChatroomRequestDto checkValidChatroomDto, Long userId) {
@@ -80,6 +97,9 @@ public class ChatRoomService {
             throw new CustomException(ErrorCode.CHATROOM_ACCESS_FORBIDDEN);
         }
 
+        String unreadKey = getUnreadChatKey(chatroomId, userId);
+        chatRedisService.resetUnreadChatCount(unreadKey);
+
         return chatService.getPagenatedChat(chatroomId, lastChatId, userId, page);
     }
 
@@ -100,7 +120,7 @@ public class ChatRoomService {
     }
 
     public CheckValidChatroomResponseDto createChatRoom(CheckValidChatroomRequestDto checkValidChatroomRequestDto) {
-        Users buyer = userRepository.findById(checkValidChatroomRequestDto.getSellerId()).orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        Users buyer = userRepository.findById(checkValidChatroomRequestDto.getBuyerId()).orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
         Users seller = userRepository.findById(checkValidChatroomRequestDto.getSellerId()).orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
         Product product = productRepository.findByIdAndSellerId(checkValidChatroomRequestDto.getProductId(), checkValidChatroomRequestDto.getSellerId()).orElseThrow(() -> new CustomException(ErrorCode.PRODUCT_NOT_FOUND));
 
@@ -111,6 +131,9 @@ public class ChatRoomService {
                 .createdAt(LocalDateTime.now())
                 .build();
         chatroomRepository.save(chatroom);
+
+        chatRedisService.setUnreadChatCount(chatroom.getId() + "_" + buyer.getId());
+        chatRedisService.setUnreadChatCount(chatroom.getId() + "_" + seller.getId());
 
         return new CheckValidChatroomResponseDto(chatroom.getId());
     }
