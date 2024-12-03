@@ -28,7 +28,7 @@ public class ProductController {
 
     @GetMapping
     public ResponseEntity<List<ProductResponseDto>> findAllProducts(
-            @RequestParam(required = false, value = "categoryId") String categoryId) {
+            @RequestParam(value = "categoryId", required = false, defaultValue = "1") String categoryId) {
         return ResponseEntity.status(HttpStatus.OK).body(productService.findAllProducts(categoryId));
     }
 
