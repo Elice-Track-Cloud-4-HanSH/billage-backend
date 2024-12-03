@@ -1,11 +1,6 @@
 package com.team01.billage.product.service;
 
-import static com.team01.billage.exception.ErrorCode.CATEGORY_NOT_FOUND;
-import static com.team01.billage.exception.ErrorCode.PRODUCT_IMAGE_NOT_FOUND;
-import static com.team01.billage.exception.ErrorCode.PRODUCT_MODIFICATION_NOT_ALLOWED;
-import static com.team01.billage.exception.ErrorCode.PRODUCT_NOT_FOUND;
-import static com.team01.billage.exception.ErrorCode.THUMBNAIL_NOT_FOUND;
-import static com.team01.billage.exception.ErrorCode.USER_NOT_FOUND;
+import static com.team01.billage.exception.ErrorCode.*;
 
 import com.team01.billage.category.domain.Category;
 import com.team01.billage.category.dto.CategoryProductResponseDto;
@@ -62,9 +57,7 @@ public class ProductService {
 
     public List<ProductResponseDto> findAllProducts(String categoryId) {
 
-        Long categoryIdToLong = (categoryId == null) ? 1L : Long.parseLong(categoryId);
-
-        return productRepository.findAllProductsByCategoryId(categoryIdToLong);
+        return productRepository.findAllProductsByCategoryId(Long.parseLong(categoryId), testUser().getId());
     }
 
     public List<OnSaleResponseDto> findAllOnSale(String email) {
