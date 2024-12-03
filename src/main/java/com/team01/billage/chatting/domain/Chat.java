@@ -63,6 +63,17 @@ public class Chat {
                 .sender(this.sender)
                 .message(this.message)
                 .createdAt(this.createdAt)
+                .isRead(this.isRead)
+                .build();
+    }
+
+    public ChatResponseDto toChatResponse(Long userId) {
+        return ChatResponseDto.builder()
+                .chatId(this.id)
+                .sender(this.sender)
+                .message(this.message)
+                .createdAt(this.createdAt)
+                .isRead(this.isRead)
                 .build();
     }
 }

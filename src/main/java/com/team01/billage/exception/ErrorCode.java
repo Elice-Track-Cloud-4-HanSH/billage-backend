@@ -27,6 +27,7 @@ public enum ErrorCode {
     CHANGE_ACCESS_FORBIDDEN(HttpStatus.FORBIDDEN, "변경 권한이 없습니다."),
     CHATROOM_ACCESS_FORBIDDEN(HttpStatus.FORBIDDEN, "채팅방에 참여 중이지 않습니다."),
     NOT_PRODUCT_OWNER(HttpStatus.FORBIDDEN, "상품의 주인이 아닙니다."),
+    UNAUTHORIZED_WEBSOCKET_CONNECTION(HttpStatus.FORBIDDEN, "웹소켓 연결을 다시 확인해주세요. 토큰이 있나요?"),
     ACCESS_DENIED(HttpStatus.FORBIDDEN, "접근 권한이 없습니다."),
 
     /* 404 NOT_FOUND : Resource를 찾을 수 없음 */
@@ -35,6 +36,7 @@ public enum ErrorCode {
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 유저를 찾을 수 없습니다."),
     RENTAL_RECORD_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 대여기록을 찾을 수 없습니다."),
     CHATROOM_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 채팅방을 찾을 수 없습니다."),
+    CHAT_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 ID를 가진 채팅을 찾을 수 없습니다."),
     THUMBNAIL_NOT_FOUND(HttpStatus.NOT_FOUND, "썸네일 이미지를 찾을 수 없습니다."),
     PRODUCT_IMAGE_NOT_FOUND(HttpStatus.NOT_FOUND,"해당 상품 이미지를 찾을 수 없습니다."),
     EMD_AREA_NOT_FOUND(HttpStatus.NOT_FOUND, "행정 구역을 찾을 수 없습니다."),
