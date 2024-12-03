@@ -59,9 +59,9 @@ public class ChatSocketService {
     public void markAsRead(Long chatId) {
         chatRepository.markAsRead(chatId);
 
-        Chat chatOpt = chatRepository.getChatById(chatId).orElseThrow();
-        Long chatroomId = chatOpt.getChatRoom().getId();
-        Long senderId = chatOpt.getSender().getId();
+        Chat chat = chatRepository.findById(chatId).orElseThrow(() -> new CustomException(ErrorCode.CHAT_NOT_FOUND));
+        Long chatroomId = chat.getChatRoom().getId();
+        Long senderId = chat.getSender().getId();
         chatRedisService.resetUnreadChatCount(chatroomId, senderId);
     }
 
