@@ -17,8 +17,8 @@ public class CustomUserDetails implements UserDetails {
         this.jws = jws;
     }
 
-    public int getId() {
-        return jws.getBody().get("accountId", Integer.class);
+    public Long getId() {
+        return jws.getBody().get("accountId", Long.class);
     }
 
     public String getEmail() {
