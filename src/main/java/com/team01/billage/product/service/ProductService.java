@@ -8,16 +8,7 @@ import com.team01.billage.category.repository.CategoryRepository;
 import com.team01.billage.exception.CustomException;
 import com.team01.billage.product.domain.Product;
 import com.team01.billage.product.domain.ProductImage;
-import com.team01.billage.product.dto.ExistProductImageRequestDto;
-import com.team01.billage.product.dto.OnSaleResponseDto;
-import com.team01.billage.product.dto.ProductDeleteCheckDto;
-import com.team01.billage.product.dto.ProductDetailResponseDto;
-import com.team01.billage.product.dto.ProductImageRequestDto;
-import com.team01.billage.product.dto.ProductImageResponseDto;
-import com.team01.billage.product.dto.ProductRequestDto;
-import com.team01.billage.product.dto.ProductResponseDto;
-import com.team01.billage.product.dto.ProductSellerResponseDto;
-import com.team01.billage.product.dto.ProductUpdateRequestDto;
+import com.team01.billage.product.dto.*;
 import com.team01.billage.product.enums.RentalStatus;
 import com.team01.billage.product.repository.ProductImageRepository;
 import com.team01.billage.product.repository.ProductRepository;
@@ -29,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,20 +37,43 @@ public class ProductService {
     private final GeometryFactory geometryFactory = new GeometryFactory();
 
     @Transactional
-    public ProductDetailResponseDto findProduct(Long productId) {
+    public ProductDetailWrapperResponseDto findProduct(UserDetails userDetails, Long productId) {
 
         Product product = productRepository.findByIdAndDeletedAtIsNull(productId)
-            .orElseThrow(() -> new CustomException(PRODUCT_NOT_FOUND));
+                .orElseThrow(() -> new CustomException(PRODUCT_NOT_FOUND));
 
-        product.increaseViewCount(); // 조회수 단순 증가
+        ProductDetailResponseDto productDetail = productRepository.findProductDetail(productId);
 
-        return toDetailDto(product);
+        increaseViewCount(product); // 조회수 단순 증가
+
+        productDetail.setLongitude(product.getLocation().getX());
+        productDetail.setLatitude(product.getLocation().getY());
+
+        boolean checkAuthor = false;
+        if(userDetails != null) {
+            Users user = determineUser(userDetails.getUsername());
+            if(product.getSeller().getId().equals(user.getId())) {
+                checkAuthor = true;
+            }
+        }
+
+        return ProductDetailWrapperResponseDto.builder()
+                .productDetail(productDetail)
+                .checkAuthor(checkAuthor)
+                .build();
     }
 
-    public List<ProductResponseDto> findAllProducts(String categoryId, String rentalStatus) {
+    public List<ProductResponseDto> findAllProducts(UserDetails userDetails, String categoryId, String rentalStatus) {
+
+        Long userId = null;
+
+        if(userDetails != null) {
+            Users user = determineUser(userDetails.getUsername());
+            userId = user.getId();
+        }
 
         return productRepository.findAllProducts(
-                testUser().getId(),
+                userId,
                 Long.parseLong(categoryId),
                 rentalStatus);
     }
@@ -69,14 +84,14 @@ public class ProductService {
     }
 
     @Transactional
-    public ProductDetailResponseDto createProduct(ProductRequestDto productRequestDto) {
+    public ProductDetailResponseDto createProduct(Users user, ProductRequestDto productRequestDto) {
 
         Category category = categoryRepository.findById(productRequestDto.getCategoryId())
             .orElseThrow(() -> new CustomException(CATEGORY_NOT_FOUND));
 
         // 상품 생성
         Product product = Product.builder()
-            .seller(testUser())
+            .seller(user)
             .category(category)
             .title(productRequestDto.getTitle())
             .description(productRequestDto.getDescription())
@@ -100,11 +115,15 @@ public class ProductService {
     }
 
     @Transactional
-    public ProductDetailResponseDto updateProduct(Long productId,
-        ProductUpdateRequestDto productUpdateRequestDto) {
+    public ProductDetailResponseDto updateProduct(Users user, Long productId,
+                                                  ProductUpdateRequestDto productUpdateRequestDto) {
 
         Product product = productRepository.findByIdAndDeletedAtIsNull(productId)
             .orElseThrow(() -> new CustomException(PRODUCT_NOT_FOUND));
+
+        if(!product.getSeller().getId().equals(user.getId())) {
+            throw new CustomException(ACCESS_DENIED);
+        }
 
         if (product.getRentalStatus() != RentalStatus.AVAILABLE) {
             throw new CustomException(PRODUCT_MODIFICATION_NOT_ALLOWED);
@@ -137,10 +156,14 @@ public class ProductService {
     }
 
     @Transactional
-    public ProductDeleteCheckDto deleteProduct(Long productId) {
+    public ProductDeleteCheckDto deleteProduct(Users user, Long productId) {
 
         Product product = productRepository.findByIdAndDeletedAtIsNull(productId)
             .orElseThrow(() -> new CustomException(PRODUCT_NOT_FOUND));
+
+        if(!product.getSeller().getId().equals(user.getId())){
+            throw new CustomException(ACCESS_DENIED);
+        }
 
         if (product.getRentalStatus() != RentalStatus.AVAILABLE) {
             throw new CustomException(PRODUCT_MODIFICATION_NOT_ALLOWED);
@@ -199,12 +222,6 @@ public class ProductService {
 
     }
 
-    // 테스트용 user
-    private Users testUser() {
-        return userRepository.findById(1L)
-            .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
-    }
-
     // 기존 이미지의 썸네일 변경 여부 확인 및 업데이트
     private void updateThumbnail(List<ExistProductImageRequestDto> imageDtos) {
         List<ProductImage> dbImages = productImageRepository.findAllById(
@@ -231,5 +248,20 @@ public class ProductService {
     private Point toPoint(double longitude, double latitude) {
         return geometryFactory.createPoint(new Coordinate(longitude, latitude));
     }
+
+    public Users determineUser(String email){
+        System.out.println("회원 확인: " + email);
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
+    }
+
+    // 조회수 단순 증가
+    @Transactional
+    public void increaseViewCount(Product product){
+        product.increaseViewCount();
+        productRepository.save(product);
+    }
+
+
 
 }
