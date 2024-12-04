@@ -1,6 +1,8 @@
 package com.team01.billage.product.dto;
 
 import com.team01.billage.category.dto.CategoryProductResponseDto;
+
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -29,5 +31,6 @@ public class ProductDetailResponseDto { // 상품 상세 확인 DTO
     private LocalDateTime updatedAt;
     private ProductSellerResponseDto seller;
     private List<ProductImageResponseDto> productImages;
+    private LocalDate expectedReturnDate;
 
 }

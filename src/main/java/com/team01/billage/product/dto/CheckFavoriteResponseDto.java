@@ -9,6 +9,6 @@ import lombok.*;
 @AllArgsConstructor
 public class CheckFavoriteResponseDto {
 
-    boolean isFavorite;
+    boolean favorite;
 
 }
