@@ -11,5 +11,5 @@ public interface CustomProductRepository {
     List<OnSaleResponseDto> findAllOnSale(String email, LocalDateTime lastTime,
         Pageable pageable);
 
-    List<ProductResponseDto> findAllProductsByCategoryId(Long categoryId);
+    List<ProductResponseDto> findAllProductsByCategoryId(Long categoryId, Long userId);
 }

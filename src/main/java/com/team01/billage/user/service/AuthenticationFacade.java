@@ -14,7 +14,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import static com.team01.billage.config.jwt.UserConstants.ACCESS_TOKEN_DURATION;
+import com.team01.billage.config.jwt.UserConstants;
+
 import static com.team01.billage.config.jwt.UserConstants.ACCESS_TOKEN_TYPE_VALUE;
 
 // AuthenticationFacade.java
@@ -25,20 +26,17 @@ public class AuthenticationFacade {
     private final TokenService tokenService;
     private final UserService userService;
     private final AuthResponseBuilder responseBuilder;
+    private final UserConstants userConstants;
 
     public ResponseEntity<JwtTokenResponse> handleLogin(
             JwtTokenLoginRequest request,
-            HttpServletResponse response,
-            Cookie existingAccessTokenCookie
+            HttpServletResponse response
     ) {
         try {
             // 기본 검증
             if (!userService.validateLoginRequest(request)) {
                 return responseBuilder.buildLoginFailResponse("아이디와 비밀번호를 입력하세요");
             }
-
-            // 기존 토큰 처리
-            handleExistingToken(response, existingAccessTokenCookie);
 
             // 로그인 처리 및 새 토큰 발급
             JwtTokenDto tokenDto = tokenService.login(request);
@@ -76,7 +74,7 @@ public class AuthenticationFacade {
                 response,
                 ACCESS_TOKEN_TYPE_VALUE,
                 token,
-                (int) ACCESS_TOKEN_DURATION.toSeconds()
+                (int) userConstants.getAccessTokenDuration().toSeconds()
         );
     }
 }
