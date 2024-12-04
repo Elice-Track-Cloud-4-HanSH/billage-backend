@@ -1,6 +1,7 @@
 package com.team01.billage.product_review.service;
 
 import static com.team01.billage.exception.ErrorCode.RENTAL_RECORD_NOT_FOUND;
+import static com.team01.billage.exception.ErrorCode.REVIEW_ALREADY_EXISTS;
 import static com.team01.billage.exception.ErrorCode.WRITE_ACCESS_FORBIDDEN;
 
 import com.team01.billage.exception.CustomException;
@@ -33,6 +34,10 @@ public class ProductReviewService {
         RentalRecord rentalRecord = rentalRecordRepository.findById(rentalRecordId)
             .orElseThrow(() -> new CustomException(RENTAL_RECORD_NOT_FOUND));
 
+        if (rentalRecord.getProductReview() != null) {
+            throw new CustomException(REVIEW_ALREADY_EXISTS);
+        }
+
         if (!rentalRecord.getBuyer().getEmail().equals(email)) {
             throw new CustomException(WRITE_ACCESS_FORBIDDEN);
         }
@@ -41,7 +46,7 @@ public class ProductReviewService {
             .score(writeReviewRequestDto.getScore())
             .content(writeReviewRequestDto.getContent())
             .author(rentalRecord.getBuyer())
-            .product(rentalRecord.getProduct())
+            .rentalRecord(rentalRecord)
             .build();
 
         productReviewRepository.save(productReview);
@@ -52,14 +57,14 @@ public class ProductReviewService {
         return productReviewRepository.findByAuthor_email(email);
     }
 
-    public List<ShowReviewResponseDto> readProductReviews(long id) {
+    public List<ShowReviewResponseDto> readProductReviews(long productId) {
 
-        return productReviewRepository.findByProduct_id(id);
+        return productReviewRepository.findByProduct_id(productId);
     }
 
-    public ReviewSubjectResponseDto getReviewSubject(long id) {
+    public ReviewSubjectResponseDto getReviewSubject(long rentalRecordId) {
 
-        RentalRecord rentalRecord = rentalRecordRepository.findById(id)
+        RentalRecord rentalRecord = rentalRecordRepository.findById(rentalRecordId)
             .orElseThrow(() -> new CustomException(RENTAL_RECORD_NOT_FOUND));
 
         Product product = rentalRecord.getProduct();

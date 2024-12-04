@@ -48,9 +48,10 @@ public class UserReviewController {
 
     @GetMapping("/{rentalRecordId}")
     public ResponseEntity<ReviewSubjectResponseDto> reviewSubject(
-        @PathVariable("rentalRecordId") long id, @AuthenticationPrincipal UserDetails userDetails) {
+        @PathVariable("rentalRecordId") long rentalRecordId,
+        @AuthenticationPrincipal UserDetails userDetails) {
 
-        ReviewSubjectResponseDto responseDto = userReviewService.getReviewSubject(id,
+        ReviewSubjectResponseDto responseDto = userReviewService.getReviewSubject(rentalRecordId,
             userDetails.getUsername());
         return ResponseEntity.status(HttpStatus.OK).body(responseDto);
     }
