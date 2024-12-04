@@ -5,6 +5,7 @@ import static com.team01.billage.exception.ErrorCode.*;
 import com.team01.billage.category.domain.Category;
 import com.team01.billage.category.dto.CategoryProductResponseDto;
 import com.team01.billage.category.repository.CategoryRepository;
+import com.team01.billage.common.CustomSlice;
 import com.team01.billage.exception.CustomException;
 import com.team01.billage.product.domain.Product;
 import com.team01.billage.product.domain.ProductImage;
@@ -23,12 +24,15 @@ import com.team01.billage.product.repository.ProductImageRepository;
 import com.team01.billage.product.repository.ProductRepository;
 import com.team01.billage.user.domain.Users;
 import com.team01.billage.user.repository.UserRepository;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -60,9 +64,22 @@ public class ProductService {
         return productRepository.findAllProductsByCategoryId(Long.parseLong(categoryId), testUser().getId());
     }
 
-    public List<OnSaleResponseDto> findAllOnSale(String email) {
+    public Slice<OnSaleResponseDto> findAllOnSale(String email, LocalDateTime lastTime,
+        Pageable pageable) {
 
-        return productRepository.findAllOnSale(email);
+        List<OnSaleResponseDto> results = productRepository.findAllOnSale(email, lastTime,
+            pageable);
+
+        boolean hasNext = results.size() > pageable.getPageSize();
+
+        if (hasNext) {
+            results.remove(results.size() - 1);
+        }
+
+        LocalDateTime nextLastTime = results.isEmpty() ? null
+            : results.get(results.size() - 1).getTime();
+
+        return new CustomSlice<>(results, pageable, hasNext, nextLastTime);
     }
 
     @Transactional

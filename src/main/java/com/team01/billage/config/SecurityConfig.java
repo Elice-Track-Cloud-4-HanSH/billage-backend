@@ -1,5 +1,6 @@
 package com.team01.billage.config;
 
+import com.team01.billage.common.CookieUtil;
 import com.team01.billage.config.jwt.JwtFilter;
 import com.team01.billage.config.oauth.OAuth2SuccessHandler;
 import com.team01.billage.exception.CustomException;
@@ -73,6 +74,12 @@ public class SecurityConfig {
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint(customAuthenticationEntryPoint)
                         .accessDeniedHandler(customAccessDeniedHandler)
+                )
+                .logout(logout -> logout
+                        .logoutUrl("/api/logout")
+                        .logoutSuccessHandler(logoutSuccessHandler)
+                        .clearAuthentication(true)
+                        .invalidateHttpSession(true)
                 )
                 //###### OAuth2 로그인 설정 ########
                 // OAuth2 로그인 설정
