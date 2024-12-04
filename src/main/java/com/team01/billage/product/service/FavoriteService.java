@@ -11,6 +11,7 @@ import com.team01.billage.product.repository.ProductRepository;
 import com.team01.billage.user.domain.Users;
 import com.team01.billage.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,29 +29,35 @@ public class FavoriteService {
     private final ProductRepository productRepository;
 
     // 해당 상품이 회원의 관심 상품인지 확인
-    public CheckFavoriteResponseDto checkFavorite(Long productId) {
+    public CheckFavoriteResponseDto checkFavorite(UserDetails userDetails, Long productId) {
 
-        boolean isFavorite = favoriteRepository.existsByUserIdAndProductId(testUser().getId(), productId);
+        boolean isFavorite = false;
+
+        // 로그인 한 경우에만 좋아요 상태 조회
+        if(userDetails != null) {
+            Users user = determineUser(userDetails.getUsername());
+            isFavorite = favoriteRepository.existsByUserIdAndProductId(user.getId(), productId);
+        }
 
         return CheckFavoriteResponseDto.builder()
-                .isFavorite(isFavorite)
+                .favorite(isFavorite)
                 .build();
     }
 
     // 회원의 관심 상품 목록 조회
-    public List<ProductResponseDto> findAllFavorite() {
+    public List<ProductResponseDto> findAllFavorite(Users user) {
 
-        return favoriteRepository.findAllByUserId(testUser().getId());
+        return favoriteRepository.findAllByUserId(user.getId());
     }
 
     @Transactional
-    public FavoriteResponseDto createFavorite(Long productId) {
+    public FavoriteResponseDto createFavorite(Users user, Long productId) {
 
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new CustomException(PRODUCT_NOT_FOUND));
 
         FavoriteProduct favoriteProduct = FavoriteProduct.builder()
-                .user(testUser())
+                .user(user)
                 .product(product)
                 .build();
 
@@ -58,24 +65,24 @@ public class FavoriteService {
 
         return FavoriteResponseDto.builder()
                 .favoriteProductId(favorite.getId())
-                .userId(favorite.getUser().getId())
+                .userId(user.getId())
                 .productId(favorite.getProduct().getId())
                 .build();
 
     }
 
     @Transactional
-    public void deleteFavorite(Long productId) {
+    public void deleteFavorite(Users user, Long productId) {
 
         productRepository.findById(productId)
                 .orElseThrow(() -> new CustomException(PRODUCT_NOT_FOUND));
 
-        favoriteRepository.deleteByUserIdAndProductId(testUser().getId(), productId);
+        favoriteRepository.deleteByUserIdAndProductId(user.getId(), productId);
     }
 
-    // 테스트용 user
-    private Users testUser() {
-        return userRepository.findById(1L)
+    public Users determineUser(String email){
+        System.out.println("회원 확인: " + email);
+        return userRepository.findByEmail(email)
                 .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
     }
 
