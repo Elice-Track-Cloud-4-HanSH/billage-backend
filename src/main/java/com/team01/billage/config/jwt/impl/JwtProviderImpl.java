@@ -3,6 +3,7 @@ package com.team01.billage.config.jwt.impl;
 import com.team01.billage.config.jwt.JwtProperties;
 import com.team01.billage.exception.CustomException;
 import com.team01.billage.exception.ErrorCode;
+import com.team01.billage.user.domain.CustomUserDetails;
 import com.team01.billage.user.domain.Provider;
 import com.team01.billage.user.domain.TokenRedis;
 import com.team01.billage.user.domain.UserRole;
@@ -56,9 +57,12 @@ public class JwtProviderImpl {
     }
 
     public Authentication getAuthentication(String authToken) {
-        Claims claims = extractAllClaims(authToken);
-        String email = claims.get("email", String.class);
-        UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+        Jws<Claims> jws = Jwts.parserBuilder()
+                .setSigningKey(jwtProperties.getSecret())
+                .build()
+                .parseClaimsJws(authToken);
+
+        UserDetails userDetails = new CustomUserDetails(jws);
         return new UsernamePasswordAuthenticationToken(userDetails, "", userDetails.getAuthorities());
     }
 

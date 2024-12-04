@@ -15,7 +15,9 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class ProductImageService {
+public class
+
+ProductImageService {
 
     private final ProductImageRepository productImageRepository;
     private final S3BucketService s3BucketService;
