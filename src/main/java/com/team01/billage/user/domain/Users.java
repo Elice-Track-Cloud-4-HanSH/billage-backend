@@ -113,4 +113,12 @@ public class Users extends BaseTimeEntity implements UserDetails {
                 .message("회원 삭제 성공")
                 .build();
     }
+
+    public void updateProfile(String nickname, String description, String imageUrl) {
+        this.nickname = nickname;
+        this.description = description;
+        if (imageUrl != null) {
+            this.imageUrl = imageUrl;
+        }
+    }
 }
