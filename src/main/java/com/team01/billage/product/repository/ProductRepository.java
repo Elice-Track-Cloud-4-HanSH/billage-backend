@@ -1,6 +1,7 @@
 package com.team01.billage.product.repository;
 
 import com.team01.billage.product.domain.Product;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -10,4 +11,5 @@ public interface ProductRepository extends JpaRepository<Product, Long>, CustomP
 
     Optional<Product> findByIdAndDeletedAtIsNull(Long id);
 
+    Optional<Product> findByIdAndSellerId(Long id, Long sellerId);
 }

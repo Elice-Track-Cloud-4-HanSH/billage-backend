@@ -1,6 +1,6 @@
 package com.team01.billage.product_review.domain;
 
-import com.team01.billage.product.domain.Product;
+import com.team01.billage.rental_record.domain.RentalRecord;
 import com.team01.billage.user.domain.Users;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -10,6 +10,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
@@ -46,7 +47,7 @@ public class ProductReview {
     @JoinColumn(name = "user_id", nullable = false)
     private Users author;
 
-    @ManyToOne
-    @JoinColumn(name = "product_id", nullable = false)
-    private Product product;
+    @OneToOne
+    @JoinColumn(name = "rental-record_id", nullable = false)
+    private RentalRecord rentalRecord;
 }

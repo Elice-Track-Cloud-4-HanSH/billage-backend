@@ -34,13 +34,13 @@ public class CustomProductReviewRepositoryImpl implements CustomProductReviewRep
                 )
             )
             .from(productReview)
-            .join(productReview.product, product)
+            .join(productReview.rentalRecord.product, product)
             .join(productReview.author, author)
             .leftJoin(productImage)
             .on(productImage.product.eq(product)
                 .and(productImage.thumbnail.eq("Y")))
             .where(author.email.eq(email))
-            .orderBy(productReview.createdAt.desc())
+            .orderBy(productReview.id.desc())
             //.limit()
             .fetch();
     }
@@ -49,7 +49,6 @@ public class CustomProductReviewRepositoryImpl implements CustomProductReviewRep
     public List<ShowReviewResponseDto> findByProduct_id(Long productId) {
         QProductReview productReview = QProductReview.productReview;
         QUsers author = QUsers.users;
-        QProduct product = QProduct.product;
 
         return queryFactory.select(
                 Projections.constructor(
@@ -64,8 +63,8 @@ public class CustomProductReviewRepositoryImpl implements CustomProductReviewRep
             )
             .from(productReview)
             .join(productReview.author, author)
-            .where(productReview.product.id.eq(productId))
-            .orderBy(productReview.createdAt.desc())
+            .where(productReview.rentalRecord.product.id.eq(productId))
+            .orderBy(productReview.id.desc())
             //.limit()
             .fetch();
     }

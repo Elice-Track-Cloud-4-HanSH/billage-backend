@@ -39,7 +39,7 @@ public class TokenApiController {
     ) {
         return authenticationFacade.handleLogin(request, response);
     }
-    @GetMapping("/protected")
+    @GetMapping("/check")
     public ResponseEntity<UserValidateTokenResponseDto> validateToken(
             @CookieValue(value = "accessToken", required = false, defaultValue = "") String accessToken
     ) {

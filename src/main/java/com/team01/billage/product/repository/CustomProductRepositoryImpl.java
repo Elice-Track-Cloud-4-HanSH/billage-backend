@@ -18,9 +18,11 @@ import com.team01.billage.rental_record.domain.QRentalRecord;
 import com.team01.billage.user.domain.QUsers;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 
 @RequiredArgsConstructor
 public class CustomProductRepositoryImpl implements CustomProductRepository {
@@ -28,29 +30,38 @@ public class CustomProductRepositoryImpl implements CustomProductRepository {
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public List<OnSaleResponseDto> findAllOnSale(String email) {
+    public List<OnSaleResponseDto> findAllOnSale(String email, LocalDateTime lastTime,
+        Pageable pageable) {
         QProduct product = QProduct.product;
         QUsers seller = QUsers.users;
         QProductImage productImage = QProductImage.productImage;
 
         return queryFactory
-                .select(Projections.constructor(
-                        OnSaleResponseDto.class,
-                        product.id,
-                        productImage.imageUrl,
-                        product.title
-                ))
-                .from(product)
-                .join(product.seller, seller)
-                .leftJoin(productImage)
-                .on(productImage.product.eq(product)
-                        .and(productImage.thumbnail.eq("Y")))
-                .where(seller.email.eq(email)
-                        .and(product.rentalStatus.eq(RentalStatus.AVAILABLE))
-                        .and(product.deletedAt.isNull()))
-                .orderBy(product.updatedAt.desc())
-                //.limit()
-                .fetch();
+            .select(Projections.constructor(
+                OnSaleResponseDto.class,
+                product.id,
+                productImage.imageUrl,
+                product.title,
+                Expressions.dateTimeTemplate(LocalDate.class, "COALESCE({0}, {1})",
+                    product.updatedAt,
+                    product.createdAt)
+            ))
+            .from(product)
+            .join(product.seller, seller)
+            .leftJoin(productImage)
+            .on(productImage.product.eq(product)
+                .and(productImage.thumbnail.eq("Y")))
+            .where(seller.email.eq(email)
+                .and(product.rentalStatus.eq(RentalStatus.AVAILABLE))
+                .and(product.deletedAt.isNull())
+                .and(Expressions.booleanTemplate("COALESCE({0}, {1}) < {2}",
+                    product.updatedAt, product.createdAt, lastTime))
+            )
+            .orderBy(Expressions.dateTimeTemplate(LocalDateTime.class, "COALESCE({0}, {1})",
+                product.updatedAt,
+                product.createdAt).desc())
+            .limit(pageable.getPageSize() + 1)
+            .fetch();
     }
 
     @Override

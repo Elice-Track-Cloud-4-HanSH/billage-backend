@@ -1,8 +1,6 @@
 package com.team01.billage.product.controller;
 
 
-import com.team01.billage.exception.CustomException;
-import com.team01.billage.exception.ErrorCode;
 import com.team01.billage.product.dto.CheckFavoriteResponseDto;
 import com.team01.billage.product.dto.FavoriteResponseDto;
 import com.team01.billage.product.dto.ProductResponseDto;

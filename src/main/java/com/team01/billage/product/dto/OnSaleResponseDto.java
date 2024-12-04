@@ -1,5 +1,6 @@
 package com.team01.billage.product.dto;
 
+import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -12,4 +13,5 @@ public class OnSaleResponseDto {
     private long productId;
     private String productImageUrl;
     private String title;
+    private LocalDateTime time;
 }

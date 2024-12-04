@@ -4,7 +4,13 @@ import com.team01.billage.product.dto.*;
 import com.team01.billage.product.service.ProductImageService;
 import com.team01.billage.product.service.ProductService;
 import com.team01.billage.user.domain.Users;
+import java.time.LocalDateTime;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.format.annotation.DateTimeFormat.ISO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -12,7 +18,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -41,10 +46,13 @@ public class ProductController {
     }
 
     @GetMapping("/on-sale")
-    public ResponseEntity<List<OnSaleResponseDto>> findAllOnSale(
-        @AuthenticationPrincipal UserDetails userDetails) {
+    public ResponseEntity<Slice<OnSaleResponseDto>> findAllOnSale(
+        @AuthenticationPrincipal UserDetails userDetails,
+        @RequestParam(value = "lastId", required = false) @DateTimeFormat(iso = ISO.DATE_TIME)
+        LocalDateTime lastTime,
+        Pageable pageable) {
         return ResponseEntity.status(HttpStatus.OK)
-            .body(productService.findAllOnSale(userDetails.getUsername()));
+            .body(productService.findAllOnSale(userDetails.getUsername(), lastTime, pageable));
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

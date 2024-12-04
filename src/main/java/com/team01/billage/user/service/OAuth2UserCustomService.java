@@ -33,7 +33,7 @@ public class OAuth2UserCustomService extends DefaultOAuth2UserService {
         OAuth2Attribute attributes = OAuth2Attribute.of(registrationId, userNameAttributeName,
                 oAuth2User.getAttributes());
 
-        Users user = saveOrUpdate(attributes);
+        Users user = upsert(attributes);
 
         return new DefaultOAuth2User(
                 Collections.singleton(new SimpleGrantedAuthority("ROLE_" + user.getRole())),
@@ -41,7 +41,7 @@ public class OAuth2UserCustomService extends DefaultOAuth2UserService {
                 attributes.getNameAttributeKey());
     }
 
-    private Users saveOrUpdate(OAuth2Attribute attributes) {
+    private Users upsert(OAuth2Attribute attributes) {
         return userRepository.findByEmail(attributes.getEmail())
                 .map(user -> {
                     // 이미 존재하는 회원이면 닉네임과 이미지 URL만 업데이트

@@ -1,7 +1,9 @@
 package com.team01.billage.rental_record.domain;
 
 import com.team01.billage.product.domain.Product;
+import com.team01.billage.product_review.domain.ProductReview;
 import com.team01.billage.user.domain.Users;
+import com.team01.billage.user_review.domain.UserReview;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
@@ -10,9 +12,13 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -57,6 +63,13 @@ public class RentalRecord {
     @ManyToOne
     @JoinColumn(name = "seller_id", nullable = false)
     private Users seller;
+
+    @OneToOne(mappedBy = "rentalRecord")
+    private ProductReview productReview;
+
+    @OneToMany(mappedBy = "rentalRecord")
+    @Builder.Default
+    private List<UserReview> userReviews = new ArrayList<>();
 
     public void productReturn() {
         this.returnDate = LocalDate.now();
