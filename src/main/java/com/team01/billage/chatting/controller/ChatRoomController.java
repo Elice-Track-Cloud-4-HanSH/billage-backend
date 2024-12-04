@@ -47,6 +47,12 @@ public class ChatRoomController {
     public ResponseEntity<CheckValidChatroomResponseDto> checkIsValidChatroom(@AuthenticationPrincipal UserDetails userDetails, @RequestBody CheckValidChatroomRequestDto checkValidChatroomDto) {
         Users user = determineUser.determineUser(userDetails.getUsername());
 
+        // 채팅방 목록이 아닌 판매 목록에서 채팅을 하는 경우 문제 발생
+        // 이때 구매자는 "나" 이므로 UserDetails에서 id를 가져옴
+        if (checkValidChatroomDto.getBuyerId() == null) {
+            checkValidChatroomDto.setBuyerId(user.getId());
+        }
+
         if (!(user.getId().equals(checkValidChatroomDto.getSellerId()) || user.getId().equals(checkValidChatroomDto.getBuyerId()))) {
             throw new CustomException(ErrorCode.CHATROOM_VALIDATE_FAILED);
         }
