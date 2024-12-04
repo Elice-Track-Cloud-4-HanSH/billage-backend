@@ -176,7 +176,7 @@ public class CustomProductRepositoryImpl implements CustomProductRepository {
                 .where(productImage.product.id.eq(productId))
                 .fetch();
 
-        // 4. 추가 데이터 설정
+        // 추가 데이터 설정
         if (productDetail != null) {
             productDetail.setExpectedReturnDate(expectedReturnDate); // 반납 예정일 설정
             productDetail.setProductImages(imageDtos != null ? imageDtos : new ArrayList<>()); // 이미지 리스트 설정
