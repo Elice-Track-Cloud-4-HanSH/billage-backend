@@ -47,17 +47,18 @@ public class ProductReviewController {
 
     @GetMapping("/product-details/{productId}")
     public ResponseEntity<List<ShowReviewResponseDto>> productDetailsReview(
-        @PathVariable("productId") long id) {
+        @PathVariable("productId") long productId) {
 
-        List<ShowReviewResponseDto> response = productReviewService.readProductReviews(id);
+        List<ShowReviewResponseDto> response = productReviewService.readProductReviews(productId);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
     @GetMapping("/{rentalRecordId}")
     public ResponseEntity<ReviewSubjectResponseDto> reviewSubject(
-        @PathVariable("rentalRecordId") long id) {
+        @PathVariable("rentalRecordId") long rentalRecordId) {
 
-        ReviewSubjectResponseDto responseDto = productReviewService.getReviewSubject(id);
+        ReviewSubjectResponseDto responseDto = productReviewService.getReviewSubject(
+            rentalRecordId);
         return ResponseEntity.status(HttpStatus.OK).body(responseDto);
     }
 }
