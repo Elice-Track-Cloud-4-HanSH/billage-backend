@@ -8,10 +8,10 @@ import com.team01.billage.product.dto.FavoriteResponseDto;
 import com.team01.billage.product.dto.ProductResponseDto;
 import com.team01.billage.product.repository.FavoriteRepository;
 import com.team01.billage.product.repository.ProductRepository;
+import com.team01.billage.user.domain.CustomUserDetails;
 import com.team01.billage.user.domain.Users;
 import com.team01.billage.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,14 +29,14 @@ public class FavoriteService {
     private final ProductRepository productRepository;
 
     // 해당 상품이 회원의 관심 상품인지 확인
-    public CheckFavoriteResponseDto checkFavorite(UserDetails userDetails, Long productId) {
+    public CheckFavoriteResponseDto checkFavorite(CustomUserDetails userDetails, Long productId) {
 
         boolean isFavorite = false;
 
         // 로그인 한 경우에만 좋아요 상태 조회
         if(userDetails != null) {
-            Users user = determineUser(userDetails.getUsername());
-            isFavorite = favoriteRepository.existsByUserIdAndProductId(user.getId(), productId);
+            checkUser(userDetails.getId());
+            isFavorite = favoriteRepository.existsByUserIdAndProductId(userDetails.getId(), productId);
         }
 
         return CheckFavoriteResponseDto.builder()
@@ -45,9 +45,9 @@ public class FavoriteService {
     }
 
     // 회원의 관심 상품 목록 조회
-    public List<ProductResponseDto> findAllFavorite(Users user) {
+    public List<ProductResponseDto> findAllFavorite(Long userId) {
 
-        return favoriteRepository.findAllByUserId(user.getId());
+        return favoriteRepository.findAllByUserId(userId);
     }
 
     @Transactional
@@ -72,17 +72,17 @@ public class FavoriteService {
     }
 
     @Transactional
-    public void deleteFavorite(Users user, Long productId) {
+    public void deleteFavorite(Long userId, Long productId) {
 
         productRepository.findById(productId)
                 .orElseThrow(() -> new CustomException(PRODUCT_NOT_FOUND));
 
-        favoriteRepository.deleteByUserIdAndProductId(user.getId(), productId);
+        favoriteRepository.deleteByUserIdAndProductId(userId, productId);
     }
 
-    public Users determineUser(String email){
-        System.out.println("회원 확인: " + email);
-        return userRepository.findByEmail(email)
+    public Users checkUser(Long userId){
+        System.out.println("회원: " + userId);
+        return userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
     }
 

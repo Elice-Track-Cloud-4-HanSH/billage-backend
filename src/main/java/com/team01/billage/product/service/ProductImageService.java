@@ -54,14 +54,14 @@ public class ProductImageService {
     // 특정 이미지 삭제
     @Transactional
     public void deleteProductImages(
-            Users user,
+            Long userId,
             String productId,
             List<ProductImageDeleteRequestDto> productImageDeleteRequestDtos){
 
         Product product = productRepository.findById(Long.parseLong(productId))
                 .orElseThrow(() -> new CustomException(PRODUCT_NOT_FOUND));
 
-        if(!product.getSeller().getId().equals(user.getId())){
+        if(!product.getSeller().getId().equals(userId)){
             throw new CustomException(ACCESS_DENIED);
         }
 
