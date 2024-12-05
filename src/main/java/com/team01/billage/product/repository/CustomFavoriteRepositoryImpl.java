@@ -10,6 +10,7 @@ import com.team01.billage.product.domain.QFavoriteProduct;
 import com.team01.billage.product.domain.QProduct;
 import com.team01.billage.product.domain.QProductImage;
 import com.team01.billage.product.dto.ProductResponseDto;
+import com.team01.billage.rental_record.domain.QRentalRecord;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
@@ -24,6 +25,7 @@ public class CustomFavoriteRepositoryImpl implements CustomFavoriteRepository{
         QFavoriteProduct favoriteProduct = QFavoriteProduct.favoriteProduct;
         QProduct product = QProduct.product;
         QProductImage productImage = QProductImage.productImage;
+        QRentalRecord rentalRecord = QRentalRecord.rentalRecord;
 
         // 서브쿼리로 좋아요 개수 가져오기
         JPQLQuery<Long> favoriteCnt = JPAExpressions.select(favoriteProduct.count())
@@ -31,7 +33,7 @@ public class CustomFavoriteRepositoryImpl implements CustomFavoriteRepository{
                 .where(favoriteProduct.product.id.eq(product.id));
 
         return queryFactory
-                .select(Projections.constructor(
+                .select(Projections.fields(
                         ProductResponseDto.class,
                         product.id.as("productId"),
                         product.title,
@@ -41,7 +43,8 @@ public class CustomFavoriteRepositoryImpl implements CustomFavoriteRepository{
                         product.viewCount,
                         productImage.imageUrl.as("thumbnailUrl"),
                         Expressions.asBoolean(true).as("favorite"),
-                        ExpressionUtils.as(favoriteCnt, "favoriteCnt")
+                        ExpressionUtils.as(favoriteCnt, "favoriteCnt"),
+                        rentalRecord.expectedReturnDate
                 ))
                 .from(favoriteProduct)
                 .leftJoin(product)
@@ -49,6 +52,8 @@ public class CustomFavoriteRepositoryImpl implements CustomFavoriteRepository{
                 .leftJoin(productImage)
                 .on(product.id.eq(productImage.product.id).
                         and(productImage.thumbnail.eq("Y")))
+                .leftJoin(rentalRecord)
+                .on(favoriteProduct.product.id.eq(rentalRecord.product.id))
                 .where(favoriteProduct.user.id.eq(userId).and(product.deletedAt.isNull()))
                 .orderBy(favoriteProduct.createdAt.desc())
                 .fetch();
