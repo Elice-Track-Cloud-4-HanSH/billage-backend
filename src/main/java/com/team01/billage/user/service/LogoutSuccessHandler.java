@@ -30,8 +30,5 @@ public class LogoutSuccessHandler implements org.springframework.security.web.au
         // 쿠키 삭제
         CookieUtil.deleteCookie(request, response, "accessToken");
         CookieUtil.deleteCookie(request, response, "refreshToken");
-
-        // 프론트엔드로 리다이렉트
-        response.sendRedirect("http://localhost:3000/signup");
     }
 }
