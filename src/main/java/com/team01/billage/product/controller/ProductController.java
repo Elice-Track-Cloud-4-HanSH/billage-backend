@@ -37,7 +37,7 @@ public class ProductController {
     }
 
     @GetMapping
-    public ResponseEntity<List<ProductResponseDto>> findAllProducts(
+    public ResponseEntity<ProductWrapperResponseDto> findAllProducts(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestParam(value = "categoryId", required = false, defaultValue = "1") String categoryId,
             @RequestParam(value = "rentalStatus", required = false, defaultValue = "ALL") String rentalStatus) {
