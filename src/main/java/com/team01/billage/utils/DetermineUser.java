@@ -2,6 +2,7 @@ package com.team01.billage.utils;
 
 import com.team01.billage.exception.CustomException;
 import com.team01.billage.exception.ErrorCode;
+import com.team01.billage.user.domain.CustomUserDetails;
 import com.team01.billage.user.domain.Users;
 import com.team01.billage.user.repository.UserRepository;
 import lombok.AllArgsConstructor;
@@ -20,5 +21,11 @@ public class DetermineUser {
             return userRepository.findByEmail(emailOrUserId)
                     .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
         }
+    }
+
+    public Users determineUser(CustomUserDetails userDetails) {
+        Long userId = (long) userDetails.getId();
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
     }
 }
