@@ -67,7 +67,7 @@ public class ProductService {
                 .build();
     }
 
-    public List<ProductResponseDto> findAllProducts(CustomUserDetails userDetails, String categoryId, String rentalStatus) {
+    public ProductWrapperResponseDto findAllProducts(CustomUserDetails userDetails, String categoryId, String rentalStatus) {
 
         Long userId = null;
 
@@ -76,10 +76,15 @@ public class ProductService {
             userId = userDetails.getId();
         }
 
-        return productRepository.findAllProducts(
+        List<ProductResponseDto> products = productRepository.findAllProducts(
                 userId,
                 Long.parseLong(categoryId),
                 rentalStatus);
+
+        return ProductWrapperResponseDto.builder()
+                .products(products)
+                .login(userId != null)
+                .build();
     }
 
     public Slice<OnSaleResponseDto> findAllOnSale(String email, LocalDateTime lastTime,
