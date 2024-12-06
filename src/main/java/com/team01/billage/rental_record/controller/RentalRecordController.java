@@ -5,13 +5,13 @@ import com.team01.billage.rental_record.dto.PurchasersResponseDto;
 import com.team01.billage.rental_record.dto.ShowRecordResponseDto;
 import com.team01.billage.rental_record.dto.StartRentalRequestDto;
 import com.team01.billage.rental_record.service.RentalRecordService;
+import com.team01.billage.user.domain.CustomUserDetails;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -32,37 +32,37 @@ public class RentalRecordController {
     @PostMapping
     public ResponseEntity<Void> startRental(
         @Valid @RequestBody StartRentalRequestDto startRentalRequestDto, @AuthenticationPrincipal
-    UserDetails userDetails) {
+    CustomUserDetails userDetails) {
 
-        rentalRecordService.createRentalRecord(startRentalRequestDto, userDetails.getUsername());
+        rentalRecordService.createRentalRecord(startRentalRequestDto, userDetails.getId());
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @GetMapping
     public ResponseEntity<List<ShowRecordResponseDto>> showRentalRecord(
         @RequestParam(name = "type") String type,
-        @AuthenticationPrincipal UserDetails userDetails) {
+        @AuthenticationPrincipal CustomUserDetails userDetails) {
 
         List<ShowRecordResponseDto> responseDtos = rentalRecordService.readRentalRecords(type,
-            userDetails.getUsername());
+            userDetails.getId());
         return ResponseEntity.status(HttpStatus.OK).body(responseDtos);
     }
 
     @GetMapping("/set-to-rented/{productId}")
     public ResponseEntity<List<PurchasersResponseDto>> showPurchasers(
-        @AuthenticationPrincipal UserDetails userDetails,
+        @AuthenticationPrincipal CustomUserDetails userDetails,
         @PathVariable("productId") long productId) {
 
         List<PurchasersResponseDto> responseDtos = rentalRecordService.readPurchasers(
-            userDetails.getUsername(), productId);
+            userDetails.getId(), productId);
         return ResponseEntity.status(HttpStatus.OK).body(responseDtos);
     }
 
     @PatchMapping("/{rentalRecordId}")
     public ResponseEntity<Void> returnCompleted(@PathVariable("rentalRecordId") long rentalRecordId,
-        @AuthenticationPrincipal UserDetails userDetails) {
+        @AuthenticationPrincipal CustomUserDetails userDetails) {
 
-        rentalRecordService.updateRentalRecord(rentalRecordId, userDetails.getUsername());
+        rentalRecordService.updateRentalRecord(rentalRecordId, userDetails.getId());
         return ResponseEntity.status(HttpStatus.OK).build();
     }
 }

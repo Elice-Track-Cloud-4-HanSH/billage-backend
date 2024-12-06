@@ -17,9 +17,8 @@ public class CustomProductReviewRepositoryImpl implements CustomProductReviewRep
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public List<ShowReviewResponseDto> findByAuthor_email(String email) {
+    public List<ShowReviewResponseDto> findByAuthor(long userId) {
         QProductReview productReview = QProductReview.productReview;
-        QUsers author = QUsers.users;
         QProduct product = QProduct.product;
         QProductImage productImage = QProductImage.productImage;
 
@@ -36,18 +35,17 @@ public class CustomProductReviewRepositoryImpl implements CustomProductReviewRep
             )
             .from(productReview)
             .join(productReview.rentalRecord.product, product)
-            .join(productReview.author, author)
             .leftJoin(productImage)
             .on(productImage.product.eq(product)
                 .and(productImage.thumbnail.eq("Y")))
-            .where(author.email.eq(email))
+            .where(productReview.author.id.eq(userId))
             .orderBy(productReview.id.desc())
             //.limit()
             .fetch();
     }
 
     @Override
-    public List<ShowReviewResponseDto> findByProduct_id(Long productId) {
+    public List<ShowReviewResponseDto> findByProduct(Long productId) {
         QProductReview productReview = QProductReview.productReview;
         QUsers author = QUsers.users;
 

@@ -57,6 +57,7 @@ public class UserService {
             .password(passwordEncoder.encode(dto.getPassword()))
             .role(dto.getUserRole())
             .provider(dto.getProvider())
+            .imageUrl("/images/default_profile.png")  // 기본 프로필 이미지 경로 설정
             .build();
 
         Users savedUser = userRepository.save(user);
@@ -93,6 +94,34 @@ public class UserService {
             + "이 코드는 30분 동안 유효합니다.");
         emailSender.send(message);
     }
+
+
+    // 이메일 인증 코드 발송
+    public void sendVerificationEmailForPassword(String email) {
+        // 이메일 중복 체크
+        if (!userRepository.existsByEmail(email)) {
+            throw new CustomException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        String verificationCode = generateRandomCode();
+
+        // Redis에 이메일 인증 코드 저장 (30분 유효)
+        redisTemplate.opsForValue().set(
+                "EmailAuth:" + email,
+                verificationCode,
+                Duration.ofMinutes(30)
+        );
+
+        // 이메일 발송
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom("kakaobank0314@naver.com");  // 네이버 계정 이메일 추가
+        message.setTo(email);
+        message.setSubject("[Billage] 이메일 인증");
+        message.setText("인증 코드: " + verificationCode + "\n\n"
+                + "이 코드는 30분 동안 유효합니다.");
+        emailSender.send(message);
+    }
+
 
     private String generateRandomCode() {
         return String.format("%06d", new Random().nextInt(1000000));
@@ -234,6 +263,14 @@ public class UserService {
         if (request.getEmail().isEmpty() || request.getPassword().isEmpty()) {
             throw new CustomException(ErrorCode.EMPTY_LOGIN_REQUEST);
         }
+        // 회원 탈퇴 여부 확인
+        Users user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+        if (user.isDeleted()) {
+            throw new CustomException(ErrorCode.USER_ALREADY_DELETED);
+        }
+
         return true;
     }
 

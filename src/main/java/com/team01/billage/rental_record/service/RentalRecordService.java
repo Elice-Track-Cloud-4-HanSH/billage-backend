@@ -31,12 +31,12 @@ public class RentalRecordService {
     private final UserRepository userRepository;
 
     @Transactional
-    public void createRentalRecord(StartRentalRequestDto startRentalRequestDto, String email) {
+    public void createRentalRecord(StartRentalRequestDto startRentalRequestDto, long userId) {
 
         ChatRoom chatRoom = chatRoomRepository.findById(startRentalRequestDto.getId())
             .orElseThrow(() -> new CustomException(CHATROOM_NOT_FOUND));
 
-        if (!chatRoom.getSeller().getEmail().equals(email)) {
+        if (chatRoom.getSeller().getId() != (userId)) {
             throw new CustomException(CHANGE_ACCESS_FORBIDDEN);
         }
 
@@ -55,29 +55,29 @@ public class RentalRecordService {
         rentalRecordRepository.save(rentalRecord);
     }
 
-    public List<PurchasersResponseDto> readPurchasers(String email, long productId) {
+    public List<PurchasersResponseDto> readPurchasers(long userId, long productId) {
 
-        return rentalRecordRepository.loadPurchasersList(email, productId);
+        return rentalRecordRepository.loadPurchasersList(userId, productId);
     }
 
-    public List<ShowRecordResponseDto> readRentalRecords(String type, String email) {
+    public List<ShowRecordResponseDto> readRentalRecords(String type, long userId) {
 
         return switch (type) {
-            case "대여중/판매" -> rentalRecordRepository.findBySellerRenting(email);
-            case "대여내역/판매" -> rentalRecordRepository.findBySellerRecord(email);
-            case "대여중/구매" -> rentalRecordRepository.findByBuyerRenting(email);
-            default -> rentalRecordRepository.findByBuyerRecord(email);
+            case "대여중/판매" -> rentalRecordRepository.findBySellerRenting(userId);
+            case "대여내역/판매" -> rentalRecordRepository.findBySellerRecord(userId);
+            case "대여중/구매" -> rentalRecordRepository.findByBuyerRenting(userId);
+            default -> rentalRecordRepository.findByBuyerRecord(userId);
         };
     }
 
     @Transactional
-    public void updateRentalRecord(long rentalRecordId, String email) {
+    public void updateRentalRecord(long rentalRecordId, long userId) {
 
         RentalRecord rentalRecord = rentalRecordRepository.findById(rentalRecordId)
             .orElseThrow(() -> new CustomException(RENTAL_RECORD_NOT_FOUND));
         Product product = rentalRecord.getProduct();
 
-        if (!rentalRecord.getSeller().getEmail().equals(email)) {
+        if (rentalRecord.getSeller().getId() != (userId)) {
             throw new CustomException(CHANGE_ACCESS_FORBIDDEN);
         }
 

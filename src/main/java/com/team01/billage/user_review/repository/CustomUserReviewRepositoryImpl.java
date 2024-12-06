@@ -15,7 +15,7 @@ public class CustomUserReviewRepositoryImpl implements CustomUserReviewRepositor
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public List<ShowReviewResponseDto> findByAuthor_email(String email) {
+    public List<ShowReviewResponseDto> findByAuthor(long userId) {
         QUserReview userReview = QUserReview.userReview;
         QUsers target = QUsers.users;
 
@@ -32,14 +32,14 @@ public class CustomUserReviewRepositoryImpl implements CustomUserReviewRepositor
             )
             .from(userReview)
             .join(userReview.target, target)
-            .where(userReview.author.email.eq(email))
+            .where(userReview.author.id.eq(userId))
             .orderBy(userReview.createdAt.desc())
             //.limit()
             .fetch();
     }
 
     @Override
-    public List<ShowReviewResponseDto> findByTarget_nickname(long userId) {
+    public List<ShowReviewResponseDto> findByTarget(long userId) {
         QUserReview userReview = QUserReview.userReview;
         QUsers author = QUsers.users;
 

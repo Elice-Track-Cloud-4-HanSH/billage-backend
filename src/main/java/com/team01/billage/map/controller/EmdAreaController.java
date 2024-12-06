@@ -1,5 +1,7 @@
 package com.team01.billage.map.controller;
 
+import com.team01.billage.map.dto.EmdAreaGeoJsonResponseDto;
+import com.team01.billage.map.dto.EmdAreaGeoResponseDto;
 import com.team01.billage.map.dto.EmdAreaResponseDto;
 import com.team01.billage.map.service.EmdAreaService;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +27,11 @@ public class EmdAreaController {
     ) {
         Pageable pageable = PageRequest.of(page, size);
         Page<EmdAreaResponseDto> result = emdAreaService.searchEmdAreas(sggNm, emdNm, pageable);
+        return ResponseEntity.ok(result);
+    }
+    @GetMapping("/{emdCd}")
+    public ResponseEntity<EmdAreaGeoJsonResponseDto> getEmdArea(@PathVariable Long emdCd) {
+        EmdAreaGeoJsonResponseDto result = emdAreaService.getEmdAreaGeoJsonById(emdCd);
         return ResponseEntity.ok(result);
     }
 }

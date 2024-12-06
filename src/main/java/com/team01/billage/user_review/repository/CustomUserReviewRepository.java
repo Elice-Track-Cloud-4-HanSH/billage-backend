@@ -6,9 +6,9 @@ import java.util.Optional;
 
 public interface CustomUserReviewRepository {
 
-    List<ShowReviewResponseDto> findByAuthor_email(String email);
+    List<ShowReviewResponseDto> findByAuthor(long userId);
 
-    List<ShowReviewResponseDto> findByTarget_nickname(long userId);
+    List<ShowReviewResponseDto> findByTarget(long userId);
 
     Optional<Double> scoreAverage(long userId);
 

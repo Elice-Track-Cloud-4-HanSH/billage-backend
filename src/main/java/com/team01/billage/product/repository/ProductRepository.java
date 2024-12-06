@@ -11,7 +11,5 @@ public interface ProductRepository extends JpaRepository<Product, Long>, CustomP
 
     Optional<Product> findByIdAndDeletedAtIsNull(Long id);
 
-    List<Product> findAllByDeletedAtIsNull();
-
     Optional<Product> findByIdAndSellerId(Long id, Long sellerId);
 }

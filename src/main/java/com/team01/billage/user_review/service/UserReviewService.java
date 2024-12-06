@@ -28,9 +28,9 @@ public class UserReviewService {
     private final RentalRecordRepository rentalRecordRepository;
 
     public void createUserReview(WriteReviewRequestDto writeReviewRequestDto, long rentalRecordId,
-        String email) {
+        long userId) {
 
-        Users author = userRepository.findByEmail(email)
+        Users author = userRepository.findById(userId)
             .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
         RentalRecord rentalRecord = rentalRecordRepository.findById(rentalRecordId)
             .orElseThrow(() -> new CustomException(RENTAL_RECORD_NOT_FOUND));
@@ -62,24 +62,24 @@ public class UserReviewService {
         userReviewRepository.save(userReview);
     }
 
-    public List<ShowReviewResponseDto> readUserReviews(String email) {
+    public List<ShowReviewResponseDto> readUserReviews(long userId) {
 
-        return userReviewRepository.findByAuthor_email(email);
+        return userReviewRepository.findByAuthor(userId);
     }
 
     public List<ShowReviewResponseDto> readTargetReviews(long userId) {
 
-        return userReviewRepository.findByTarget_nickname(userId);
+        return userReviewRepository.findByTarget(userId);
     }
 
-    public ReviewSubjectResponseDto getReviewSubject(long rentalRecordId, String email) {
+    public ReviewSubjectResponseDto getReviewSubject(long rentalRecordId, long userId) {
 
         RentalRecord rentalRecord = rentalRecordRepository.findById(rentalRecordId)
             .orElseThrow(() -> new CustomException(RENTAL_RECORD_NOT_FOUND));
 
         Users subject;
 
-        if (rentalRecord.getSeller().getEmail().equals(email)) {
+        if (rentalRecord.getSeller().getId() == userId) {
             subject = rentalRecord.getBuyer();
         } else {
             subject = rentalRecord.getSeller();

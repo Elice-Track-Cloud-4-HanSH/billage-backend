@@ -3,6 +3,7 @@ package com.team01.billage.user_review.controller;
 import com.team01.billage.product_review.dto.ReviewSubjectResponseDto;
 import com.team01.billage.product_review.dto.ShowReviewResponseDto;
 import com.team01.billage.product_review.dto.WriteReviewRequestDto;
+import com.team01.billage.user.domain.CustomUserDetails;
 import com.team01.billage.user_review.service.UserReviewService;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -10,7 +11,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -29,29 +29,29 @@ public class UserReviewController {
     public ResponseEntity<Void> writeUserReview(
         @Valid @RequestBody WriteReviewRequestDto writeReviewRequestDto,
         @PathVariable("rentalRecordId") long rentalRecordId,
-        @AuthenticationPrincipal UserDetails userDetails) {
+        @AuthenticationPrincipal CustomUserDetails userDetails) {
 
         userReviewService.createUserReview(writeReviewRequestDto, rentalRecordId,
-            userDetails.getUsername());
+            userDetails.getId());
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @GetMapping
     public ResponseEntity<List<ShowReviewResponseDto>> showUserReview(
-        @AuthenticationPrincipal UserDetails userDetails) {
+        @AuthenticationPrincipal CustomUserDetails userDetails) {
 
         List<ShowReviewResponseDto> responseDtos = userReviewService.readUserReviews(
-            userDetails.getUsername());
+            userDetails.getId());
         return ResponseEntity.status(HttpStatus.OK).body(responseDtos);
     }
 
     @GetMapping("/{rentalRecordId}")
     public ResponseEntity<ReviewSubjectResponseDto> reviewSubject(
         @PathVariable("rentalRecordId") long rentalRecordId,
-        @AuthenticationPrincipal UserDetails userDetails) {
+        @AuthenticationPrincipal CustomUserDetails userDetails) {
 
         ReviewSubjectResponseDto responseDto = userReviewService.getReviewSubject(rentalRecordId,
-            userDetails.getUsername());
+            userDetails.getId());
         return ResponseEntity.status(HttpStatus.OK).body(responseDto);
     }
 
