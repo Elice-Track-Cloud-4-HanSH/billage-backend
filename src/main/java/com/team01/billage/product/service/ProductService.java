@@ -67,7 +67,11 @@ public class ProductService {
                 .build();
     }
 
-    public ProductWrapperResponseDto findAllProducts(CustomUserDetails userDetails, String categoryId, String rentalStatus) {
+    public ProductWrapperResponseDto findAllProducts(
+            CustomUserDetails userDetails,
+            String categoryId,
+            String rentalStatus,
+            String search) {
 
         Long userId = null;
 
@@ -79,7 +83,8 @@ public class ProductService {
         List<ProductResponseDto> products = productRepository.findAllProducts(
                 userId,
                 Long.parseLong(categoryId),
-                rentalStatus);
+                rentalStatus,
+                search);
 
         return ProductWrapperResponseDto.builder()
                 .products(products)
