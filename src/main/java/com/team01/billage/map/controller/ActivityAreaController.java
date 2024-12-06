@@ -5,8 +5,10 @@ import com.team01.billage.exception.ErrorCode;
 import com.team01.billage.map.dto.ActivityAreaRequestDto;
 import com.team01.billage.map.dto.ActivityAreaResponseDto;
 import com.team01.billage.map.service.ActivityAreaService;
+import com.team01.billage.user.domain.CustomUserDetails;
 import com.team01.billage.user.domain.Users;
 import com.team01.billage.user.repository.UserRepository;
+import com.team01.billage.utils.DetermineUser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,16 +24,16 @@ public class ActivityAreaController {
 
     private final ActivityAreaService activityAreaService;
     private final UserRepository userRepository;
+    private final DetermineUser determineUser;
 
     // 활동 지역 설정
     @PostMapping
     public ResponseEntity<Void> setActivityArea(
         @RequestBody ActivityAreaRequestDto requestDto,
-        @AuthenticationPrincipal UserDetails userDetails) {
+        @AuthenticationPrincipal CustomUserDetails userDetails) {
+        Users user = determineUser.determineUser(userDetails);
 
-        // userDetails에서 email을 가져오고, 이를 통해 userId 조회, 수정예정
-        Users user = userRepository.findByEmail(userDetails.getUsername())
-            .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
 
         activityAreaService.setActivityArea(user.getId(), requestDto);
         return ResponseEntity.status(HttpStatus.OK).build();
@@ -41,11 +43,11 @@ public class ActivityAreaController {
     // 활동 지역 조회
     @GetMapping
     public ResponseEntity<ActivityAreaResponseDto> getActivityArea(
-        @AuthenticationPrincipal UserDetails userDetails) {
+        @AuthenticationPrincipal CustomUserDetails userDetails) {
 
 
-        Users user = userRepository.findByEmail(userDetails.getUsername())
-            .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+        Users user = determineUser.determineUser(userDetails);
+
 
         ActivityAreaResponseDto responseDto = activityAreaService.getActivityArea(user.getId());
         return ResponseEntity.status(HttpStatus.OK).body(responseDto);
