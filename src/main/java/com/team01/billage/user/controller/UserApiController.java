@@ -1,6 +1,5 @@
 package com.team01.billage.user.controller;
 
-import com.team01.billage.common.CookieUtil;
 import com.team01.billage.user.domain.CustomUserDetails;
 import com.team01.billage.user.dto.Request.*;
 import com.team01.billage.user.dto.Response.*;
@@ -11,21 +10,17 @@ import com.team01.billage.user.dto.Response.UserSignupResponseDto;
 import com.team01.billage.user.service.ProfileService;
 import com.team01.billage.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -42,6 +37,12 @@ public class UserApiController {
 
     private final UserService userService;
     private final ProfileService profileService;
+
+    @PostMapping("/after-login")
+    public ResponseEntity<SimpleUserInfoResponseDto> getSimpleUserInfo(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        SimpleUserInfoResponseDto simpleUserInfoDto = new SimpleUserInfoResponseDto(userDetails);
+        return ResponseEntity.ok(simpleUserInfoDto);
+    }
 
     @Operation(summary = "회원가입", description = "새로운 사용자를 등록합니다.")
     @ApiResponses(value = {
