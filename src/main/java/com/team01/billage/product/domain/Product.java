@@ -72,7 +72,6 @@ public class Product {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
-    @LastModifiedDate
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
@@ -109,6 +108,10 @@ public class Product {
 
     public void addProductImage(ProductImage productImage) {
         this.productImages.add(productImage);
+    }
+
+    public void updateDate(){
+        this.updatedAt = LocalDateTime.now();
     }
 
 }
