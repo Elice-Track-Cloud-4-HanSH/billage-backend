@@ -65,6 +65,7 @@ public class SecurityConfig {
                 .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/chatroom/**", "/connect").authenticated()
                         .requestMatchers(
                                 permitAllUrlConfig.getPermitAllUrls()
                                         .toArray(String[]::new)
