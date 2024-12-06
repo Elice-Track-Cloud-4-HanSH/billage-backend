@@ -4,7 +4,6 @@ import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.ExpressionUtils;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.Expressions;
-import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.JPQLQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -15,11 +14,9 @@ import com.team01.billage.product.dto.OnSaleResponseDto;
 import com.team01.billage.product.dto.ProductResponseDto;
 import com.team01.billage.product.enums.RentalStatus;
 import com.team01.billage.user.domain.QUsers;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Pageable;
 
 @RequiredArgsConstructor
 public class CustomProductRepositoryImpl implements CustomProductRepository {
@@ -27,11 +24,15 @@ public class CustomProductRepositoryImpl implements CustomProductRepository {
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public List<OnSaleResponseDto> findAllOnSale(String email, LocalDateTime lastTime,
-        Pageable pageable) {
+    public List<OnSaleResponseDto> findAllOnSale(String email) {
         QProduct product = QProduct.product;
         QUsers seller = QUsers.users;
         QProductImage productImage = QProductImage.productImage;
+
+        BooleanBuilder whereClause = new BooleanBuilder();
+        whereClause.and(seller.email.eq(email))
+            .and(product.rentalStatus.eq(RentalStatus.AVAILABLE))
+            .and(product.deletedAt.isNull());
 
         return queryFactory
             .select(Projections.constructor(
@@ -39,7 +40,7 @@ public class CustomProductRepositoryImpl implements CustomProductRepository {
                 product.id,
                 productImage.imageUrl,
                 product.title,
-                Expressions.dateTimeTemplate(LocalDate.class, "COALESCE({0}, {1})",
+                Expressions.dateTimeTemplate(LocalDateTime.class, "COALESCE({0}, {1})",
                     product.updatedAt,
                     product.createdAt)
             ))
@@ -48,18 +49,14 @@ public class CustomProductRepositoryImpl implements CustomProductRepository {
             .leftJoin(productImage)
             .on(productImage.product.eq(product)
                 .and(productImage.thumbnail.eq("Y")))
-            .where(seller.email.eq(email)
-                .and(product.rentalStatus.eq(RentalStatus.AVAILABLE))
-                .and(product.deletedAt.isNull())
-                .and(Expressions.booleanTemplate("COALESCE({0}, {1}) < {2}",
-                    product.updatedAt, product.createdAt, lastTime))
-            )
+            .where(whereClause)
             .orderBy(Expressions.dateTimeTemplate(LocalDateTime.class, "COALESCE({0}, {1})",
                 product.updatedAt,
                 product.createdAt).desc())
-            .limit(pageable.getPageSize() + 1)
+            //.limit()
             .fetch();
     }
+
 
     @Override
     public List<ProductResponseDto> findAllProductsByCategoryId(Long categoryId, Long userId) {
@@ -71,37 +68,37 @@ public class CustomProductRepositoryImpl implements CustomProductRepository {
         BooleanBuilder builder = new BooleanBuilder();
         builder.and(product.deletedAt.isNull());
 
-        if(categoryId != 1L){
+        if (categoryId != 1L) {
             builder.and(product.category.id.eq(categoryId));
         }
 
         // 서브쿼리로 좋아요 개수 가져오기
         JPQLQuery<Long> favoriteCnt = JPAExpressions.select(favoriteProduct.count())
-                .from(favoriteProduct)
-                .where(favoriteProduct.product.id.eq(product.id));
+            .from(favoriteProduct)
+            .where(favoriteProduct.product.id.eq(product.id));
 
         return queryFactory
-                .select(Projections.fields(
-                        ProductResponseDto.class,
-                        product.id.as("productId"),
-                        product.title,
-                        product.updatedAt,
-                        product.dayPrice,
-                        product.weekPrice,
-                        product.viewCount,
-                        productImage.imageUrl.as("thumbnailUrl"),
-                        favoriteProduct.id.isNotNull().as("favorite"),
-                        ExpressionUtils.as(favoriteCnt, "favoriteCnt")
-                ))
-                .from(product)
-                .leftJoin(productImage)
-                .on(product.id.eq(productImage.product.id).
-                        and(productImage.thumbnail.eq("Y")))
-                .leftJoin(favoriteProduct)
-                .on(product.id.eq(favoriteProduct.product.id).
-                        and(favoriteProduct.user.id.eq(userId)))
-                .where(builder)
-                .orderBy(product.updatedAt.desc())
-                .fetch();
+            .select(Projections.fields(
+                ProductResponseDto.class,
+                product.id.as("productId"),
+                product.title,
+                product.updatedAt,
+                product.dayPrice,
+                product.weekPrice,
+                product.viewCount,
+                productImage.imageUrl.as("thumbnailUrl"),
+                favoriteProduct.id.isNotNull().as("favorite"),
+                ExpressionUtils.as(favoriteCnt, "favoriteCnt")
+            ))
+            .from(product)
+            .leftJoin(productImage)
+            .on(product.id.eq(productImage.product.id).
+                and(productImage.thumbnail.eq("Y")))
+            .leftJoin(favoriteProduct)
+            .on(product.id.eq(favoriteProduct.product.id).
+                and(favoriteProduct.user.id.eq(userId)))
+            .where(builder)
+            .orderBy(product.updatedAt.desc())
+            .fetch();
     }
 }

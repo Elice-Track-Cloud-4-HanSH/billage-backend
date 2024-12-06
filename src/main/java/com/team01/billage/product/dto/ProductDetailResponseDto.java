@@ -29,5 +29,7 @@ public class ProductDetailResponseDto { // 상품 상세 확인 DTO
     private LocalDateTime updatedAt;
     private ProductSellerResponseDto seller;
     private List<ProductImageResponseDto> productImages;
+    private Double avgScore;
+    private Integer reviewCount;
 
 }

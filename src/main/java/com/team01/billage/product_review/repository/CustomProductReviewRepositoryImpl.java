@@ -8,6 +8,7 @@ import com.team01.billage.product_review.domain.QProductReview;
 import com.team01.billage.product_review.dto.ShowReviewResponseDto;
 import com.team01.billage.user.domain.QUsers;
 import java.util.List;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
@@ -67,6 +68,32 @@ public class CustomProductReviewRepositoryImpl implements CustomProductReviewRep
             .orderBy(productReview.id.desc())
             //.limit()
             .fetch();
+    }
+
+    @Override
+    public Optional<Double> scoreAverage(long productId) {
+        QProductReview productReview = QProductReview.productReview;
+
+        Double averageScore = queryFactory
+            .select(productReview.score.avg())
+            .from(productReview)
+            .where(productReview.rentalRecord.product.id.eq(productId))
+            .fetchOne();
+
+        return Optional.ofNullable(averageScore);
+    }
+
+    @Override
+    public Optional<Integer> reviewCount(long productId) {
+        QProductReview productReview = QProductReview.productReview;
+
+        Integer count = queryFactory
+            .select(productReview.count().intValue())
+            .from(productReview)
+            .where(productReview.rentalRecord.product.id.eq(productId))
+            .fetchOne();
+
+        return Optional.ofNullable(count);
     }
 }
 

@@ -173,18 +173,21 @@ public class UserService {
         }
     }
 
-    public TargetProfileResponseDto showProfile(String nickname) {
-        Users target = userRepository.findByNickname(nickname)
+    public TargetProfileResponseDto showProfile(long userId) {
+        Users target = userRepository.findById(userId)
             .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
-        Double avgScore = userReviewRepository.scoreAverage(nickname)
+        Double avgScore = userReviewRepository.scoreAverage(userId)
             .map(score -> Math.round(score * 10) / 10.0).orElse(0.0);
+
+        Integer reviewCount = userReviewRepository.reviewCount(userId).orElse(0);
 
         return TargetProfileResponseDto.builder()
             .imageUrl(target.getImageUrl())
             .nickname(target.getNickname())
             .description(target.getDescription())
             .avgScore(avgScore)
+            .reviewCount(reviewCount)
             .build();
     }
 

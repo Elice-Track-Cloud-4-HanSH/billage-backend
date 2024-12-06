@@ -67,9 +67,9 @@ public class UserReviewService {
         return userReviewRepository.findByAuthor_email(email);
     }
 
-    public List<ShowReviewResponseDto> readTargetReviews(String nickname) {
+    public List<ShowReviewResponseDto> readTargetReviews(long userId) {
 
-        return userReviewRepository.findByTarget_nickname(nickname);
+        return userReviewRepository.findByTarget_nickname(userId);
     }
 
     public ReviewSubjectResponseDto getReviewSubject(long rentalRecordId, String email) {

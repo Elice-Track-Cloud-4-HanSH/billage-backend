@@ -1,11 +1,14 @@
 package com.team01.billage.product.service;
 
-import static com.team01.billage.exception.ErrorCode.*;
+import static com.team01.billage.exception.ErrorCode.CATEGORY_NOT_FOUND;
+import static com.team01.billage.exception.ErrorCode.PRODUCT_IMAGE_NOT_FOUND;
+import static com.team01.billage.exception.ErrorCode.PRODUCT_MODIFICATION_NOT_ALLOWED;
+import static com.team01.billage.exception.ErrorCode.PRODUCT_NOT_FOUND;
+import static com.team01.billage.exception.ErrorCode.USER_NOT_FOUND;
 
 import com.team01.billage.category.domain.Category;
 import com.team01.billage.category.dto.CategoryProductResponseDto;
 import com.team01.billage.category.repository.CategoryRepository;
-import com.team01.billage.common.CustomSlice;
 import com.team01.billage.exception.CustomException;
 import com.team01.billage.product.domain.Product;
 import com.team01.billage.product.domain.ProductImage;
@@ -22,17 +25,15 @@ import com.team01.billage.product.dto.ProductUpdateRequestDto;
 import com.team01.billage.product.enums.RentalStatus;
 import com.team01.billage.product.repository.ProductImageRepository;
 import com.team01.billage.product.repository.ProductRepository;
+import com.team01.billage.product_review.repository.ProductReviewRepository;
 import com.team01.billage.user.domain.Users;
 import com.team01.billage.user.repository.UserRepository;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,6 +46,7 @@ public class ProductService {
     private final ProductImageRepository productImageRepository;
     private final ProductImageService productImageService;
     private final UserRepository userRepository;
+    private final ProductReviewRepository productReviewRepository;
 
     private final GeometryFactory geometryFactory = new GeometryFactory();
 
@@ -61,25 +63,13 @@ public class ProductService {
 
     public List<ProductResponseDto> findAllProducts(String categoryId) {
 
-        return productRepository.findAllProductsByCategoryId(Long.parseLong(categoryId), testUser().getId());
+        return productRepository.findAllProductsByCategoryId(Long.parseLong(categoryId),
+            testUser().getId());
     }
 
-    public Slice<OnSaleResponseDto> findAllOnSale(String email, LocalDateTime lastTime,
-        Pageable pageable) {
+    public List<OnSaleResponseDto> findAllOnSale(String email) {
 
-        List<OnSaleResponseDto> results = productRepository.findAllOnSale(email, lastTime,
-            pageable);
-
-        boolean hasNext = results.size() > pageable.getPageSize();
-
-        if (hasNext) {
-            results.remove(results.size() - 1);
-        }
-
-        LocalDateTime nextLastTime = results.isEmpty() ? null
-            : results.get(results.size() - 1).getTime();
-
-        return new CustomSlice<>(results, pageable, hasNext, nextLastTime);
+        return productRepository.findAllOnSale(email);
     }
 
     @Transactional
@@ -195,6 +185,11 @@ public class ProductService {
             .categoryName(product.getCategory().getName())
             .build();
 
+        Double avgScore = productReviewRepository.scoreAverage(product.getId())
+            .map(score -> Math.round(score * 10) / 10.0).orElse(0.0);
+
+        Integer reviewCount = productReviewRepository.reviewCount(product.getId()).orElse(0);
+
         return ProductDetailResponseDto.builder()
             .productId(product.getId())
             .category(category)
@@ -209,6 +204,8 @@ public class ProductService {
             .updatedAt(product.getUpdatedAt())
             .seller(sellerDto)
             .productImages(imageDtos)
+            .avgScore(avgScore)
+            .reviewCount(reviewCount)
             .build();
 
     }

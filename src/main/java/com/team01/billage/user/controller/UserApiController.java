@@ -1,23 +1,25 @@
 package com.team01.billage.user.controller;
 
-import com.team01.billage.common.CookieUtil;
+import static com.team01.billage.config.jwt.UserConstants.ACCESS_TOKEN_TYPE_VALUE;
+import static com.team01.billage.config.jwt.UserConstants.REFRESH_TOKEN_TYPE_VALUE;
+
 import com.team01.billage.user.dto.Request.EmailRequest;
 import com.team01.billage.user.dto.Request.EmailVerificationRequest;
 import com.team01.billage.user.dto.Request.UserPasswordRequestDto;
-import com.team01.billage.user.dto.Response.*;
 import com.team01.billage.user.dto.Request.UserSignupRequestDto;
+import com.team01.billage.user.dto.Response.EmailAvailabilityResponse;
+import com.team01.billage.user.dto.Response.NicknameAvailabilityResponse;
 import com.team01.billage.user.dto.Response.TargetProfileResponseDto;
 import com.team01.billage.user.dto.Response.UserDeleteResponseDto;
+import com.team01.billage.user.dto.Response.UserPasswordResponseDto;
 import com.team01.billage.user.dto.Response.UserResponseDto;
 import com.team01.billage.user.dto.Response.UserSignupResponseDto;
 import com.team01.billage.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -25,12 +27,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.*;
-
-import static com.team01.billage.config.jwt.UserConstants.ACCESS_TOKEN_TYPE_VALUE;
-import static com.team01.billage.config.jwt.UserConstants.REFRESH_TOKEN_TYPE_VALUE;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 @Tag(name = "User", description = "사용자 관련 API")
 @RestController
@@ -99,10 +104,11 @@ public class UserApiController {
         return ResponseEntity.badRequest().body(deleteResponse);
     }
 
-    @GetMapping("/profile")
-    public ResponseEntity<TargetProfileResponseDto> targetProfile(@RequestParam String nickname) {
+    @GetMapping("/profile/{userId}")
+    public ResponseEntity<TargetProfileResponseDto> targetProfile(
+        @PathVariable("userId") long userId) {
 
-        TargetProfileResponseDto responseDto = userService.showProfile(nickname);
+        TargetProfileResponseDto responseDto = userService.showProfile(userId);
         return ResponseEntity.status(HttpStatus.OK).body(responseDto);
     }
 
@@ -123,23 +129,23 @@ public class UserApiController {
 
     @Operation(summary = "비밀번호 확인", description = "회원 탈퇴 전 비밀번호를 확인합니다.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "비밀번호 확인 성공"),
-            @ApiResponse(responseCode = "401", description = "비밀번호 불일치"),
-            @ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음")
+        @ApiResponse(responseCode = "200", description = "비밀번호 확인 성공"),
+        @ApiResponse(responseCode = "401", description = "비밀번호 불일치"),
+        @ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음")
     })
     @PostMapping("/check-password")
     public ResponseEntity<UserPasswordResponseDto> checkPassword(
-            @AuthenticationPrincipal UserDetails userDetails,
-            @Valid @RequestBody UserPasswordRequestDto requestDto
+        @AuthenticationPrincipal UserDetails userDetails,
+        @Valid @RequestBody UserPasswordRequestDto requestDto
     ) {
         UserPasswordResponseDto response = userService.verifyPassword(
-                userDetails.getUsername(),  // email
-                requestDto.password()
+            userDetails.getUsername(),  // email
+            requestDto.password()
         );
 
         return response.matches()
-                ? ResponseEntity.ok(response)
-                : ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+            ? ResponseEntity.ok(response)
+            : ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
     }
 
     // 이메일 인증 코드 발송

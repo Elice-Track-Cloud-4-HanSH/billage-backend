@@ -8,7 +8,9 @@ public interface CustomUserReviewRepository {
 
     List<ShowReviewResponseDto> findByAuthor_email(String email);
 
-    List<ShowReviewResponseDto> findByTarget_nickname(String nickname);
+    List<ShowReviewResponseDto> findByTarget_nickname(long userId);
 
-    Optional<Double> scoreAverage(String nickname);
+    Optional<Double> scoreAverage(long userId);
+
+    Optional<Integer> reviewCount(long userId);
 }
