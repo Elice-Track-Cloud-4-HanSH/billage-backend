@@ -167,6 +167,7 @@ public class ProductService {
         product.updateProductLocation(
                 toPoint(productUpdateRequestDto.getLongitude(), productUpdateRequestDto.getLatitude())
         );
+        product.updateDate();
 
         // 새로 추가한 상품 이미지 저장 (상품 이미지 생성)
         if (productUpdateRequestDto.getProductImages() != null) {
