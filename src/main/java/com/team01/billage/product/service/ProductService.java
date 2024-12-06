@@ -67,7 +67,11 @@ public class ProductService {
                 .build();
     }
 
-    public ProductWrapperResponseDto findAllProducts(CustomUserDetails userDetails, String categoryId, String rentalStatus) {
+    public ProductWrapperResponseDto findAllProducts(
+            CustomUserDetails userDetails,
+            String categoryId,
+            String rentalStatus,
+            String search) {
 
         Long userId = null;
 
@@ -79,7 +83,8 @@ public class ProductService {
         List<ProductResponseDto> products = productRepository.findAllProducts(
                 userId,
                 Long.parseLong(categoryId),
-                rentalStatus);
+                rentalStatus,
+                search);
 
         return ProductWrapperResponseDto.builder()
                 .products(products)
@@ -162,6 +167,7 @@ public class ProductService {
         product.updateProductLocation(
                 toPoint(productUpdateRequestDto.getLongitude(), productUpdateRequestDto.getLatitude())
         );
+        product.updateDate();
 
         // 새로 추가한 상품 이미지 저장 (상품 이미지 생성)
         if (productUpdateRequestDto.getProductImages() != null) {

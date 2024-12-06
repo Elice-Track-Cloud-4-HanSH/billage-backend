@@ -40,9 +40,10 @@ public class ProductController {
     public ResponseEntity<ProductWrapperResponseDto> findAllProducts(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestParam(value = "categoryId", required = false, defaultValue = "1") String categoryId,
-            @RequestParam(value = "rentalStatus", required = false, defaultValue = "ALL") String rentalStatus) {
+            @RequestParam(value = "rentalStatus", required = false, defaultValue = "ALL") String rentalStatus,
+            @RequestParam(value = "search", required = false, defaultValue = "ALL") String search) {
         return ResponseEntity.status(HttpStatus.OK)
-                .body(productService.findAllProducts(userDetails, categoryId, rentalStatus));
+                .body(productService.findAllProducts(userDetails, categoryId, rentalStatus, search));
     }
 
     @GetMapping("/on-sale")
