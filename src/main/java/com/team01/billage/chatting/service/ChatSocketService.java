@@ -11,10 +11,7 @@ import com.team01.billage.exception.ErrorCode;
 import com.team01.billage.user.domain.Users;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
-
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -24,7 +21,7 @@ public class ChatSocketService {
     private final ChatRedisService chatRedisService;
 
     @Transactional
-    public ChatResponseDto insertChat(Long chatroomId, Users sender, ChatMessage message) {
+    public ChatResponseDto insertChat(Long chatroomId, Users sender, ChatMessage.Chatting message) {
         ChatRoom chatroom = chatroomRepository.findById(chatroomId).orElseThrow(() -> new CustomException(ErrorCode.CHATROOM_NOT_FOUND));
 
         Chat chat = Chat.builder()
@@ -35,9 +32,10 @@ public class ChatSocketService {
 
         chatRepository.save(chat);
 
+        Long targetId = getTargetId(chatroom, sender);
         setToJoin(chatroom, sender);
 
-        chatRedisService.increaseUnreadChatCount(chatroomId, sender.getId());
+        chatRedisService.increaseUnreadChatCount(chatroomId, targetId);
 
         return chat.toChatResponse(sender.getId());
     }
@@ -60,10 +58,17 @@ public class ChatSocketService {
         chatRepository.markAsRead(chatId);
 
         Chat chat = chatRepository.findById(chatId).orElseThrow(() -> new CustomException(ErrorCode.CHAT_NOT_FOUND));
-        Long chatroomId = chat.getChatRoom().getId();
-        Long senderId = chat.getSender().getId();
-        chatRedisService.resetUnreadChatCount(chatroomId, senderId);
+        ChatRoom chatroom = chat.getChatRoom();
+        Long chatroomId = chatroom.getId();
+
+        Long targetId = getTargetId(chatroom, chat.getSender());
+        chatRedisService.resetUnreadChatCount(chatroomId, targetId);
     }
 
+    private Long getTargetId(ChatRoom chatroom, Users sender) {
+        Long buyerId = chatroom.getBuyer().getId();
+        Long sellerId = chatroom.getSeller().getId();
 
+        return buyerId.equals(sender.getId()) ? sellerId : buyerId;
+    }
 }

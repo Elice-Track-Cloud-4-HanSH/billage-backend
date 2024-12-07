@@ -23,7 +23,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
@@ -63,9 +62,9 @@ public class ChatRoomService {
     }
 
     private String getUnreadChatKey(Long chatroomId, Long userId) {
-        Set<String> keys = chatRedisService.getKeysByPattern(chatroomId.toString(), 2);
+        Set<String> keys = chatRedisService.getKeysByPattern(chatroomId.toString() + "_*", 2);
         return keys.stream().filter((key) ->
-                Long.parseLong(key.split("_")[1]) != userId
+                Long.parseLong(key.split("_")[1]) == userId
         ).findFirst().orElse(null);
     }
 
