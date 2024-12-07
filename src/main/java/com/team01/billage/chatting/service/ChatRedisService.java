@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ScanOptions;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
@@ -19,11 +20,13 @@ public class ChatRedisService {
         return chatroomId + "_" + senderId;
     }
 
+    @Async
     public void increaseUnreadChatCount(Long chatroomId, Long senderId) {
         String key = createKey(chatroomId, senderId);
         increaseUnreadChatCount(key);
     }
 
+    @Async
     public void increaseUnreadChatCount(String key) {
         String val = redisTemplate.opsForValue().get(key);
         int count = Integer.parseInt(val != null ? val : "0");
@@ -31,11 +34,13 @@ public class ChatRedisService {
         redisTemplate.opsForValue().set(key, String.format("%d", ++count));
     }
 
+    @Async
     public void resetUnreadChatCount(Long chatroomId, Long senderId) {
         String key = createKey(chatroomId, senderId);
         resetUnreadChatCount(key);
     }
 
+    @Async
     public void resetUnreadChatCount(String key) {
         redisTemplate.opsForValue().set(key, "0");
     }
@@ -45,21 +50,24 @@ public class ChatRedisService {
         return Long.parseLong(val != null ? val : "0");
     }
 
+    @Async
     public void setUnreadChatCount(String key) {
-        redisTemplate.opsForValue().set(key, "0");
+        setUnreadChatCount(key, "0");
     }
 
+    @Async
     public void setUnreadChatCount(String key, Long count) {
         setUnreadChatCount(key, count.toString());
     }
 
+    @Async
     public void setUnreadChatCount(String key, String count) {
         redisTemplate.opsForValue().set(key, count);
     }
 
     public Set<String> getKeysByPattern(String pattern, int maxKeysSize) {
         Set<String> results = new HashSet<>();
-        ScanOptions scanOptions = ScanOptions.scanOptions().match(pattern + "*").build();
+        ScanOptions scanOptions = ScanOptions.scanOptions().match(pattern).build();
         try (Cursor<byte[]> cursor = redisTemplate.getConnectionFactory().getConnection().scan(scanOptions)){
             while (cursor.hasNext() && results.size() < maxKeysSize) {
                 byte[] keyBytes = cursor.next();

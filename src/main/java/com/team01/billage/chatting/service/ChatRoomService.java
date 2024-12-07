@@ -23,7 +23,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
@@ -36,6 +35,7 @@ public class ChatRoomService {
     private final ChatRoomQueryDSL chatroomQueryDsl;
     private final ChatService chatService;
     private final ChatRedisService chatRedisService;
+    private final ChatSocketService chatSocketService;
 
     public ChatRoom isChatroomExists(Long chatroomId) {
         return chatroomRepository.findById(chatroomId).orElseThrow(() ->
@@ -51,7 +51,6 @@ public class ChatRoomService {
                     Long chatroomId = result.getChatRoom().getId();
                     String unreadKey = getUnreadChatKey(chatroomId, userId);
                     Long unreadCount = chatRedisService.getUnreadChatCount(unreadKey);
-                    System.out.println(unreadKey + " " + unreadCount);
                     return new ChatroomResponseDto(
                             result.getChatRoom(),
                             result.getLastChat(),
@@ -63,9 +62,9 @@ public class ChatRoomService {
     }
 
     private String getUnreadChatKey(Long chatroomId, Long userId) {
-        Set<String> keys = chatRedisService.getKeysByPattern(chatroomId.toString(), 2);
+        Set<String> keys = chatRedisService.getKeysByPattern(chatroomId.toString() + "_*", 2);
         return keys.stream().filter((key) ->
-                Long.parseLong(key.split("_")[1]) != userId
+                Long.parseLong(key.split("_")[1]) == userId
         ).findFirst().orElse(null);
     }
 
@@ -98,7 +97,10 @@ public class ChatRoomService {
         }
 
         String unreadKey = getUnreadChatKey(chatroomId, userId);
+        Long unreadCount = chatRedisService.getUnreadChatCount(unreadKey);
+
         chatRedisService.resetUnreadChatCount(unreadKey);
+        chatSocketService.sendUnreadChatCount(userId, -unreadCount.intValue());
 
         return chatService.getPagenatedChat(chatroomId, lastChatId, userId, page);
     }
