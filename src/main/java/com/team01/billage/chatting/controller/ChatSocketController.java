@@ -24,7 +24,7 @@ private final ChatSocketService chatSocketService;
     @SendTo("/sub/chat/{chatroomId}")
     public ChatResponseDto chat(
             @DestinationVariable Long chatroomId,
-            ChatMessage message,
+            ChatMessage.Chatting message,
             java.security.Principal principal
     ) {
         CustomUserDetails userDetails = (CustomUserDetails)((Authentication) principal).getPrincipal();
