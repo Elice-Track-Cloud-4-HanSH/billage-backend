@@ -11,6 +11,8 @@ import com.team01.billage.exception.ErrorCode;
 import com.team01.billage.user.domain.Users;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -19,6 +21,7 @@ public class ChatSocketService {
     private final ChatRoomRepository chatroomRepository;
     private final ChatRepository chatRepository;
     private final ChatRedisService chatRedisService;
+    private final SimpMessagingTemplate messagingTemplate;
 
     @Transactional
     public ChatResponseDto insertChat(Long chatroomId, Users sender, ChatMessage.Chatting message) {
@@ -33,6 +36,7 @@ public class ChatSocketService {
         chatRepository.save(chat);
 
         Long targetId = getTargetId(chatroom, sender);
+        sendUnreadChatCount(targetId, 1);
         setToJoin(chatroom, sender);
 
         chatRedisService.increaseUnreadChatCount(chatroomId, targetId);
@@ -62,6 +66,8 @@ public class ChatSocketService {
         Long chatroomId = chatroom.getId();
 
         Long targetId = getTargetId(chatroom, chat.getSender());
+
+        sendUnreadChatCount(targetId, -1);
         chatRedisService.resetUnreadChatCount(chatroomId, targetId);
     }
 
@@ -70,5 +76,18 @@ public class ChatSocketService {
         Long sellerId = chatroom.getSeller().getId();
 
         return buyerId.equals(sender.getId()) ? sellerId : buyerId;
+    }
+
+    @Async
+    public void sendUnreadChatCount(Long targetId, int value) {
+        String type = value < 0 ? "-" : "+";
+        sendUnreadChatCount(targetId, type, value);
+    }
+
+    @Async
+    public void sendUnreadChatCount(Long targetId, String type, int value) {
+        ChatMessage.UnreadCountDelta deltaData =
+                new ChatMessage.UnreadCountDelta(type, Math.abs(value));
+        messagingTemplate.convertAndSend("/sub/chat/unread/" + targetId, deltaData);
     }
 }

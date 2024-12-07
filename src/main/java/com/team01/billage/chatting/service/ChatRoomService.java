@@ -35,6 +35,7 @@ public class ChatRoomService {
     private final ChatRoomQueryDSL chatroomQueryDsl;
     private final ChatService chatService;
     private final ChatRedisService chatRedisService;
+    private final ChatSocketService chatSocketService;
 
     public ChatRoom isChatroomExists(Long chatroomId) {
         return chatroomRepository.findById(chatroomId).orElseThrow(() ->
@@ -97,7 +98,10 @@ public class ChatRoomService {
         }
 
         String unreadKey = getUnreadChatKey(chatroomId, userId);
+        Long unreadCount = chatRedisService.getUnreadChatCount(unreadKey);
+
         chatRedisService.resetUnreadChatCount(unreadKey);
+        chatSocketService.sendUnreadChatCount(userId, -unreadCount.intValue());
 
         return chatService.getPagenatedChat(chatroomId, lastChatId, userId, page);
     }
