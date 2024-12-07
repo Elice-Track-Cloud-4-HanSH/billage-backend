@@ -1,10 +1,8 @@
 package com.team01.billage.chatting.controller;
 
-import com.team01.billage.chatting.dto.ChatResponseDto;
-import com.team01.billage.chatting.dto.ChatroomResponseDto;
-import com.team01.billage.chatting.dto.CheckValidChatroomRequestDto;
-import com.team01.billage.chatting.dto.CheckValidChatroomResponseDto;
+import com.team01.billage.chatting.dto.*;
 import com.team01.billage.chatting.enums.ChatType;
+import com.team01.billage.chatting.service.ChatRedisService;
 import com.team01.billage.chatting.service.ChatRoomService;
 import com.team01.billage.chatting.service.ChatService;
 import com.team01.billage.exception.CustomException;
@@ -19,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequiredArgsConstructor
@@ -27,6 +26,16 @@ public class ChatRoomController {
     private final ChatRoomService chatroomService;
     private final ChatService chatService;
     private final DetermineUser determineUser;
+    private final ChatRedisService chatRedisService;
+
+    @GetMapping("/unread-chat")
+    public ResponseEntity<Object> getUnreadChatCount(
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        Set<String> keys = chatRedisService.getKeysByPattern("*_" + userDetails.getId(), Integer.MAX_VALUE);
+        Long counts = keys.stream().mapToLong(chatRedisService::getUnreadChatCount).sum();
+        return ResponseEntity.ok(new ChatMessage.UnreadCount(counts));
+    }
 
     @GetMapping
     public ResponseEntity<List<ChatroomResponseDto>> getAllChatRooms(
