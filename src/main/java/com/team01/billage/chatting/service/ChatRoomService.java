@@ -51,7 +51,6 @@ public class ChatRoomService {
                     Long chatroomId = result.getChatRoom().getId();
                     String unreadKey = getUnreadChatKey(chatroomId, userId);
                     Long unreadCount = chatRedisService.getUnreadChatCount(unreadKey);
-                    System.out.println(unreadKey + " " + unreadCount);
                     return new ChatroomResponseDto(
                             result.getChatRoom(),
                             result.getLastChat(),
