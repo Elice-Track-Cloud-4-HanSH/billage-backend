@@ -9,6 +9,8 @@ import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.JPQLQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.team01.billage.category.dto.CategoryProductResponseDto;
+import com.team01.billage.map.domain.QActivityArea;
+import com.team01.billage.map.domain.QNeighborArea;
 import com.team01.billage.product.domain.QFavoriteProduct;
 import com.team01.billage.product.domain.QProduct;
 import com.team01.billage.product.domain.QProductImage;
@@ -70,6 +72,8 @@ public class CustomProductRepositoryImpl implements CustomProductRepository {
         QProductImage productImage = QProductImage.productImage;
         QFavoriteProduct favoriteProduct = QFavoriteProduct.favoriteProduct;
         QRentalRecord rentalRecord = QRentalRecord.rentalRecord;
+        QNeighborArea neighborArea = QNeighborArea.neighborArea;
+        QActivityArea activityArea = QActivityArea.activityArea;
 
         // 동적 조건 처리
         BooleanBuilder builder = new BooleanBuilder();
@@ -107,6 +111,24 @@ public class CustomProductRepositoryImpl implements CustomProductRepository {
             .from(rentalRecord)
             .where(product.rentalStatus.eq(RentalStatus.RENTED)
                 .and(rentalRecord.product.id.eq(product.id)));
+
+        BooleanExpression inNeighborArea = userId != null
+            ? JPAExpressions.selectOne()
+            .from(neighborArea)
+            .where(
+                neighborArea.emdArea.id.in(
+                        JPAExpressions.select(activityArea.emdArea.id)
+                            .from(activityArea)
+                            .where(activityArea.users.id.eq(userId))
+                    )
+                    .and(Expressions.booleanTemplate("ST_Contains({0}, {1})", neighborArea.geom, product.location))
+            )
+            .exists()
+            : null;
+
+        if (inNeighborArea != null) {
+            builder.and(inNeighborArea);
+        }
 
         return queryFactory
             .select(Projections.fields(
