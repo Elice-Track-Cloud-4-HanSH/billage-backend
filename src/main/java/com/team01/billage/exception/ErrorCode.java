@@ -15,6 +15,7 @@ public enum ErrorCode {
     PRODUCT_ID_REQUIRED(HttpStatus.BAD_REQUEST, "상품 ID는 필수입니다."),
     CHATROOM_VALIDATE_FAILED(HttpStatus.BAD_REQUEST, "구매자 또는 판매자가 토큰의 값과 다릅니다."),
     INVALID_QUERY_PARAMETER_TYPE(HttpStatus.BAD_REQUEST, "유효하지 않은 쿼리 파라미터 유형입니다."),
+    INVALID_CHAT_TYPE(HttpStatus.BAD_REQUEST, "올바르지 않은 채팅방 조회 타입입니다."),
 
     /* 401 UNAUTHORIZED : 인증되지 않은 사용자 */
     INVALID_EMAIL_CODE(HttpStatus.UNAUTHORIZED, "잘못된 인증 코드입니다."),

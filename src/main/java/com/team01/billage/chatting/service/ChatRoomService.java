@@ -7,7 +7,6 @@ import com.team01.billage.chatting.dto.ChatResponseDto;
 import com.team01.billage.chatting.dto.ChatroomResponseDto;
 import com.team01.billage.chatting.dto.CheckValidChatroomRequestDto;
 import com.team01.billage.chatting.dto.CheckValidChatroomResponseDto;
-import com.team01.billage.chatting.enums.ChatType;
 import com.team01.billage.chatting.repository.ChatRoomQueryDSL;
 import com.team01.billage.chatting.repository.ChatRoomRepository;
 import com.team01.billage.exception.CustomException;
@@ -42,8 +41,9 @@ public class ChatRoomService {
                 new CustomException(ErrorCode.CHATROOM_NOT_FOUND));
     }
 
-    public List<ChatroomResponseDto> getAllChatroomsWithDSL(ChatType type, int page, Long userId, Long productId) {
+    public List<ChatroomResponseDto> getAllChatroomsWithDSL(String type, int page, Long userId, Long productId) {
         Pageable pageable = PageRequest.of(page, 20);
+
         List<ChatRoomWithLastChat> results = chatroomQueryDsl.getChatrooms(type, userId, productId, pageable);
 
         return results.stream()
@@ -68,14 +68,25 @@ public class ChatRoomService {
         ).findFirst().orElse(null);
     }
 
-    public CheckValidChatroomResponseDto checkValidChatroom(CheckValidChatroomRequestDto checkValidChatroomDto, Long userId) {
+    public CheckValidChatroomResponseDto checkValidChatroom(CheckValidChatroomRequestDto checkValidChatroomDto, Users user) {
+        // 채팅방 목록이 아닌 판매 목록에서 채팅을 하는 경우 문제 발생
+        // 이때 구매자는 "나" 이므로 UserDetails에서 id를 가져옴;
+        if (checkValidChatroomDto.getBuyerId() == null) {
+            checkValidChatroomDto.setBuyerId(user.getId());
+        }
+
+        if (!(user.getId().equals(checkValidChatroomDto.getSellerId()) || user.getId().equals(checkValidChatroomDto.getBuyerId()))) {
+            throw new CustomException(ErrorCode.CHATROOM_VALIDATE_FAILED);
+        }
+
+
         Optional<ChatRoom> chatroomOpt = chatroomRepository.checkChatroomIsExist(
                 checkValidChatroomDto.getSellerId(),
                 checkValidChatroomDto.getBuyerId(),
                 checkValidChatroomDto.getProductId()
         );
         return chatroomOpt.map(chatroom -> {
-                    if (userId.equals(checkValidChatroomDto.getSellerId())) {
+                    if (user.getId().equals(checkValidChatroomDto.getSellerId())) {
                         if (chatroom.getSellerExitAt() != null) {
                             chatroom.setSellerJoinAt();
                         }
@@ -149,6 +160,12 @@ public class ChatRoomService {
             chatroom.setSellerExitAt();
         } else {
             throw new CustomException(ErrorCode.CHATROOM_ACCESS_FORBIDDEN);
+        }
+    }
+
+    public void checkValidProductChatGetType(String type, Long productId) {
+        if ("PR".equals(type) && productId == null) {
+            throw new CustomException(ErrorCode.PRODUCT_ID_REQUIRED);
         }
     }
 }
