@@ -8,6 +8,7 @@ import com.team01.billage.product_review.domain.QProductReview;
 import com.team01.billage.product_review.dto.ShowReviewResponseDto;
 import com.team01.billage.user.domain.QUsers;
 import java.util.List;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
@@ -16,9 +17,8 @@ public class CustomProductReviewRepositoryImpl implements CustomProductReviewRep
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public List<ShowReviewResponseDto> findByAuthor_email(String email) {
+    public List<ShowReviewResponseDto> findByAuthor(long userId) {
         QProductReview productReview = QProductReview.productReview;
-        QUsers author = QUsers.users;
         QProduct product = QProduct.product;
         QProductImage productImage = QProductImage.productImage;
 
@@ -35,18 +35,17 @@ public class CustomProductReviewRepositoryImpl implements CustomProductReviewRep
             )
             .from(productReview)
             .join(productReview.rentalRecord.product, product)
-            .join(productReview.author, author)
             .leftJoin(productImage)
             .on(productImage.product.eq(product)
                 .and(productImage.thumbnail.eq("Y")))
-            .where(author.email.eq(email))
+            .where(productReview.author.id.eq(userId))
             .orderBy(productReview.id.desc())
             //.limit()
             .fetch();
     }
 
     @Override
-    public List<ShowReviewResponseDto> findByProduct_id(Long productId) {
+    public List<ShowReviewResponseDto> findByProduct(Long productId) {
         QProductReview productReview = QProductReview.productReview;
         QUsers author = QUsers.users;
 
@@ -67,6 +66,32 @@ public class CustomProductReviewRepositoryImpl implements CustomProductReviewRep
             .orderBy(productReview.id.desc())
             //.limit()
             .fetch();
+    }
+
+    @Override
+    public Optional<Double> scoreAverage(long productId) {
+        QProductReview productReview = QProductReview.productReview;
+
+        Double averageScore = queryFactory
+            .select(productReview.score.avg())
+            .from(productReview)
+            .where(productReview.rentalRecord.product.id.eq(productId))
+            .fetchOne();
+
+        return Optional.ofNullable(averageScore);
+    }
+
+    @Override
+    public Optional<Integer> reviewCount(long productId) {
+        QProductReview productReview = QProductReview.productReview;
+
+        Integer count = queryFactory
+            .select(productReview.count().intValue())
+            .from(productReview)
+            .where(productReview.rentalRecord.product.id.eq(productId))
+            .fetchOne();
+
+        return Optional.ofNullable(count);
     }
 }
 

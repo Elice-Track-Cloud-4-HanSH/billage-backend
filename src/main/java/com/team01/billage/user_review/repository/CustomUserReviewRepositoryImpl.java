@@ -15,31 +15,7 @@ public class CustomUserReviewRepositoryImpl implements CustomUserReviewRepositor
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public List<ShowReviewResponseDto> findByAuthor_email(String email) {
-        QUserReview userReview = QUserReview.userReview;
-        QUsers author = QUsers.users;
-
-        return queryFactory.select(
-                Projections.constructor(
-                    ShowReviewResponseDto.class,
-                    userReview.id,
-                    userReview.score,
-                    userReview.content,
-                    author.id,
-                    author.imageUrl,
-                    author.nickname
-                )
-            )
-            .from(userReview)
-            .join(userReview.author, author)
-            .where(author.email.eq(email))
-            .orderBy(userReview.createdAt.desc())
-            //.limit()
-            .fetch();
-    }
-
-    @Override
-    public List<ShowReviewResponseDto> findByTarget_nickname(String nickname) {
+    public List<ShowReviewResponseDto> findByAuthor(long userId) {
         QUserReview userReview = QUserReview.userReview;
         QUsers target = QUsers.users;
 
@@ -56,25 +32,59 @@ public class CustomUserReviewRepositoryImpl implements CustomUserReviewRepositor
             )
             .from(userReview)
             .join(userReview.target, target)
-            .where(target.nickname.eq(nickname))
+            .where(userReview.author.id.eq(userId))
             .orderBy(userReview.createdAt.desc())
             //.limit()
             .fetch();
     }
 
     @Override
-    public Optional<Double> scoreAverage(String nickname) {
+    public List<ShowReviewResponseDto> findByTarget(long userId) {
         QUserReview userReview = QUserReview.userReview;
-        QUsers target = QUsers.users;
+        QUsers author = QUsers.users;
+
+        return queryFactory.select(
+                Projections.constructor(
+                    ShowReviewResponseDto.class,
+                    userReview.id,
+                    userReview.score,
+                    userReview.content,
+                    author.id,
+                    author.imageUrl,
+                    author.nickname
+                )
+            )
+            .from(userReview)
+            .join(userReview.author, author)
+            .where(userReview.target.id.eq(userId))
+            .orderBy(userReview.createdAt.desc())
+            //.limit()
+            .fetch();
+    }
+
+    @Override
+    public Optional<Double> scoreAverage(long userId) {
+        QUserReview userReview = QUserReview.userReview;
 
         Double averageScore = queryFactory
             .select(userReview.score.avg())
             .from(userReview)
-            .join(userReview.target, target)
-            .where(target.nickname.eq(nickname))
+            .where(userReview.target.id.eq(userId))
             .fetchOne();
 
         return Optional.ofNullable(averageScore);
     }
 
+    @Override
+    public Optional<Integer> reviewCount(long userId) {
+        QUserReview userReview = QUserReview.userReview;
+
+        Integer count = queryFactory
+            .select(userReview.count().intValue())
+            .from(userReview)
+            .where(userReview.target.id.eq(userId))
+            .fetchOne();
+
+        return Optional.ofNullable(count);
+    }
 }

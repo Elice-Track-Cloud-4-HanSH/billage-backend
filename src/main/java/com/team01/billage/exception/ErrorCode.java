@@ -14,6 +14,7 @@ public enum ErrorCode {
     EMPTY_LOGIN_REQUEST(HttpStatus.BAD_REQUEST, "이메일 또는 비밀번호가 비어있습니다."),
     PRODUCT_ID_REQUIRED(HttpStatus.BAD_REQUEST, "상품 ID는 필수입니다."),
     CHATROOM_VALIDATE_FAILED(HttpStatus.BAD_REQUEST, "구매자 또는 판매자가 토큰의 값과 다릅니다."),
+    INVALID_QUERY_PARAMETER_TYPE(HttpStatus.BAD_REQUEST, "유효하지 않은 쿼리 파라미터 유형입니다."),
 
     /* 401 UNAUTHORIZED : 인증되지 않은 사용자 */
     INVALID_EMAIL_CODE(HttpStatus.UNAUTHORIZED, "잘못된 인증 코드입니다."),
@@ -47,12 +48,14 @@ public enum ErrorCode {
     EMAIL_ALREADY_EXISTS(HttpStatus.CONFLICT, "해당 이메일이 이미 존재합니다."),
     NICKNAME_ALREADY_EXISTS(HttpStatus.CONFLICT, "해당 닉네임이 이미 존재합니다."),
     REVIEW_ALREADY_EXISTS(HttpStatus.CONFLICT, "해당 거래에 대한 리뷰가 이미 존재합니다."),
+    PRODUCT_ALREADY_RETURNED(HttpStatus.CONFLICT, "이미 반납이 완료된 상품입니다."),
 
     /* 410 : GONE : 리소스가 더 이상 유효하지 않음 */
 
     /* 500 INTERNAL_SERVER_ERROR : 서버 내부 에러 */
     PUT_OBJECT_EXCEPTION(HttpStatus.INTERNAL_SERVER_ERROR, "S3 업로드 중 오류가 발생했습니다."),
-    IO_EXCEPTION_ON_FILE_DELETE(HttpStatus.INTERNAL_SERVER_ERROR, "이미지 삭제 중 오류가 발생했습니다.");
+    IO_EXCEPTION_ON_FILE_DELETE(HttpStatus.INTERNAL_SERVER_ERROR, "이미지 삭제 중 오류가 발생했습니다."),
+    SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "서버에 문제가 발생했습니다.");
 
 
     private final HttpStatus httpStatus;

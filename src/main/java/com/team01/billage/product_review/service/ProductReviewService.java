@@ -28,8 +28,7 @@ public class ProductReviewService {
     private final RentalRecordRepository rentalRecordRepository;
 
     public void createProductReview(WriteReviewRequestDto writeReviewRequestDto,
-        long rentalRecordId,
-        String email) {
+        long rentalRecordId, long userId) {
 
         RentalRecord rentalRecord = rentalRecordRepository.findById(rentalRecordId)
             .orElseThrow(() -> new CustomException(RENTAL_RECORD_NOT_FOUND));
@@ -38,7 +37,7 @@ public class ProductReviewService {
             throw new CustomException(REVIEW_ALREADY_EXISTS);
         }
 
-        if (!rentalRecord.getBuyer().getEmail().equals(email)) {
+        if (rentalRecord.getBuyer().getId() != userId) {
             throw new CustomException(WRITE_ACCESS_FORBIDDEN);
         }
 
@@ -52,14 +51,14 @@ public class ProductReviewService {
         productReviewRepository.save(productReview);
     }
 
-    public List<ShowReviewResponseDto> readProductReviews(String email) {
+    public List<ShowReviewResponseDto> readMyProductReviews(long userId) {
 
-        return productReviewRepository.findByAuthor_email(email);
+        return productReviewRepository.findByAuthor(userId);
     }
 
     public List<ShowReviewResponseDto> readProductReviews(long productId) {
 
-        return productReviewRepository.findByProduct_id(productId);
+        return productReviewRepository.findByProduct(productId);
     }
 
     public ReviewSubjectResponseDto getReviewSubject(long rentalRecordId) {
