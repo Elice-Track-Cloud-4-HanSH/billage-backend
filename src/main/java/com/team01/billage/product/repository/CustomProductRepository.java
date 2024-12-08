@@ -12,7 +12,7 @@ public interface CustomProductRepository {
     List<OnSaleResponseDto> findAllOnSale(String email, LocalDateTime lastTime,
         Pageable pageable);
 
-    List<ProductResponseDto> findAllProducts(Long userId, Long categoryId, String rentalStatus, String search);
+    List<ProductResponseDto> findAllProducts(Long userId, Long categoryId, String rentalStatus, String search, Pageable pageable);
 
     ProductDetailResponseDto findProductDetail(Long productId);
 

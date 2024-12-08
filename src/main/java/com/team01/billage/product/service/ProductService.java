@@ -23,6 +23,7 @@ import lombok.RequiredArgsConstructor;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
@@ -71,7 +72,8 @@ public class ProductService {
             CustomUserDetails userDetails,
             String categoryId,
             String rentalStatus,
-            String search) {
+            String search,
+            int page) {
 
         Long userId = null;
 
@@ -80,11 +82,14 @@ public class ProductService {
             userId = userDetails.getId();
         }
 
+        Pageable pageable = PageRequest.of(page, 10);
+
         List<ProductResponseDto> products = productRepository.findAllProducts(
                 userId,
                 Long.parseLong(categoryId),
                 rentalStatus,
-                search);
+                search,
+                pageable);
 
         return ProductWrapperResponseDto.builder()
                 .products(products)
@@ -122,9 +127,10 @@ public class ProductService {
                 .category(category)
                 .title(productRequestDto.getTitle())
                 .description(productRequestDto.getDescription())
-                .dayPrice(productRequestDto.getDayPrice())
-                .weekPrice(productRequestDto.getWeekPrice())
+                .dayPrice(Integer.parseInt(productRequestDto.getDayPrice()))
+                .weekPrice(Integer.parseInt(productRequestDto.getWeekPrice()))
                 .location(toPoint(productRequestDto.getLongitude(), productRequestDto.getLatitude()))
+                .updatedAt(LocalDateTime.now())
                 .build();
 
         // 상품 이미지 생성
