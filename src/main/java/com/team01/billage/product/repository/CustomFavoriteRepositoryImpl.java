@@ -10,9 +10,12 @@ import com.team01.billage.product.domain.QFavoriteProduct;
 import com.team01.billage.product.domain.QProduct;
 import com.team01.billage.product.domain.QProductImage;
 import com.team01.billage.product.dto.ProductResponseDto;
+import com.team01.billage.product.enums.RentalStatus;
 import com.team01.billage.rental_record.domain.QRentalRecord;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -21,7 +24,7 @@ public class CustomFavoriteRepositoryImpl implements CustomFavoriteRepository{
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public List<ProductResponseDto> findAllByUserId(Long userId) {
+    public List<ProductResponseDto> findAllByUserId(Long userId, Pageable pageable) {
         QFavoriteProduct favoriteProduct = QFavoriteProduct.favoriteProduct;
         QProduct product = QProduct.product;
         QProductImage productImage = QProductImage.productImage;
@@ -31,6 +34,12 @@ public class CustomFavoriteRepositoryImpl implements CustomFavoriteRepository{
         JPQLQuery<Long> favoriteCnt = JPAExpressions.select(favoriteProduct.count())
                 .from(favoriteProduct)
                 .where(favoriteProduct.product.id.eq(product.id));
+
+        // 상품 상태가 RENTED이면 expectedReturnDate 표시
+        JPQLQuery<LocalDate> expectedReturnDate = JPAExpressions.select(rentalRecord.expectedReturnDate)
+                .from(rentalRecord)
+                .where(product.rentalStatus.eq(RentalStatus.RENTED)
+                        .and(rentalRecord.product.id.eq(product.id)));
 
         return queryFactory
                 .select(Projections.fields(
@@ -44,7 +53,7 @@ public class CustomFavoriteRepositoryImpl implements CustomFavoriteRepository{
                         productImage.imageUrl.as("thumbnailUrl"),
                         Expressions.asBoolean(true).as("favorite"),
                         ExpressionUtils.as(favoriteCnt, "favoriteCnt"),
-                        rentalRecord.expectedReturnDate
+                        ExpressionUtils.as(expectedReturnDate, "expectedReturnDate")
                 ))
                 .from(favoriteProduct)
                 .leftJoin(product)
@@ -53,9 +62,11 @@ public class CustomFavoriteRepositoryImpl implements CustomFavoriteRepository{
                 .on(product.id.eq(productImage.product.id).
                         and(productImage.thumbnail.eq("Y")))
                 .leftJoin(rentalRecord)
-                .on(favoriteProduct.product.id.eq(rentalRecord.product.id))
+                .on(product.rentalStatus.eq(RentalStatus.RENTED).and(favoriteProduct.product.id.eq(rentalRecord.product.id)))
                 .where(favoriteProduct.user.id.eq(userId).and(product.deletedAt.isNull()))
                 .orderBy(favoriteProduct.createdAt.desc())
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
                 .fetch();
     }
 

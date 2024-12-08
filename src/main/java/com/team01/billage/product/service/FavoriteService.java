@@ -12,6 +12,8 @@ import com.team01.billage.user.domain.CustomUserDetails;
 import com.team01.billage.user.domain.Users;
 import com.team01.billage.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,9 +47,11 @@ public class FavoriteService {
     }
 
     // 회원의 관심 상품 목록 조회
-    public List<ProductResponseDto> findAllFavorite(Long userId) {
+    public List<ProductResponseDto> findAllFavorite(Long userId, int page) {
 
-        return favoriteRepository.findAllByUserId(userId);
+        Pageable pageable = PageRequest.of(page, 10);
+
+        return favoriteRepository.findAllByUserId(userId, pageable);
     }
 
     @Transactional
