@@ -82,4 +82,9 @@ public class ChatRedisService {
         }
         return results;
     }
+
+    public Long sumOfKeysValue(String pattern) {
+        Set<String> keys = getKeysByPattern(pattern, Integer.MAX_VALUE);
+        return keys.stream().mapToLong(this::getUnreadChatCount).sum();
+    }
 }

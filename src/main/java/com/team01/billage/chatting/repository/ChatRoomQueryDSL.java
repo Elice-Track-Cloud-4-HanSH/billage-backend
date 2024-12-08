@@ -8,7 +8,6 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.team01.billage.chatting.dao.ChatRoomWithLastChat;
 import com.team01.billage.chatting.domain.QChat;
 import com.team01.billage.chatting.domain.QChatRoom;
-import com.team01.billage.chatting.enums.ChatType;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
@@ -20,7 +19,7 @@ import java.util.List;
 public class ChatRoomQueryDSL {
     private final JPAQueryFactory queryFactory;
 
-    public List<ChatRoomWithLastChat> getChatrooms(ChatType type, Long userId, Long productId, Pageable pageable) {
+    public List<ChatRoomWithLastChat> getChatrooms(String type, Long userId, Long productId, Pageable pageable) {
         BooleanBuilder builder = new BooleanBuilder();
 
         QChatRoom chatroom = QChatRoom.chatRoom;
@@ -28,9 +27,9 @@ public class ChatRoomQueryDSL {
         QChat chat2 = new QChat("chat2");
 
         BooleanExpression userCondition = switch (type) {
-            case LENT -> getSellerCondition(chatroom, userId);
-            case RENT -> getBuyerCondition(chatroom, userId);
-            case PR -> {
+            case "LENT" -> getSellerCondition(chatroom, userId);
+            case "RENT" -> getBuyerCondition(chatroom, userId);
+            case "PR" -> {
                     BooleanExpression sellerCondition = getSellerCondition(chatroom, userId);
                     yield chatroom.product.id.eq(productId).and(sellerCondition);
             }
