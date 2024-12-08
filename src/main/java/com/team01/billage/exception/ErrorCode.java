@@ -42,6 +42,7 @@ public enum ErrorCode {
     PRODUCT_IMAGE_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 상품 이미지를 찾을 수 없습니다."),
     EMD_AREA_NOT_FOUND(HttpStatus.NOT_FOUND, "행정 구역을 찾을 수 없습니다."),
     ACTIVITY_AREA_NOT_FOUND(HttpStatus.NOT_FOUND, "활동 지역을 찾을 수 없습니다."),
+    NEIGHBOR_AREA_NOT_FOUND(HttpStatus.NOT_FOUND, "이웃 지역을 찾을 수 없습니다."),
 
     /* 409 : CONFLICT : Resource의 현재 상태와 충돌. 보통 중복된 데이터 존재, 조건을 만족하지 못함 */
     USER_ALREADY_EXISTS(HttpStatus.CONFLICT, "해당 유저가 이미 존재합니다."),
