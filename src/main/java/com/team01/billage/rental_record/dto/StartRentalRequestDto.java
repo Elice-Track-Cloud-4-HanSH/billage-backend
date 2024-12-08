@@ -1,18 +1,22 @@
 package com.team01.billage.rental_record.dto;
 
-import jakarta.validation.constraints.NotBlank;
+import io.swagger.v3.oas.annotations.Parameter;
+import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
 import lombok.Getter;
 
 @Getter
 public class StartRentalRequestDto {
 
-    @NotBlank(message = "거래 상대방을 선택해주세요.")
+    @Parameter(description = "거래 상대방과 채팅했던 채팅방의 ID", example = "1")
+    @NotNull
     private long id;
 
-    @NotBlank(message = "대여 시작일을 선택해주세요.")
+    @Parameter(description = "대여 시작일", example = "2024-12-09")
+    @NotNull
     private LocalDate startDate;
 
-    @NotBlank(message = "반납 예정일을 선택해주세요.")
-    private LocalDate expectedRentalDate;
+    @Parameter(description = "반납 예정일", example = "2024-12-19")
+    @NotNull
+    private LocalDate expectedReturnDate;
 }

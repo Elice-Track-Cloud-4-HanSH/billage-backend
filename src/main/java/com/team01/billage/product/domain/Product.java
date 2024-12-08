@@ -72,7 +72,6 @@ public class Product {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
-    @LastModifiedDate
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
@@ -82,8 +81,8 @@ public class Product {
     public void updateProduct(ProductUpdateRequestDto dto) {
         this.title = dto.getTitle();
         this.description = dto.getDescription();
-        this.dayPrice = dto.getDayPrice();
-        this.weekPrice = dto.getWeekPrice();
+        this.dayPrice = Integer.parseInt(dto.getDayPrice());
+        this.weekPrice = Integer.parseInt(dto.getWeekPrice());
     }
 
     public void updateProductCategory(Category category) {
@@ -109,6 +108,10 @@ public class Product {
 
     public void addProductImage(ProductImage productImage) {
         this.productImages.add(productImage);
+    }
+
+    public void updateDate(){
+        this.updatedAt = LocalDateTime.now();
     }
 
 }

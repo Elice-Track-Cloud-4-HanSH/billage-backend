@@ -5,7 +5,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.MultiPolygon;
 
 @Entity
@@ -23,14 +22,18 @@ public class EmdArea {
     @Column(name = "col_adm_se", length = 20)
     private Long colAdmSe;
 
+    @Column(name = "sido_nm", length = 50)
+    private String sidoNm;  // 시도명 추가
+
+    @Column(name = "sgg_nm", length = 50)
+    private String sggNm;  // 시군구명 추가
+
     @Column(name = "emd_nm", length = 255)
     private String emdNm;
 
     @Column(name = "sgg_oid")
     private Long sggOid;
 
-    @Column(columnDefinition = "geometry(MultiPolygon, 4326)", nullable = false)
-    private MultiPolygon geom;  // GEOMETRY 타입, 좌표계 4326
-
-
+    @Column(columnDefinition = "geometry", nullable = false)
+    private MultiPolygon geom;
 }

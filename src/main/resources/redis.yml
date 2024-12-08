@@ -1,0 +1,7 @@
+spring:
+  data:
+    redis:
+      host: ${REDIS_REMOTE_HOST}
+      port: ${REDIS_REMOTE_PORT}
+      password: ${REDIS_REMOTE_PASSWORD}
+      username: ${REDIS_REMOTE_USERNAME}
