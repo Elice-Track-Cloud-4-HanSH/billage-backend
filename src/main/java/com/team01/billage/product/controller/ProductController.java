@@ -7,6 +7,8 @@ import com.team01.billage.user.domain.CustomUserDetails;
 import com.team01.billage.user.domain.Users;
 import java.time.LocalDateTime;
 import java.util.List;
+
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -41,9 +43,10 @@ public class ProductController {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestParam(value = "categoryId", required = false, defaultValue = "1") String categoryId,
             @RequestParam(value = "rentalStatus", required = false, defaultValue = "ALL") String rentalStatus,
-            @RequestParam(value = "search", required = false, defaultValue = "ALL") String search) {
+            @RequestParam(value = "search", required = false, defaultValue = "ALL") String search,
+            @RequestParam(value = "page", required = false, defaultValue = "0") int page) {
         return ResponseEntity.status(HttpStatus.OK)
-                .body(productService.findAllProducts(userDetails, categoryId, rentalStatus, search));
+                .body(productService.findAllProducts(userDetails, categoryId, rentalStatus, search, page));
     }
 
     @GetMapping("/on-sale")
@@ -59,7 +62,7 @@ public class ProductController {
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ProductDetailResponseDto> createProduct(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @ModelAttribute ProductRequestDto productRequestDto) {
+            @Valid @ModelAttribute ProductRequestDto productRequestDto) {
 
         Users user = productService.checkUser(userDetails.getId());
 
@@ -71,7 +74,7 @@ public class ProductController {
     public ResponseEntity<ProductDetailResponseDto> updateProduct(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable("productId") Long productId,
-            @ModelAttribute ProductUpdateRequestDto productUpdateRequestDto) {
+            @Valid @ModelAttribute ProductUpdateRequestDto productUpdateRequestDto) {
 
         productService.checkUser(userDetails.getId());
 

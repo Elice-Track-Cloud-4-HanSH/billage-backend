@@ -81,8 +81,8 @@ public class Product {
     public void updateProduct(ProductUpdateRequestDto dto) {
         this.title = dto.getTitle();
         this.description = dto.getDescription();
-        this.dayPrice = dto.getDayPrice();
-        this.weekPrice = dto.getWeekPrice();
+        this.dayPrice = Integer.parseInt(dto.getDayPrice());
+        this.weekPrice = Integer.parseInt(dto.getWeekPrice());
     }
 
     public void updateProductCategory(Category category) {
