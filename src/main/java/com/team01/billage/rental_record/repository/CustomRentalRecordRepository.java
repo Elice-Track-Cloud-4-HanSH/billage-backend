@@ -6,13 +6,13 @@ import java.util.List;
 
 public interface CustomRentalRecordRepository {
 
-    List<ShowRecordResponseDto> findBySellerRenting(String emaill);
+    List<ShowRecordResponseDto> findBySellerRenting(long userId);
 
-    List<ShowRecordResponseDto> findBySellerRecord(String emaill);
+    List<ShowRecordResponseDto> findBySellerRecord(long userId);
 
-    List<ShowRecordResponseDto> findByBuyerRenting(String emaill);
+    List<ShowRecordResponseDto> findByBuyerRenting(long userId);
 
-    List<ShowRecordResponseDto> findByBuyerRecord(String emaill);
+    List<ShowRecordResponseDto> findByBuyerRecord(long userId);
 
-    List<PurchasersResponseDto> loadPurchasersList(String email);
+    List<PurchasersResponseDto> loadPurchasersList(long userId, long productId);
 }

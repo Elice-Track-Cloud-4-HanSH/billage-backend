@@ -9,4 +9,5 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ActivityAreaRequestDto {
     private Long emdCd; // 행정구역 코드
+    private int depth;
 }
