@@ -1,7 +1,6 @@
 package com.team01.billage.chatting.controller;
 
 import com.team01.billage.chatting.dto.*;
-import com.team01.billage.chatting.enums.ChatType;
 import com.team01.billage.chatting.service.ChatRedisService;
 import com.team01.billage.chatting.service.ChatRoomService;
 import com.team01.billage.chatting.service.ChatService;
@@ -16,6 +15,8 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -28,46 +29,44 @@ public class ChatRoomController {
     private final DetermineUser determineUser;
     private final ChatRedisService chatRedisService;
 
+    private final Set<String> chatTypes = new HashSet<>(Arrays.asList("ALL", "PR", "LENT", "RENT"));
+
     @GetMapping("/unread-chat")
-    public ResponseEntity<Object> getUnreadChatCount(
+    public ResponseEntity<ChatMessage.UnreadCount> getUnreadChatCount(
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        Set<String> keys = chatRedisService.getKeysByPattern("*_" + userDetails.getId(), Integer.MAX_VALUE);
-        Long counts = keys.stream().mapToLong(chatRedisService::getUnreadChatCount).sum();
+        Long counts = chatRedisService.sumOfKeysValue("*_" + userDetails.getId());
         return ResponseEntity.ok(new ChatMessage.UnreadCount(counts));
     }
 
     @GetMapping
     public ResponseEntity<List<ChatroomResponseDto>> getAllChatRooms(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @RequestParam(name = "type", required = false, defaultValue="ALL") ChatType type,
+            @RequestParam(name = "type", required = false, defaultValue="ALL") String type,
             @RequestParam(name = "productId", required = false) Long productId,
-            @RequestParam(name = "page", required = false, defaultValue="0") int page) {
+            @RequestParam(name = "page", required = false, defaultValue="0") int page
+    ) {
+        if (!chatTypes.contains(type)) {
+            throw new CustomException(ErrorCode.INVALID_CHAT_TYPE);
+        }
+
         Users user = determineUser.determineUser(userDetails);
 
-        if (type == ChatType.PR && productId == null) {
-            throw new CustomException(ErrorCode.PRODUCT_ID_REQUIRED);
-        }
+        chatroomService.checkValidProductChatGetType(type, productId);
 
         List<ChatroomResponseDto> responseDto = chatroomService.getAllChatroomsWithDSL(type, page, user.getId(), productId);
         return ResponseEntity.ok(responseDto);
     }
 
+
     @PostMapping("/valid")
-    public ResponseEntity<CheckValidChatroomResponseDto> checkIsValidChatroom(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody CheckValidChatroomRequestDto checkValidChatroomDto) {
+    public ResponseEntity<CheckValidChatroomResponseDto> checkIsValidChatroom(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestBody CheckValidChatroomRequestDto checkValidChatroomDto
+    ) {
         Users user = determineUser.determineUser(userDetails);
 
-        // 채팅방 목록이 아닌 판매 목록에서 채팅을 하는 경우 문제 발생
-        // 이때 구매자는 "나" 이므로 UserDetails에서 id를 가져옴;
-        if (checkValidChatroomDto.getBuyerId() == null) {
-            checkValidChatroomDto.setBuyerId(user.getId());
-        }
-
-        if (!(user.getId().equals(checkValidChatroomDto.getSellerId()) || user.getId().equals(checkValidChatroomDto.getBuyerId()))) {
-            throw new CustomException(ErrorCode.CHATROOM_VALIDATE_FAILED);
-        }
-
-        CheckValidChatroomResponseDto responseDto = chatroomService.checkValidChatroom(checkValidChatroomDto, user.getId());
+        CheckValidChatroomResponseDto responseDto = chatroomService.checkValidChatroom(checkValidChatroomDto, user);
         return ResponseEntity.ok(responseDto);
     }
 
@@ -98,6 +97,7 @@ public class ChatRoomController {
     @DeleteMapping("/{chatroomId}")
     public ResponseEntity<Object> exitChatRoom(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable(name = "chatroomId") Long chatroomId) {
         Users user = determineUser.determineUser(userDetails);
+
         chatroomService.exitFromChatRoom(chatroomId, user.getId());
         return ResponseEntity.noContent().build();
     }
