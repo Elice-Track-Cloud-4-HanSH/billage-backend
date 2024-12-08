@@ -2,6 +2,7 @@ package com.team01.billage.rental_record.service;
 
 import static com.team01.billage.exception.ErrorCode.CHANGE_ACCESS_FORBIDDEN;
 import static com.team01.billage.exception.ErrorCode.CHATROOM_NOT_FOUND;
+import static com.team01.billage.exception.ErrorCode.PRODUCT_ALREADY_RETURNED;
 import static com.team01.billage.exception.ErrorCode.RENTAL_RECORD_NOT_FOUND;
 
 import com.team01.billage.chatting.domain.ChatRoom;
@@ -10,6 +11,7 @@ import com.team01.billage.exception.CustomException;
 import com.team01.billage.product.domain.Product;
 import com.team01.billage.product.enums.RentalStatus;
 import com.team01.billage.product.repository.ProductRepository;
+import com.team01.billage.rental_record.domain.RecordType;
 import com.team01.billage.rental_record.domain.RentalRecord;
 import com.team01.billage.rental_record.dto.PurchasersResponseDto;
 import com.team01.billage.rental_record.dto.ShowRecordResponseDto;
@@ -31,12 +33,12 @@ public class RentalRecordService {
     private final UserRepository userRepository;
 
     @Transactional
-    public void createRentalRecord(StartRentalRequestDto startRentalRequestDto, String email) {
+    public void createRentalRecord(StartRentalRequestDto startRentalRequestDto, long userId) {
 
         ChatRoom chatRoom = chatRoomRepository.findById(startRentalRequestDto.getId())
             .orElseThrow(() -> new CustomException(CHATROOM_NOT_FOUND));
 
-        if (!chatRoom.getSeller().getEmail().equals(email)) {
+        if (chatRoom.getSeller().getId() != (userId)) {
             throw new CustomException(CHANGE_ACCESS_FORBIDDEN);
         }
 
@@ -45,7 +47,7 @@ public class RentalRecordService {
 
         RentalRecord rentalRecord = RentalRecord.builder()
             .startDate(startRentalRequestDto.getStartDate())
-            .expectedReturnDate(startRentalRequestDto.getExpectedRentalDate())
+            .expectedReturnDate(startRentalRequestDto.getExpectedReturnDate())
             .seller(chatRoom.getSeller())
             .buyer(chatRoom.getBuyer())
             .product(product)
@@ -55,30 +57,37 @@ public class RentalRecordService {
         rentalRecordRepository.save(rentalRecord);
     }
 
-    public List<PurchasersResponseDto> readPurchasers(String email) {
+    public List<PurchasersResponseDto> readPurchasers(long userId, long productId) {
 
-        return rentalRecordRepository.loadPurchasersList(email);
+        return rentalRecordRepository.loadPurchasersList(userId, productId);
     }
 
-    public List<ShowRecordResponseDto> readRentalRecords(String type, String email) {
+    public List<ShowRecordResponseDto> readRentalRecords(String type, long userId) {
 
-        return switch (type) {
-            case "대여중/판매" -> rentalRecordRepository.findBySellerRenting(email);
-            case "대여내역/판매" -> rentalRecordRepository.findBySellerRecord(email);
-            case "대여중/구매" -> rentalRecordRepository.findByBuyerRenting(email);
-            default -> rentalRecordRepository.findByBuyerRecord(email);
+        RecordType recordType = RecordType.fromDescription(type);
+
+        return switch (recordType) {
+            case SELLER_RENTING -> rentalRecordRepository.findBySellerRenting(userId);
+            case SELLER_RECORD -> rentalRecordRepository.findBySellerRecord(userId);
+            case BUYER_RENTING -> rentalRecordRepository.findByBuyerRenting(userId);
+            case BUYER_RECORD -> rentalRecordRepository.findByBuyerRecord(userId);
         };
     }
 
     @Transactional
-    public void updateRentalRecord(long rentalRecordId, String email) {
+    public void updateRentalRecord(long rentalRecordId, long userId) {
 
         RentalRecord rentalRecord = rentalRecordRepository.findById(rentalRecordId)
             .orElseThrow(() -> new CustomException(RENTAL_RECORD_NOT_FOUND));
+
         Product product = rentalRecord.getProduct();
 
-        if (!rentalRecord.getSeller().getEmail().equals(email)) {
+        if (rentalRecord.getSeller().getId() != (userId)) {
             throw new CustomException(CHANGE_ACCESS_FORBIDDEN);
+        }
+
+        if (rentalRecord.getReturnDate() != null) {
+            throw new CustomException(PRODUCT_ALREADY_RETURNED);
         }
 
         product.updateRentalStatus(RentalStatus.AVAILABLE);

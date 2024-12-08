@@ -1,6 +1,7 @@
 package com.team01.billage.user_review.service;
 
 import static com.team01.billage.exception.ErrorCode.RENTAL_RECORD_NOT_FOUND;
+import static com.team01.billage.exception.ErrorCode.REVIEW_ALREADY_EXISTS;
 import static com.team01.billage.exception.ErrorCode.USER_NOT_FOUND;
 import static com.team01.billage.exception.ErrorCode.WRITE_ACCESS_FORBIDDEN;
 
@@ -27,13 +28,20 @@ public class UserReviewService {
     private final RentalRecordRepository rentalRecordRepository;
 
     public void createUserReview(WriteReviewRequestDto writeReviewRequestDto, long rentalRecordId,
-        String email) {
+        long userId) {
 
-        Users author = userRepository.findByEmail(email)
+        Users author = userRepository.findById(userId)
             .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
         RentalRecord rentalRecord = rentalRecordRepository.findById(rentalRecordId)
             .orElseThrow(() -> new CustomException(RENTAL_RECORD_NOT_FOUND));
         Users target;
+
+        if (!rentalRecord.getUserReviews().isEmpty()) {
+            rentalRecord.getUserReviews().stream().filter(ur -> ur.getAuthor().equals(author))
+                .findAny().ifPresent(ur -> {
+                    throw new CustomException(REVIEW_ALREADY_EXISTS);
+                });
+        }
 
         if (rentalRecord.getBuyer().equals(author)) {
             target = rentalRecord.getSeller();
@@ -48,29 +56,30 @@ public class UserReviewService {
             .content(writeReviewRequestDto.getContent())
             .author(author)
             .target(target)
+            .rentalRecord(rentalRecord)
             .build();
 
         userReviewRepository.save(userReview);
     }
 
-    public List<ShowReviewResponseDto> readUserReviews(String email) {
+    public List<ShowReviewResponseDto> readUserReviews(long userId) {
 
-        return userReviewRepository.findByAuthor_email(email);
+        return userReviewRepository.findByAuthor(userId);
     }
 
-    public List<ShowReviewResponseDto> readTargetReviews(String nickname) {
+    public List<ShowReviewResponseDto> readTargetReviews(long userId) {
 
-        return userReviewRepository.findByTarget_nickname(nickname);
+        return userReviewRepository.findByTarget(userId);
     }
 
-    public ReviewSubjectResponseDto getReviewSubject(long id, String email) {
+    public ReviewSubjectResponseDto getReviewSubject(long rentalRecordId, long userId) {
 
-        RentalRecord rentalRecord = rentalRecordRepository.findById(id)
+        RentalRecord rentalRecord = rentalRecordRepository.findById(rentalRecordId)
             .orElseThrow(() -> new CustomException(RENTAL_RECORD_NOT_FOUND));
 
         Users subject;
 
-        if (rentalRecord.getSeller().getEmail().equals(email)) {
+        if (rentalRecord.getSeller().getId() == userId) {
             subject = rentalRecord.getBuyer();
         } else {
             subject = rentalRecord.getSeller();

@@ -40,11 +40,11 @@ class TokenApiControllerTest {
         JwtTokenLoginRequest loginRequest = createLoginRequest("test@email.com", "password");
         JwtTokenResponse expectedResponse = createSuccessResponse();
 
-        given(authenticationFacade.handleLogin(any(), any(), any()))
+        given(authenticationFacade.handleLogin(any(), any()))
                 .willReturn(ResponseEntity.ok(expectedResponse));
 
         // When
-        ResponseEntity<JwtTokenResponse> result = tokenApiController.login(loginRequest, response, null);
+        ResponseEntity<JwtTokenResponse> result = tokenApiController.login(loginRequest, response);
 
         // Then
         assertThat(result.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -52,7 +52,6 @@ class TokenApiControllerTest {
         assertThat(result.getBody().getMessage()).isEqualTo("로그인 성공");
         assertThat(result.getBody().getRole()).isEqualTo(UserRole.USER);
 
-        verify(authenticationFacade).handleLogin(eq(loginRequest), eq(response), isNull());
     }
 
     @Test

@@ -1,5 +1,6 @@
 package com.team01.billage.user_review.domain;
 
+import com.team01.billage.rental_record.domain.RentalRecord;
 import com.team01.billage.user.domain.Users;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -48,4 +49,8 @@ public class UserReview {
     @ManyToOne
     @JoinColumn(name = "target_id", nullable = false)
     private Users target;
+
+    @ManyToOne
+    @JoinColumn(name = "rental_record_id", nullable = false)
+    private RentalRecord rentalRecord;
 }
