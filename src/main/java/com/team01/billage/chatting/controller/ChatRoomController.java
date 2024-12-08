@@ -1,34 +1,43 @@
 package com.team01.billage.chatting.controller;
 
-import com.team01.billage.chatting.dao.CheckValidChatroomDao;
 import com.team01.billage.chatting.dto.*;
 import com.team01.billage.chatting.enums.ChatType;
+import com.team01.billage.chatting.service.ChatRedisService;
 import com.team01.billage.chatting.service.ChatRoomService;
 import com.team01.billage.chatting.service.ChatService;
 import com.team01.billage.exception.CustomException;
 import com.team01.billage.exception.ErrorCode;
-import com.team01.billage.product.domain.Product;
 import com.team01.billage.user.domain.CustomUserDetails;
 import com.team01.billage.user.domain.Users;
-import com.team01.billage.user.repository.UserRepository;
 import com.team01.billage.utils.DetermineUser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequiredArgsConstructor
+@RequestMapping("/api/chatroom")
 public class ChatRoomController {
     private final ChatRoomService chatroomService;
     private final ChatService chatService;
     private final DetermineUser determineUser;
+    private final ChatRedisService chatRedisService;
 
-    @GetMapping("/api/chatroom")
+    @GetMapping("/unread-chat")
+    public ResponseEntity<Object> getUnreadChatCount(
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        Set<String> keys = chatRedisService.getKeysByPattern("*_" + userDetails.getId(), Integer.MAX_VALUE);
+        Long counts = keys.stream().mapToLong(chatRedisService::getUnreadChatCount).sum();
+        return ResponseEntity.ok(new ChatMessage.UnreadCount(counts));
+    }
+
+    @GetMapping
     public ResponseEntity<List<ChatroomResponseDto>> getAllChatRooms(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestParam(name = "type", required = false, defaultValue="ALL") ChatType type,
@@ -44,7 +53,7 @@ public class ChatRoomController {
         return ResponseEntity.ok(responseDto);
     }
 
-    @PostMapping("/api/chatroom/valid")
+    @PostMapping("/valid")
     public ResponseEntity<CheckValidChatroomResponseDto> checkIsValidChatroom(@AuthenticationPrincipal CustomUserDetails userDetails, @RequestBody CheckValidChatroomRequestDto checkValidChatroomDto) {
         Users user = determineUser.determineUser(userDetails);
 
@@ -63,7 +72,7 @@ public class ChatRoomController {
     }
 
     // 특정 채팅방의 이전 채팅 목록가져오기
-    @GetMapping("/api/chatroom/{chatroomId}")
+    @GetMapping("/{chatroomId}")
     public ResponseEntity<List<ChatResponseDto>> getAllChats(
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable(name = "chatroomId") Long chatroomId,
@@ -77,7 +86,7 @@ public class ChatRoomController {
     }
 
     @Transactional
-    @PostMapping("/api/chatroom/{chatroomId}")
+    @PostMapping("/{chatroomId}")
     public ResponseEntity<Object> markAsRead(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable(name = "chatroomId") Long chatroomId) {
         Users user = determineUser.determineUser(userDetails);
 
@@ -86,7 +95,7 @@ public class ChatRoomController {
     }
 
     @Transactional
-    @DeleteMapping("/api/chatroom/{chatroomId}")
+    @DeleteMapping("/{chatroomId}")
     public ResponseEntity<Object> exitChatRoom(@AuthenticationPrincipal CustomUserDetails userDetails, @PathVariable(name = "chatroomId") Long chatroomId) {
         Users user = determineUser.determineUser(userDetails);
         chatroomService.exitFromChatRoom(chatroomId, user.getId());

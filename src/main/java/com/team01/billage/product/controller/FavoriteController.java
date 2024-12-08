@@ -36,11 +36,13 @@ public class FavoriteController {
 
     // 회원의 관심 상품 목록 조회
     @GetMapping
-    public ResponseEntity<List<ProductResponseDto>> findAllFavorite(@AuthenticationPrincipal CustomUserDetails userDetails){
+    public ResponseEntity<List<ProductResponseDto>> findAllFavorite(
+            @AuthenticationPrincipal CustomUserDetails userDetails,
+            @RequestParam(value = "page", required = false, defaultValue = "0") int page){
 
         favoriteService.checkUser(userDetails.getId());
 
-        return ResponseEntity.status(HttpStatus.OK).body(favoriteService.findAllFavorite(userDetails.getId()));
+        return ResponseEntity.status(HttpStatus.OK).body(favoriteService.findAllFavorite(userDetails.getId(), page));
     }
 
     @PostMapping("/{productId}")

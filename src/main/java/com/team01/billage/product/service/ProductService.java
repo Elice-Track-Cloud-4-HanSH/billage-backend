@@ -32,12 +32,15 @@ import com.team01.billage.product_review.repository.ProductReviewRepository;
 import com.team01.billage.user.domain.CustomUserDetails;
 import com.team01.billage.user.domain.Users;
 import com.team01.billage.user.repository.UserRepository;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -82,8 +85,12 @@ public class ProductService {
             .build();
     }
 
-    public ProductWrapperResponseDto findAllProducts(CustomUserDetails userDetails,
-        String categoryId, String rentalStatus) {
+    public ProductWrapperResponseDto findAllProducts(
+        CustomUserDetails userDetails,
+        String categoryId,
+        String rentalStatus,
+        String search,
+        int page) {
 
         Long userId = null;
 
@@ -92,10 +99,14 @@ public class ProductService {
             userId = userDetails.getId();
         }
 
+        Pageable pageable = PageRequest.of(page, 10);
+
         List<ProductResponseDto> products = productRepository.findAllProducts(
             userId,
             Long.parseLong(categoryId),
-            rentalStatus);
+            rentalStatus,
+            search,
+            pageable);
 
         return ProductWrapperResponseDto.builder()
             .products(products)
@@ -120,9 +131,10 @@ public class ProductService {
             .category(category)
             .title(productRequestDto.getTitle())
             .description(productRequestDto.getDescription())
-            .dayPrice(productRequestDto.getDayPrice())
-            .weekPrice(productRequestDto.getWeekPrice())
+            .dayPrice(Integer.parseInt(productRequestDto.getDayPrice()))
+            .weekPrice(Integer.parseInt(productRequestDto.getWeekPrice()))
             .location(toPoint(productRequestDto.getLongitude(), productRequestDto.getLatitude()))
+            .updatedAt(LocalDateTime.now())
             .build();
 
         // 상품 이미지 생성
@@ -165,6 +177,7 @@ public class ProductService {
         product.updateProductLocation(
             toPoint(productUpdateRequestDto.getLongitude(), productUpdateRequestDto.getLatitude())
         );
+        product.updateDate();
 
         // 새로 추가한 상품 이미지 저장 (상품 이미지 생성)
         if (productUpdateRequestDto.getProductImages() != null) {

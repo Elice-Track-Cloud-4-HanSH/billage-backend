@@ -24,6 +24,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 
 @RequiredArgsConstructor
 public class CustomProductRepositoryImpl implements CustomProductRepository {
@@ -64,7 +65,7 @@ public class CustomProductRepositoryImpl implements CustomProductRepository {
 
     @Override
     public List<ProductResponseDto> findAllProducts(Long userId, Long categoryId,
-        String rentalStatus) {
+        String rentalStatus, String search, Pageable pageable) {
         QProduct product = QProduct.product;
         QProductImage productImage = QProductImage.productImage;
         QFavoriteProduct favoriteProduct = QFavoriteProduct.favoriteProduct;
@@ -74,12 +75,16 @@ public class CustomProductRepositoryImpl implements CustomProductRepository {
         BooleanBuilder builder = new BooleanBuilder();
         builder.and(product.deletedAt.isNull());
 
-        if (categoryId != 1L) {
+        if (categoryId != 1L) { // 카테고리 필터링
             builder.and(product.category.id.eq(categoryId));
         }
 
-        if (rentalStatus.equals(RentalStatus.AVAILABLE.name())) {
+        if (rentalStatus.equals(RentalStatus.AVAILABLE.name())) { // 대여 가능 상품 필터링
             builder.and(product.rentalStatus.eq(RentalStatus.AVAILABLE));
+        }
+
+        if (!search.equals("ALL")) { // 검색 필터링
+            builder.and(product.title.like("%" + search + "%"));
         }
 
         // 서브쿼리로 좋아요 개수 가져오기
@@ -96,6 +101,13 @@ public class CustomProductRepositoryImpl implements CustomProductRepository {
                 .exists()
             : Expressions.asBoolean(false);
 
+        // 상품 상태가 RENTED이면 expectedReturnDate 표시
+        JPQLQuery<LocalDate> expectedReturnDate = JPAExpressions.select(
+                rentalRecord.expectedReturnDate)
+            .from(rentalRecord)
+            .where(product.rentalStatus.eq(RentalStatus.RENTED)
+                .and(rentalRecord.product.id.eq(product.id)));
+
         return queryFactory
             .select(Projections.fields(
                 ProductResponseDto.class,
@@ -108,16 +120,19 @@ public class CustomProductRepositoryImpl implements CustomProductRepository {
                 productImage.imageUrl.as("thumbnailUrl"),
                 isFavorite.as("favorite"),
                 ExpressionUtils.as(favoriteCnt, "favoriteCnt"),
-                rentalRecord.expectedReturnDate
+                ExpressionUtils.as(expectedReturnDate, "expectedReturnDate")
             ))
             .from(product)
             .leftJoin(productImage)
             .on(product.id.eq(productImage.product.id).
                 and(productImage.thumbnail.eq("Y")))
             .leftJoin(rentalRecord)
-            .on(product.id.eq(rentalRecord.product.id))
+            .on(product.rentalStatus.eq(RentalStatus.RENTED)
+                .and(product.id.eq(rentalRecord.product.id)))
             .where(builder)
             .orderBy(product.updatedAt.desc())
+            .offset(pageable.getOffset())
+            .limit(pageable.getPageSize())
             .fetch();
     }
 

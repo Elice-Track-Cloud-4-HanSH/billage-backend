@@ -1,5 +1,6 @@
 package com.team01.billage.product.controller;
 
+import com.team01.billage.exception.ErrorResponseEntity;
 import com.team01.billage.product.dto.OnSaleResponseDto;
 import com.team01.billage.product.dto.ProductDeleteCheckDto;
 import com.team01.billage.product.dto.ProductDetailResponseDto;
@@ -12,6 +13,13 @@ import com.team01.billage.product.service.ProductImageService;
 import com.team01.billage.product.service.ProductService;
 import com.team01.billage.user.domain.CustomUserDetails;
 import com.team01.billage.user.domain.Users;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -51,13 +59,42 @@ public class ProductController {
     public ResponseEntity<ProductWrapperResponseDto> findAllProducts(
         @AuthenticationPrincipal CustomUserDetails userDetails,
         @RequestParam(value = "categoryId", required = false, defaultValue = "1") String categoryId,
-        @RequestParam(value = "rentalStatus", required = false, defaultValue = "ALL") String rentalStatus) {
+        @RequestParam(value = "rentalStatus", required = false, defaultValue = "ALL") String rentalStatus,
+        @RequestParam(value = "search", required = false, defaultValue = "ALL") String search,
+        @RequestParam(value = "page", required = false, defaultValue = "0") int page) {
         return ResponseEntity.status(HttpStatus.OK)
-            .body(productService.findAllProducts(userDetails, categoryId, rentalStatus));
+            .body(productService.findAllProducts(userDetails, categoryId, rentalStatus, search,
+                page));
     }
 
+    @Operation(
+        summary = "상품 조회",
+        description = "요청을 보낸 사용자가 판매 중인 상품들을 조회합니다.",
+        tags = {"상품"}
+    )
+    @ApiResponses(value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "상품 조회 성공",
+            content = @Content(mediaType = "application/json",
+                schema = @Schema(implementation = OnSaleResponseDto.class))
+        ),
+        @ApiResponse(
+            responseCode = "401",
+            description = "인증되지 않은 사용자",
+            content = @Content(mediaType = "application/json",
+                schema = @Schema(example = "{\"message\":\"인증되지 않은 사용자입니다.\",\"code\":\"UNAUTHORIZED_USER\"}"))
+        ),
+        @ApiResponse(
+            responseCode = "500",
+            description = "서버 에러",
+            content = @Content(mediaType = "application/json",
+                schema = @Schema(implementation = ErrorResponseEntity.class))
+        )
+    })
     @GetMapping("/on-sale")
     public ResponseEntity<List<OnSaleResponseDto>> findAllOnSale(
+        @Parameter(hidden = true)
         @AuthenticationPrincipal CustomUserDetails userDetails) {
         return ResponseEntity.status(HttpStatus.OK)
             .body(productService.findAllOnSale(userDetails.getId()));
@@ -66,7 +103,7 @@ public class ProductController {
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ProductDetailResponseDto> createProduct(
         @AuthenticationPrincipal CustomUserDetails userDetails,
-        @ModelAttribute ProductRequestDto productRequestDto) {
+        @Valid @ModelAttribute ProductRequestDto productRequestDto) {
 
         Users user = productService.checkUser(userDetails.getId());
 
@@ -78,7 +115,7 @@ public class ProductController {
     public ResponseEntity<ProductDetailResponseDto> updateProduct(
         @AuthenticationPrincipal CustomUserDetails userDetails,
         @PathVariable("productId") Long productId,
-        @ModelAttribute ProductUpdateRequestDto productUpdateRequestDto) {
+        @Valid @ModelAttribute ProductUpdateRequestDto productUpdateRequestDto) {
 
         productService.checkUser(userDetails.getId());
 

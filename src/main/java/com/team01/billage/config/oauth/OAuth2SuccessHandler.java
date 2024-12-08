@@ -81,7 +81,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
         clearAuthenticationAttributes(request, response);
 
-        getRedirectStrategy().sendRedirect(request, response, "http://localhost:3000/chat"); //TODO: 환경변수화
+        getRedirectStrategy().sendRedirect(request, response, "http://localhost:3000/after-login"); //TODO: 환경변수화
     }
 
     private void clearAuthenticationAttributes(HttpServletRequest request, HttpServletResponse response) {

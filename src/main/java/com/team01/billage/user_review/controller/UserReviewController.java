@@ -208,4 +208,39 @@ public class UserReviewController {
         List<ShowReviewResponseDto> responseDtos = userReviewService.readTargetReviews(userId);
         return ResponseEntity.status(HttpStatus.OK).body(responseDtos);
     }
+
+    @Operation(
+        summary = "사용자 후기 조회",
+        description = "요청을 보낸 사용자에 대한 사용자 후기들을 조회합니다.",
+        tags = {"사용자 후기"}
+    )
+    @ApiResponses(value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "사용자 후기 조회 성공",
+            content = @Content(mediaType = "application/json",
+                schema = @Schema(implementation = ShowReviewResponseDto.class))
+        ),
+        @ApiResponse(
+            responseCode = "401",
+            description = "인증되지 않은 사용자",
+            content = @Content(mediaType = "application/json",
+                schema = @Schema(example = "{\"message\":\"인증되지 않은 사용자입니다.\",\"code\":\"UNAUTHORIZED_USER\"}"))
+        ),
+        @ApiResponse(
+            responseCode = "500",
+            description = "서버 에러",
+            content = @Content(mediaType = "application/json",
+                schema = @Schema(implementation = ErrorResponseEntity.class))
+        ),
+    })
+    @GetMapping("/target")
+    public ResponseEntity<List<ShowReviewResponseDto>> targetReview(
+        @Parameter(description = "유저 ID", example = "1")
+        @AuthenticationPrincipal CustomUserDetails userDetails) {
+
+        List<ShowReviewResponseDto> responseDtos = userReviewService.readTargetReviews(
+            userDetails.getId());
+        return ResponseEntity.status(HttpStatus.OK).body(responseDtos);
+    }
 }
