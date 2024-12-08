@@ -65,7 +65,7 @@ public class CustomProductRepositoryImpl implements CustomProductRepository {
     }
 
     @Override
-    public List<ProductResponseDto> findAllProducts(Long userId, Long categoryId, String rentalStatus, String search) {
+    public List<ProductResponseDto> findAllProducts(Long userId, Long categoryId, String rentalStatus, String search, Pageable pageable) {
         QProduct product = QProduct.product;
         QProductImage productImage = QProductImage.productImage;
         QFavoriteProduct favoriteProduct = QFavoriteProduct.favoriteProduct;
@@ -129,6 +129,8 @@ public class CustomProductRepositoryImpl implements CustomProductRepository {
                 .on(product.rentalStatus.eq(RentalStatus.RENTED).and(product.id.eq(rentalRecord.product.id)))
                 .where(builder)
                 .orderBy(product.updatedAt.desc())
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
                 .fetch();
     }
 
