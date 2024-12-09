@@ -11,6 +11,7 @@ import com.team01.billage.category.domain.Category;
 import com.team01.billage.category.dto.CategoryProductResponseDto;
 import com.team01.billage.category.repository.CategoryRepository;
 import com.team01.billage.exception.CustomException;
+import com.team01.billage.map.service.AddressService;
 import com.team01.billage.product.domain.Product;
 import com.team01.billage.product.domain.ProductImage;
 import com.team01.billage.product.dto.ExistProductImageRequestDto;
@@ -126,6 +127,9 @@ public class ProductService {
         Category category = categoryRepository.findById(productRequestDto.getCategoryId())
             .orElseThrow(() -> new CustomException(CATEGORY_NOT_FOUND));
         Point location = toPoint(productRequestDto.getLongitude(), productRequestDto.getLatitude());
+        AddressService addressService = new AddressService();
+        String address = addressService.getAddressFromCoordinates(productRequestDto.getLatitude(), productRequestDto.getLongitude());
+
 
         // 상품 생성
         Product product = Product.builder()
@@ -139,6 +143,7 @@ public class ProductService {
                     Integer.parseInt(productRequestDto.getWeekPrice()) : null
             )
             .location(toPoint(productRequestDto.getLongitude(), productRequestDto.getLatitude()))
+            .address(address)
             .updatedAt(LocalDateTime.now())
             .build();
 
