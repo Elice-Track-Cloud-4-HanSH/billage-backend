@@ -38,11 +38,12 @@ public class FavoriteController {
     @GetMapping
     public ResponseEntity<List<ProductResponseDto>> findAllFavorite(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @RequestParam(value = "page", required = false, defaultValue = "0") int page){
+            @RequestParam(value = "page", required = false, defaultValue = "0") int page,
+            @RequestParam(value = "pageSize", required = false, defaultValue = "10") int pageSize){
 
         favoriteService.checkUser(userDetails.getId());
 
-        return ResponseEntity.status(HttpStatus.OK).body(favoriteService.findAllFavorite(userDetails.getId(), page));
+        return ResponseEntity.status(HttpStatus.OK).body(favoriteService.findAllFavorite(userDetails.getId(), page, pageSize));
     }
 
     @PostMapping("/{productId}")
