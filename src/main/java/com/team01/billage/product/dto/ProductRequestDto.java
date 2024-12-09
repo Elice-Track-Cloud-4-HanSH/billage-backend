@@ -1,6 +1,7 @@
 package com.team01.billage.product.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import lombok.*;
 
@@ -14,7 +15,7 @@ import java.util.List;
 @AllArgsConstructor
 public class ProductRequestDto {
 
-    @NotBlank(message = "카테고리를 선택해 주세요.")
+    @NotNull(message = "카테고리를 선택해 주세요.")
     private Long categoryId;
 
     @NotBlank(message = "제목을 입력해 주세요.")

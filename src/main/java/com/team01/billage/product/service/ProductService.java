@@ -124,6 +124,8 @@ public class ProductService {
 
         Category category = categoryRepository.findById(productRequestDto.getCategoryId())
             .orElseThrow(() -> new CustomException(CATEGORY_NOT_FOUND));
+        Point location = toPoint(productRequestDto.getLongitude(), productRequestDto.getLatitude());
+
 
         // 상품 생성
         Product product = Product.builder()
@@ -293,7 +295,9 @@ public class ProductService {
 
     // Point(경도, 위도) 변환
     private Point toPoint(double longitude, double latitude) {
-        return geometryFactory.createPoint(new Coordinate(longitude, latitude));
+        Point point = geometryFactory.createPoint(new Coordinate(longitude, latitude));
+        point.setSRID(4326); // SRID를 4326으로 설정
+        return point;
     }
 
     public Users checkUser(Long userId) {
@@ -307,6 +311,20 @@ public class ProductService {
     public void increaseViewCount(Product product) {
         product.increaseViewCount();
         productRepository.save(product);
+    }
+
+
+    public List<ProductResponseDto> findProductsInNeighborArea(Long userId) {
+        List<Product> products = productRepository.findProductsInNeighborArea(userId);
+
+        return products.stream()
+            .map(product -> ProductResponseDto.builder()
+                .productId(product.getId())
+                .title(product.getTitle())
+                .dayPrice(product.getDayPrice())
+
+                .build())
+            .collect(Collectors.toList());
     }
 
 
