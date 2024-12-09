@@ -78,6 +78,9 @@ public class Product {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
+    @Column(name = "address")
+    private String  address;
+
     public void updateProduct(ProductUpdateRequestDto dto) {
         this.title = dto.getTitle();
         this.description = dto.getDescription();
@@ -112,6 +115,9 @@ public class Product {
 
     public void updateDate(){
         this.updatedAt = LocalDateTime.now();
+    }
+    public void updateAddress(String address) {
+        this.address = address;
     }
 
 }
