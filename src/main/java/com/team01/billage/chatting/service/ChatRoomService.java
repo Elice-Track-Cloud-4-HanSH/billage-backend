@@ -41,8 +41,8 @@ public class ChatRoomService {
                 new CustomException(ErrorCode.CHATROOM_NOT_FOUND));
     }
 
-    public List<ChatroomResponseDto> getAllChatroomsWithDSL(String type, int page, Long userId, Long productId) {
-        Pageable pageable = PageRequest.of(page, 20);
+    public List<ChatroomResponseDto> getAllChatroomsWithDSL(String type, int page, int pageSize, Long userId, Long productId) {
+        Pageable pageable = PageRequest.of(page, pageSize);
 
         List<ChatRoomWithLastChat> results = chatroomQueryDsl.getChatrooms(type, userId, productId, pageable);
 
@@ -100,7 +100,7 @@ public class ChatRoomService {
                 .orElseGet(() -> createChatRoom(checkValidChatroomDto));
     }
 
-    public List<ChatResponseDto> getChatsInChatroom(Long chatroomId, Long userId, int page, Long lastChatId) {
+    public List<ChatResponseDto> getChatsInChatroom(Long chatroomId, Long userId, int page, int pageSize, Long lastChatId) {
         ChatRoom chatroom = chatroomRepository.findById(chatroomId).orElseThrow(() -> new CustomException(ErrorCode.CHATROOM_NOT_FOUND));
 
         if (!(userId.equals(chatroom.getSeller().getId()) || userId.equals(chatroom.getBuyer().getId()))) {
@@ -113,7 +113,7 @@ public class ChatRoomService {
         chatRedisService.resetUnreadChatCount(unreadKey);
         chatSocketService.sendUnreadChatCount(userId, -unreadCount.intValue());
 
-        return chatService.getPagenatedChat(chatroomId, lastChatId, userId, page);
+        return chatService.getPagenatedChat(chatroomId, lastChatId, userId, page, pageSize);
     }
 
     public CheckValidChatroomResponseDto createChatRoom(CheckValidChatroomDao checkValidChatroomDao) {

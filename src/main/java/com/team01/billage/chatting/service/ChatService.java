@@ -33,8 +33,8 @@ public class ChatService {
                 .toList();
     }
 
-    public List<ChatResponseDto> getPagenatedChat(Long chatroomId, Long chatId, Long userId, int page) {
-        Pageable pageable = PageRequest.of(page, 50);
+    public List<ChatResponseDto> getPagenatedChat(Long chatroomId, Long chatId, Long userId, int page, int pageSize) {
+        Pageable pageable = PageRequest.of(page, pageSize);
         List<Chat> chats = chatQueryDsl.getPagenatedChatsInChatroom(chatroomId, chatId, userId, pageable);
 
         return chats.stream()
