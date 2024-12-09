@@ -7,6 +7,7 @@ import com.team01.billage.chatting.dto.ChatResponseDto;
 import com.team01.billage.chatting.dto.ChatroomResponseDto;
 import com.team01.billage.chatting.dto.CheckValidChatroomRequestDto;
 import com.team01.billage.chatting.dto.CheckValidChatroomResponseDto;
+import com.team01.billage.chatting.dto.querydsl.ChatroomWithRecentChatDTO;
 import com.team01.billage.chatting.repository.ChatRoomQueryDSL;
 import com.team01.billage.chatting.repository.ChatRoomRepository;
 import com.team01.billage.exception.CustomException;
@@ -22,6 +23,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -48,21 +50,25 @@ public class ChatRoomService {
     public List<ChatroomResponseDto> getAllChatroomsWithDSL(String type, int page, int pageSize, Long userId, Long productId) {
         Pageable pageable = PageRequest.of(page, pageSize);
 
-        List<ChatRoomWithLastChat> results = chatroomQueryDsl.getChatrooms(type, userId, productId, pageable);
+        List<ChatroomWithRecentChatDTO> results = chatroomQueryDsl.getChatrooms(type, userId, productId, pageable);
+
+        List<String> redisKeys = results.stream()
+                .map(result -> generateRedisKey(result.getChatroomId(), userId))
+                .toList();
+
+        Map<String, Long> unreadChatsCount = chatRedisService.getUnreadChatsCount(redisKeys);
 
         return results.stream()
                 .map(result -> {
-                    Long chatroomId = result.getChatRoom().getId();
-                    String unreadKey = getUnreadChatKey(chatroomId, userId);
-                    Long unreadCount = chatRedisService.getUnreadChatCount(unreadKey);
-                    return new ChatroomResponseDto(
-                            result.getChatRoom(),
-                            result.getLastChat(),
-                            userId,
-                            unreadCount
-                    );
+                    String unreadKey = generateRedisKey(result.getChatroomId(), userId);
+                    Long unreadCount = unreadChatsCount.get(unreadKey);
+                    return new ChatroomResponseDto(result, userId, unreadCount);
                 })
                 .toList();
+    }
+
+    private String generateRedisKey(Long chatroomId, Long userId) {
+        return chatroomId + "_" + userId;
     }
 
     private String getUnreadChatKey(Long chatroomId, Long userId) {
