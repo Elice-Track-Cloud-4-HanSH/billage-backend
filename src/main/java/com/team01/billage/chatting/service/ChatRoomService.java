@@ -1,7 +1,5 @@
 package com.team01.billage.chatting.service;
 
-import com.team01.billage.chatting.dao.ChatRoomWithLastChat;
-import com.team01.billage.chatting.dao.CheckValidChatroomDao;
 import com.team01.billage.chatting.domain.ChatRoom;
 import com.team01.billage.chatting.dto.ChatResponseDto;
 import com.team01.billage.chatting.dto.ChatroomResponseDto;
@@ -24,7 +22,6 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
 @Service
@@ -89,25 +86,23 @@ public class ChatRoomService {
             throw new CustomException(ErrorCode.CHATROOM_VALIDATE_FAILED);
         }
 
-
-        Optional<ChatRoom> chatroomOpt = chatroomRepository.checkChatroomIsExist(
+        ChatRoom chatroom = chatroomRepository.checkChatroomIsExist(
                 checkValidChatroomDto.getSellerId(),
                 checkValidChatroomDto.getBuyerId(),
                 checkValidChatroomDto.getProductId()
-        );
-        return chatroomOpt.map(chatroom -> {
-                    if (user.getId().equals(checkValidChatroomDto.getSellerId())) {
-                        if (chatroom.getSellerExitAt() != null) {
-                            chatroom.setSellerJoinAt();
-                        }
-                    } else {
-                        if (chatroom.getBuyerExitAt() != null) {
-                            chatroom.setBuyerJoinAt();
-                        }
-                    }
-                    return new CheckValidChatroomResponseDto(chatroom.getId());
-                })
-                .orElseGet(() -> createChatRoom(checkValidChatroomDto));
+        ).orElseGet(() -> createChatRoom(checkValidChatroomDto));
+
+        if (user.getId().equals(checkValidChatroomDto.getSellerId())) {
+            if (chatroom.getSellerExitAt() != null) {
+                chatroom.setSellerJoinAt();
+            }
+        } else {
+            if (chatroom.getBuyerExitAt() != null) {
+                chatroom.setBuyerJoinAt();
+            }
+        }
+
+        return new CheckValidChatroomResponseDto(chatroom.getId());
     }
 
     public List<ChatResponseDto> getChatsInChatroom(Long chatroomId, Long userId, int page, int pageSize, Long lastChatId) {
@@ -126,23 +121,7 @@ public class ChatRoomService {
         return chatService.getPagenatedChat(chatroomId, lastChatId, userId, page, pageSize);
     }
 
-    public CheckValidChatroomResponseDto createChatRoom(CheckValidChatroomDao checkValidChatroomDao) {
-        Users buyer = checkValidChatroomDao.getBuyer();
-        Users seller = userRepository.findById(checkValidChatroomDao.getSellerId()).orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
-        Product product = productRepository.findByIdAndSellerId(checkValidChatroomDao.getProductId(), checkValidChatroomDao.getSellerId()).orElseThrow(() -> new CustomException(ErrorCode.PRODUCT_NOT_FOUND));
-
-        ChatRoom chatroom = ChatRoom.builder()
-                .buyer(buyer)
-                .seller(seller)
-                .product(product)
-                .createdAt(LocalDateTime.now())
-                .build();
-        chatroomRepository.save(chatroom);
-
-        return new CheckValidChatroomResponseDto(chatroom.getId());
-    }
-
-    public CheckValidChatroomResponseDto createChatRoom(CheckValidChatroomRequestDto checkValidChatroomRequestDto) {
+    public ChatRoom createChatRoom(CheckValidChatroomRequestDto checkValidChatroomRequestDto) {
         Users buyer = userRepository.findById(checkValidChatroomRequestDto.getBuyerId()).orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
         Users seller = userRepository.findById(checkValidChatroomRequestDto.getSellerId()).orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
         Product product = productRepository.findByIdAndSellerId(checkValidChatroomRequestDto.getProductId(), checkValidChatroomRequestDto.getSellerId()).orElseThrow(() -> new CustomException(ErrorCode.PRODUCT_NOT_FOUND));
@@ -158,7 +137,7 @@ public class ChatRoomService {
         chatRedisService.setUnreadChatCount(chatroom.getId() + "_" + buyer.getId());
         chatRedisService.setUnreadChatCount(chatroom.getId() + "_" + seller.getId());
 
-        return new CheckValidChatroomResponseDto(chatroom.getId());
+        return chatroom;
     }
 
     public void exitFromChatRoom(Long chatroomId, Long userId) {
