@@ -6,9 +6,11 @@ import java.util.Optional;
 
 public interface CustomUserReviewRepository {
 
-    List<ShowReviewResponseDto> findByAuthor_email(String email);
+    List<ShowReviewResponseDto> findByAuthor(long userId);
 
-    List<ShowReviewResponseDto> findByTarget_nickname(String nickname);
+    List<ShowReviewResponseDto> findByTarget(long userId);
 
-    Optional<Double> scoreAverage(String nickname);
+    Optional<Double> scoreAverage(long userId);
+
+    Optional<Integer> reviewCount(long userId);
 }

@@ -18,26 +18,26 @@ public class CustomRentalRecordRepositoryImpl implements CustomRentalRecordRepos
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public List<ShowRecordResponseDto> findBySellerRenting(String email) {
-        return findRecords(email, QRentalRecord.rentalRecord.seller, true);
+    public List<ShowRecordResponseDto> findBySellerRenting(long userId) {
+        return findRecords(userId, QRentalRecord.rentalRecord.seller, true);
     }
 
     @Override
-    public List<ShowRecordResponseDto> findBySellerRecord(String email) {
-        return findRecords(email, QRentalRecord.rentalRecord.seller, false);
+    public List<ShowRecordResponseDto> findBySellerRecord(long userId) {
+        return findRecords(userId, QRentalRecord.rentalRecord.seller, false);
     }
 
     @Override
-    public List<ShowRecordResponseDto> findByBuyerRenting(String email) {
-        return findRecords(email, QRentalRecord.rentalRecord.buyer, true);
+    public List<ShowRecordResponseDto> findByBuyerRenting(long userId) {
+        return findRecords(userId, QRentalRecord.rentalRecord.buyer, true);
     }
 
     @Override
-    public List<ShowRecordResponseDto> findByBuyerRecord(String email) {
-        return findRecords(email, QRentalRecord.rentalRecord.buyer, false);
+    public List<ShowRecordResponseDto> findByBuyerRecord(long userId) {
+        return findRecords(userId, QRentalRecord.rentalRecord.buyer, false);
     }
 
-    private List<ShowRecordResponseDto> findRecords(String email, QUsers userType,
+    private List<ShowRecordResponseDto> findRecords(long userId, QUsers userType,
         boolean isRenting) {
 
         QRentalRecord rentalRecord = QRentalRecord.rentalRecord;
@@ -67,7 +67,7 @@ public class CustomRentalRecordRepositoryImpl implements CustomRentalRecordRepos
             .on(productImage.product.eq(product)
                 .and(productImage.thumbnail.eq("Y")))
             .where(
-                userType.email.eq(email)
+                userType.id.eq(userId)
                     .and(isRenting ? rentalRecord.returnDate.isNull()
                         : rentalRecord.returnDate.isNotNull())
             )
@@ -77,9 +77,8 @@ public class CustomRentalRecordRepositoryImpl implements CustomRentalRecordRepos
     }
 
     @Override
-    public List<PurchasersResponseDto> loadPurchasersList(String email) {
+    public List<PurchasersResponseDto> loadPurchasersList(long userId, long productId) {
 
-        QUsers seller = QUsers.users;
         QUsers buyer = QUsers.users;
         QChatRoom chatRoom = QChatRoom.chatRoom;
 
@@ -91,9 +90,9 @@ public class CustomRentalRecordRepositoryImpl implements CustomRentalRecordRepos
                     buyer.nickname
                 )
             ).from(chatRoom)
-            .join(chatRoom.seller, seller)
             .join(chatRoom.buyer, buyer)
-            .where(chatRoom.seller.email.eq(email))
+            .where(chatRoom.seller.id.eq(userId)
+                .and(chatRoom.product.id.eq(productId)))
             .fetch();
     }
 }

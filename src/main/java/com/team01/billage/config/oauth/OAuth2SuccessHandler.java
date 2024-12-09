@@ -1,11 +1,8 @@
 package com.team01.billage.config.oauth;
 
 import com.team01.billage.common.CookieUtil;
-import com.team01.billage.config.jwt.UserConstants;
 import com.team01.billage.config.jwt.impl.AuthTokenImpl;
 import com.team01.billage.config.jwt.impl.JwtProviderImpl;
-import com.team01.billage.exception.CustomException;
-import com.team01.billage.exception.ErrorCode;
 import com.team01.billage.user.domain.TokenRedis;
 import com.team01.billage.user.domain.Users;
 import com.team01.billage.user.repository.OAuth2AuthorizationRequestBasedOnCookieRepository;
@@ -23,9 +20,8 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.team01.billage.config.jwt.UserConstants.ACCESS_TOKEN_DURATION;
+import com.team01.billage.config.jwt.UserConstants;
 import static com.team01.billage.config.jwt.UserConstants.ACCESS_TOKEN_TYPE_VALUE;
-
 
 @Component
 @RequiredArgsConstructor
@@ -35,6 +31,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
     private final OAuth2AuthorizationRequestBasedOnCookieRepository authorizationRequestRepository;
     private final UserService userService;
     private final TokenRedisRepository tokenRedisRepository;
+    private final UserConstants userConstants;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
@@ -69,15 +66,22 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
                 claims
         );
 
+        // Access Token을 쿠키에 저장
         CookieUtil.addCookie(response, ACCESS_TOKEN_TYPE_VALUE,
-                accessToken.getToken(), (int) ACCESS_TOKEN_DURATION.toSeconds());
+                accessToken.getToken(), (int) userConstants.getAccessTokenDuration().toSeconds());
 
-        TokenRedis tokenRedis = new TokenRedis(user.getId(), refreshToken.getToken());
+        // Refresh Token을 Redis에 저장
+        long refreshTokenValidityInSeconds = userConstants.getRefreshTokenDuration().toSeconds();
+        TokenRedis tokenRedis = new TokenRedis(
+                user.getId(),
+                refreshToken.getToken(),
+                refreshTokenValidityInSeconds
+        );
         tokenRedisRepository.save(tokenRedis);
 
         clearAuthenticationAttributes(request, response);
 
-        getRedirectStrategy().sendRedirect(request, response, "http://localhost:3000/chat");        //TODO: 환경변수화
+        getRedirectStrategy().sendRedirect(request, response, "http://localhost:3000/after-login"); //TODO: 환경변수화
     }
 
     private void clearAuthenticationAttributes(HttpServletRequest request, HttpServletResponse response) {
