@@ -126,7 +126,6 @@ public class ProductService {
             .orElseThrow(() -> new CustomException(CATEGORY_NOT_FOUND));
         Point location = toPoint(productRequestDto.getLongitude(), productRequestDto.getLatitude());
 
-
         // 상품 생성
         Product product = Product.builder()
             .seller(user)
@@ -134,7 +133,10 @@ public class ProductService {
             .title(productRequestDto.getTitle())
             .description(productRequestDto.getDescription())
             .dayPrice(Integer.parseInt(productRequestDto.getDayPrice()))
-            .weekPrice(Integer.parseInt(productRequestDto.getWeekPrice()))
+            .weekPrice(
+                    (productRequestDto.getWeekPrice() != null) ?
+                    Integer.parseInt(productRequestDto.getWeekPrice()) : null
+            )
             .location(toPoint(productRequestDto.getLongitude(), productRequestDto.getLatitude()))
             .updatedAt(LocalDateTime.now())
             .build();

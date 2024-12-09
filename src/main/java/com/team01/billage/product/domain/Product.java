@@ -82,7 +82,7 @@ public class Product {
         this.title = dto.getTitle();
         this.description = dto.getDescription();
         this.dayPrice = Integer.parseInt(dto.getDayPrice());
-        this.weekPrice = Integer.parseInt(dto.getWeekPrice());
+        this.weekPrice = dto.getWeekPrice() == null ? null : Integer.parseInt(dto.getWeekPrice());
     }
 
     public void updateProductCategory(Category category) {
