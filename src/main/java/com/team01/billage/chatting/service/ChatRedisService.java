@@ -8,8 +8,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 @RequiredArgsConstructor
 @Service
@@ -50,6 +49,22 @@ public class ChatRedisService {
         return Long.parseLong(val != null ? val : "0");
     }
 
+    public Map<String, Long> getUnreadChatsCount(List<String> keys) {
+        List<Long> chatsCount  = getMultipleValues(keys).stream()
+                .map(value -> Long.parseLong(value != null ? value : "0"))
+                .toList();
+        Map<String, Long> resultMap = new HashMap<>();
+
+        for (int i = 0; i < keys.size(); i++) {
+            resultMap.put(keys.get(i), chatsCount.get(i));
+        }
+        return resultMap;
+    }
+
+    public List<String> getMultipleValues(List<String> keys) {
+        return redisTemplate.opsForValue().multiGet(keys);
+    }
+
     @Async
     public void setUnreadChatCount(String key) {
         setUnreadChatCount(key, "0");
@@ -83,8 +98,8 @@ public class ChatRedisService {
         return results;
     }
 
-    public Long sumOfKeysValue(String pattern) {
-        Set<String> keys = getKeysByPattern(pattern, Integer.MAX_VALUE);
+    public Long sumOfKeysValue(String pattern, Long maxGet) {
+        Set<String> keys = getKeysByPattern(pattern, maxGet.intValue());
         return keys.stream().mapToLong(this::getUnreadChatCount).sum();
     }
 }

@@ -2,6 +2,7 @@ package com.team01.billage.chatting.service;
 
 import com.team01.billage.chatting.domain.Chat;
 import com.team01.billage.chatting.dto.ChatResponseDto;
+import com.team01.billage.chatting.dto.querydsl.ChatWithSenderDTO;
 import com.team01.billage.chatting.repository.ChatQueryDSL;
 import com.team01.billage.chatting.repository.ChatRepository;
 import com.team01.billage.user.domain.Users;
@@ -18,32 +19,16 @@ public class ChatService {
     private final ChatRepository chatRepository;
     private final ChatQueryDSL chatQueryDsl;
 
-    public List<ChatResponseDto> getPagenatedChat(Long chatroomId, Long chatId, int page) {
-        Pageable pageable = PageRequest.of(page, 50);
-        List<Chat> chats = chatRepository.getPagenatedChatsInChatroom(chatroomId, chatId, pageable);
+    public List<ChatResponseDto> getPagenatedChat(Long chatroomId, Long chatId, Long userId, int page, int pageSize) {
+        Pageable pageable = PageRequest.of(page, pageSize);
+        List<ChatWithSenderDTO> chats = chatQueryDsl.getPagenatedChatsInChatroom(chatroomId, chatId, userId, pageable);
 
         return chats.stream()
                 .map(chat -> new ChatResponseDto(
-                        chat.getId(),
+                        chat.getChatId(),
                         chat.getSender(),
                         chat.getMessage(),
-                        chat.isRead(),
-                        chat.getCreatedAt()
-                ))
-                .toList();
-    }
-
-    public List<ChatResponseDto> getPagenatedChat(Long chatroomId, Long chatId, Long userId, int page) {
-        Pageable pageable = PageRequest.of(page, 50);
-        List<Chat> chats = chatQueryDsl.getPagenatedChatsInChatroom(chatroomId, chatId, userId, pageable);
-
-        return chats.stream()
-                .map(chat -> new ChatResponseDto(
-                        chat.getId(),
-                        chat.getSender(),
-                        chat.getMessage(),
-                        chat.isRead(),
-                        chat.getCreatedAt()
+                        chat.isRead()
                 ))
                 .toList();
     }

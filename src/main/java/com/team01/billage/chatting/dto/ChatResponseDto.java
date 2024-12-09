@@ -2,6 +2,7 @@ package com.team01.billage.chatting.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.team01.billage.chatting.dto.object.CustomChatResponseUser;
+import com.team01.billage.chatting.dto.querydsl.ChatWithSenderDTO;
 import com.team01.billage.user.domain.Users;
 import lombok.Getter;
 import lombok.Setter;
@@ -15,10 +16,22 @@ public class ChatResponseDto {
     private CustomChatResponseUser sender;
     private String message;
     private boolean read;
-    private String nickname;
 
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime createdAt;
+
+    public ChatResponseDto(
+            Long chatId,
+            ChatWithSenderDTO.User sender,
+            ChatWithSenderDTO.Message message,
+            boolean isRead
+    ) {
+        this.chatId = chatId;
+        this.sender = new CustomChatResponseUser(sender.getId(), sender.getNickname());
+        this.message = message.getMessage();
+        this.createdAt = message.getCreatedAt();
+        this.read = isRead;
+    }
 
     public ChatResponseDto(Long chatId, Users sender, String message, boolean isRead, LocalDateTime createdAt) {
         this.chatId = chatId;
