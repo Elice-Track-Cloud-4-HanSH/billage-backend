@@ -7,6 +7,7 @@ import com.team01.billage.product.dto.ProductDetailResponseDto;
 import com.team01.billage.product.dto.ProductDetailWrapperResponseDto;
 import com.team01.billage.product.dto.ProductImageDeleteRequestDto;
 import com.team01.billage.product.dto.ProductRequestDto;
+import com.team01.billage.product.dto.ProductResponseDto;
 import com.team01.billage.product.dto.ProductUpdateRequestDto;
 import com.team01.billage.product.dto.ProductWrapperResponseDto;
 import com.team01.billage.product.service.ProductImageService;
@@ -147,6 +148,15 @@ public class ProductController {
 
         return ResponseEntity.status(HttpStatus.OK)
             .body(productService.deleteProduct(userDetails.getId(), productId));
+    }
+
+    @GetMapping("/neighbor-area")
+    public ResponseEntity<List<ProductResponseDto>> findProductsInNeighborArea(
+        @AuthenticationPrincipal CustomUserDetails userDetails) {
+
+        List<ProductResponseDto> products = productService.findProductsInNeighborArea(userDetails.getId());
+
+        return ResponseEntity.status(HttpStatus.OK).body(products);
     }
 
 }
