@@ -36,6 +36,10 @@ public class ChatRoomService {
     private final ChatRedisService chatRedisService;
     private final ChatSocketService chatSocketService;
 
+    public Long chatroomCount(Long userId) {
+        return chatroomRepository.countByUserId(userId);
+    }
+
     public ChatRoom isChatroomExists(Long chatroomId) {
         return chatroomRepository.findById(chatroomId).orElseThrow(() ->
                 new CustomException(ErrorCode.CHATROOM_NOT_FOUND));

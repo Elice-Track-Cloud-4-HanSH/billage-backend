@@ -12,6 +12,9 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
+    @Query(value = "SELECT COUNT(cr) FROM ChatRoom cr WHERE cr.buyer.id = :userId OR cr.seller.id = :userId")
+    Long countByUserId(@Param("userId") Long userId);
+
     @Modifying
     @Transactional
     @Query(value = "UPDATE ChatRoom cr SET cr.sellerExitAt = CURRENT_TIMESTAMP WHERE cr.seller.id = :id")
