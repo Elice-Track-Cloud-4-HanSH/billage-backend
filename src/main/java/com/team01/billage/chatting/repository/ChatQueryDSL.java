@@ -4,11 +4,10 @@ import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import com.team01.billage.chatting.domain.Chat;
 import com.team01.billage.chatting.domain.QChat;
 import com.team01.billage.chatting.domain.QChatRoom;
+import com.team01.billage.chatting.dto.querydsl.ChatWithChatroomAndBSDTO;
 import com.team01.billage.chatting.dto.querydsl.ChatWithSenderDTO;
-import com.team01.billage.chatting.dto.querydsl.ChatroomWithRecentChatDTO;
 import com.team01.billage.user.domain.QUsers;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -20,6 +19,28 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ChatQueryDSL {
     private final JPAQueryFactory queryFactory;
+
+    public ChatWithChatroomAndBSDTO getChatWithBuyerAndSeller(Long chatId) {
+        QChatRoom qChatroom = QChatRoom.chatRoom;
+        QChat qChat = QChat.chat;
+
+        ChatWithChatroomAndBSDTO chat = queryFactory
+                .select(Projections.constructor(
+                        ChatWithChatroomAndBSDTO.class,
+                        qChatroom.id,
+                        Projections.constructor(ChatWithChatroomAndBSDTO.User.class, qChatroom.buyer.id),
+                        Projections.constructor(ChatWithChatroomAndBSDTO.User.class, qChatroom.seller.id),
+                        qChat.sender.id
+                ))
+                .from(qChat)
+                .join(qChat.chatRoom, qChatroom)
+                .where(
+                        qChat.id.eq(chatId),
+                        qChat.chatRoom.id.eq(qChatroom.id)
+                ).fetchFirst();
+
+        return chat;
+    }
 
     public List<ChatWithSenderDTO> getPagenatedChatsInChatroom(Long chatroomId, Long chatId, Long userId, Pageable pageable) {
         BooleanBuilder builder = new BooleanBuilder();
