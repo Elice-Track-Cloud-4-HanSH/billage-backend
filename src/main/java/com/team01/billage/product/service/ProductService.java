@@ -90,7 +90,8 @@ public class ProductService {
         String categoryId,
         String rentalStatus,
         String search,
-        int page) {
+        int page,
+        int pageSize) {
 
         Long userId = null;
 
@@ -99,7 +100,7 @@ public class ProductService {
             userId = userDetails.getId();
         }
 
-        Pageable pageable = PageRequest.of(page, 10);
+        Pageable pageable = PageRequest.of(page, pageSize);
 
         List<ProductResponseDto> products = productRepository.findAllProducts(
             userId,
