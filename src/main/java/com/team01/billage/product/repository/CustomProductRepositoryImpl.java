@@ -110,6 +110,7 @@ public class CustomProductRepositoryImpl implements CustomProductRepository {
                 rentalRecord.expectedReturnDate)
             .from(rentalRecord)
             .where(product.rentalStatus.eq(RentalStatus.RENTED)
+                .and(rentalRecord.returnDate.isNull())
                 .and(rentalRecord.product.id.eq(product.id)));
 
         BooleanExpression inNeighborArea = userId != null
@@ -148,9 +149,6 @@ public class CustomProductRepositoryImpl implements CustomProductRepository {
             .leftJoin(productImage)
             .on(product.id.eq(productImage.product.id).
                 and(productImage.thumbnail.eq("Y")))
-            .leftJoin(rentalRecord)
-            .on(product.rentalStatus.eq(RentalStatus.RENTED)
-                .and(product.id.eq(rentalRecord.product.id)))
             .where(builder)
             .orderBy(product.updatedAt.desc())
             .offset(pageable.getOffset())
@@ -197,7 +195,8 @@ public class CustomProductRepositoryImpl implements CustomProductRepository {
             .select(rentalRecord.expectedReturnDate)
             .from(rentalRecord)
             .where(rentalRecord.product.id.eq(productId)
-                .and(product.rentalStatus.eq(RentalStatus.RENTED)))
+                .and(product.rentalStatus.eq(RentalStatus.RENTED))
+                .and(rentalRecord.returnDate.isNull()))
             .fetchOne();
 
         // 이미지 리스트 가져오기
