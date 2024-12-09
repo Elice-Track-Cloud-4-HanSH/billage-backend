@@ -48,6 +48,6 @@ public class ProductReview {
     private Users author;
 
     @OneToOne
-    @JoinColumn(name = "rental-record_id", nullable = false)
+    @JoinColumn(name = "rental_record_id", nullable = false)
     private RentalRecord rentalRecord;
 }
