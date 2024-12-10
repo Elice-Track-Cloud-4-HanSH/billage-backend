@@ -9,6 +9,7 @@ import com.team01.billage.chatting.domain.QChat;
 import com.team01.billage.chatting.domain.QChatRoom;
 import com.team01.billage.chatting.dto.querydsl.ChatroomWithRecentChatDTO;
 import com.team01.billage.product.domain.QProduct;
+import com.team01.billage.product.domain.QProductImage;
 import com.team01.billage.user.domain.QUsers;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -30,6 +31,7 @@ public class ChatRoomQueryDSL {
         QUsers qBuyer = new QUsers("buyer");
         QUsers qSeller = new QUsers("seller");
         QProduct qProduct = new QProduct("product");
+        QProductImage qProductImage = new QProductImage("image");
 
         BooleanExpression userCondition = switch (type) {
             case "LENT" -> getSellerCondition(qChatroom, userId);
@@ -51,16 +53,17 @@ public class ChatRoomQueryDSL {
                 .select(Projections.constructor(
                         ChatroomWithRecentChatDTO.class,
                         qChatroom.id,
-                        Projections.constructor(ChatroomWithRecentChatDTO.User.class, qBuyer.id, qBuyer.nickname),
-                        Projections.constructor(ChatroomWithRecentChatDTO.User.class, qSeller.id, qSeller.nickname),
+                        Projections.constructor(ChatroomWithRecentChatDTO.User.class, qBuyer.id, qBuyer.nickname, qBuyer.imageUrl),
+                        Projections.constructor(ChatroomWithRecentChatDTO.User.class, qSeller.id, qSeller.nickname, qSeller.imageUrl),
                         Projections.constructor(ChatroomWithRecentChatDTO.Chat.class, qChat.message, qChat.createdAt),
-                        Projections.constructor(ChatroomWithRecentChatDTO.Product.class, qProduct.id, qProduct.title)
+                        Projections.constructor(ChatroomWithRecentChatDTO.Product.class, qProduct.id, qProduct.title, qProductImage.imageUrl)
                 ))
                 .from(qChatroom)
                 .leftJoin(qChatroom.buyer, qBuyer)
                 .leftJoin(qChatroom.seller, qSeller)
                 .leftJoin(qChatroom.product, qProduct)
                 .leftJoin(qChatroom.chats, qChat)
+                .leftJoin(qProduct.productImages, qProductImage)
                 .where(
                         builder,
                         qChat.id.eq(
@@ -68,7 +71,8 @@ public class ChatRoomQueryDSL {
                                         .select(qChat2.id.max())
                                         .from(qChat2)
                                         .where(qChat2.chatRoom.eq(qChatroom))
-                        )
+                        ),
+                        qProductImage.thumbnail.eq("Y")
                 )
                 .orderBy(qChat.createdAt.desc(), qChatroom.id.desc())
                 .offset(pageable.getOffset())
