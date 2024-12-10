@@ -52,7 +52,7 @@ public class ProfileService {
 
         if (imageFile != null && !imageFile.isEmpty()) {
             // 기존 이미지가 있다면 삭제
-            if (imageUrl != null && !imageUrl.isEmpty()) {
+            if (imageUrl != null && !imageUrl.isEmpty() && !imageUrl.startsWith("/images")) {
                 s3BucketService.delete(imageUrl);
             }
             // 새 이미지 업로드
