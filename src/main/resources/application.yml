@@ -79,9 +79,10 @@ custom:
 
 app:
   cors:
-    allowed-origins: http://localhost:3000
+    allowed-origins: ${ALLOWED_ORIGIN_URL}
   oauth2:
-    authorized-redirect-urls: http://localhost:3000/chat
+    authorized-redirect-urls: ${OAUTH_REDIRECT_URL}
+    after-authorize-redirect-url: ${AFTER_OAUTH_REDIRECT_URL}
 
 server:
   servlet:
