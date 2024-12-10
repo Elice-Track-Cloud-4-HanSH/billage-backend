@@ -1,5 +1,6 @@
 package com.team01.billage.product_review.repository;
 
+import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.team01.billage.product.domain.QProduct;
@@ -10,6 +11,7 @@ import com.team01.billage.user.domain.QUsers;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 
 @RequiredArgsConstructor
 public class CustomProductReviewRepositoryImpl implements CustomProductReviewRepository {
@@ -17,10 +19,18 @@ public class CustomProductReviewRepositoryImpl implements CustomProductReviewRep
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public List<ShowReviewResponseDto> findByAuthor(long userId) {
+    public List<ShowReviewResponseDto> findByAuthor(long userId, Long lastStandard,
+        Pageable pageable) {
         QProductReview productReview = QProductReview.productReview;
         QProduct product = QProduct.product;
         QProductImage productImage = QProductImage.productImage;
+
+        BooleanBuilder condition = new BooleanBuilder();
+        condition.and(productReview.author.id.eq(userId));
+
+        if (lastStandard != null) {
+            condition.and(productReview.id.lt(lastStandard));
+        }
 
         return queryFactory.select(
                 Projections.constructor(
@@ -38,9 +48,9 @@ public class CustomProductReviewRepositoryImpl implements CustomProductReviewRep
             .leftJoin(productImage)
             .on(productImage.product.eq(product)
                 .and(productImage.thumbnail.eq("Y")))
-            .where(productReview.author.id.eq(userId))
+            .where(condition)
             .orderBy(productReview.id.desc())
-            //.limit()
+            .limit(pageable.getPageSize() + 1)
             .fetch();
     }
 

@@ -5,6 +5,7 @@ import static com.team01.billage.exception.ErrorCode.REVIEW_ALREADY_EXISTS;
 import static com.team01.billage.exception.ErrorCode.USER_NOT_FOUND;
 import static com.team01.billage.exception.ErrorCode.WRITE_ACCESS_FORBIDDEN;
 
+import com.team01.billage.common.CustomSlice;
 import com.team01.billage.exception.CustomException;
 import com.team01.billage.product_review.dto.ReviewSubjectResponseDto;
 import com.team01.billage.product_review.dto.ShowReviewResponseDto;
@@ -17,6 +18,8 @@ import com.team01.billage.user_review.domain.UserReview;
 import com.team01.billage.user_review.repository.UserReviewRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -62,9 +65,25 @@ public class UserReviewService {
         userReviewRepository.save(userReview);
     }
 
-    public List<ShowReviewResponseDto> readUserReviews(long userId) {
+    public Slice<ShowReviewResponseDto> readUserReviews(long userId, Long lastStandard,
+        Pageable pageable) {
 
-        return userReviewRepository.findByAuthor(userId);
+        List<ShowReviewResponseDto> content = userReviewRepository.findByAuthor(userId,
+            lastStandard, pageable);
+
+        boolean hasNext = content.size() > pageable.getPageSize();
+
+        if (hasNext) {
+            content.remove(content.size() - 1);
+        }
+
+        Long nextLastStandard = null;
+
+        if (!content.isEmpty()) {
+            nextLastStandard = content.get(content.size() - 1).getReviewId();
+        }
+
+        return new CustomSlice<>(content, pageable, hasNext, nextLastStandard);
     }
 
     public List<ShowReviewResponseDto> readTargetReviews(long userId) {

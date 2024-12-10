@@ -10,6 +10,7 @@ import static com.team01.billage.exception.ErrorCode.USER_NOT_FOUND;
 import com.team01.billage.category.domain.Category;
 import com.team01.billage.category.dto.CategoryProductResponseDto;
 import com.team01.billage.category.repository.CategoryRepository;
+import com.team01.billage.common.CustomSlice;
 import com.team01.billage.exception.CustomException;
 import com.team01.billage.map.service.AddressService;
 import com.team01.billage.product.domain.Product;
@@ -42,6 +43,7 @@ import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -68,6 +70,13 @@ public class ProductService {
         ProductDetailResponseDto productDetail = productRepository.findProductDetail(productId);
 
         increaseViewCount(product); // 조회수 단순 증가
+
+        Double avgScore = productReviewRepository.scoreAverage(product.getId())
+            .map(score -> Math.round(score * 10) / 10.0).orElse(0.0);
+        Integer reviewCount = productReviewRepository.reviewCount(product.getId()).orElse(0);
+
+        productDetail.setAvgScore(avgScore);
+        productDetail.setReviewCount(reviewCount);
 
         productDetail.setLongitude(product.getLocation().getX());
         productDetail.setLatitude(product.getLocation().getY());
@@ -116,9 +125,25 @@ public class ProductService {
             .build();
     }
 
-    public List<OnSaleResponseDto> findAllOnSale(long userId) {
+    public Slice<OnSaleResponseDto> findAllOnSale(long userId, LocalDateTime lastStandard,
+        Pageable pageable) {
 
-        return productRepository.findAllOnSale(userId);
+        List<OnSaleResponseDto> content = productRepository.findAllOnSale(userId, lastStandard,
+            pageable);
+
+        boolean hasNext = content.size() > pageable.getPageSize();
+
+        if (hasNext) {
+            content.remove(content.size() - 1);
+        }
+
+        LocalDateTime nextLastStandard = null;
+
+        if (!content.isEmpty()) {
+            nextLastStandard = content.get(content.size() - 1).getTime();
+        }
+
+        return new CustomSlice<>(content, pageable, hasNext, nextLastStandard);
     }
 
     @Transactional
@@ -139,7 +164,7 @@ public class ProductService {
             .description(productRequestDto.getDescription())
             .dayPrice(Integer.parseInt(productRequestDto.getDayPrice()))
             .weekPrice(
-                    (productRequestDto.getWeekPrice() != null) ?
+                (productRequestDto.getWeekPrice() != null) ?
                     Integer.parseInt(productRequestDto.getWeekPrice()) : null
             )
             .location(toPoint(productRequestDto.getLongitude(), productRequestDto.getLatitude()))
@@ -254,11 +279,6 @@ public class ProductService {
             .categoryName(product.getCategory().getName())
             .build();
 
-        Double avgScore = productReviewRepository.scoreAverage(product.getId())
-            .map(score -> Math.round(score * 10) / 10.0).orElse(0.0);
-
-        Integer reviewCount = productReviewRepository.reviewCount(product.getId()).orElse(0);
-
         return ProductDetailResponseDto.builder()
             .productId(product.getId())
             .category(category)
@@ -273,8 +293,6 @@ public class ProductService {
             .updatedAt(product.getUpdatedAt())
             .seller(sellerDto)
             .productImages(imageDtos)
-            .avgScore(avgScore)
-            .reviewCount(reviewCount)
             .build();
 
     }
