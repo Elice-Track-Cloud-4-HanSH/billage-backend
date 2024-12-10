@@ -114,20 +114,25 @@ public class CustomProductRepositoryImpl implements CustomProductRepository {
                 .and(rentalRecord.returnDate.isNull())
                 .and(rentalRecord.product.id.eq(product.id)));
 
-        BooleanExpression inNeighborArea = userId != null
-            ? JPAExpressions.selectOne()
-            .from(neighborArea)
-            .where(
-                neighborArea.emdArea.id.in(
-                        JPAExpressions.select(activityArea.emdArea.id)
-                            .from(activityArea)
-                            .where(activityArea.users.id.eq(userId))
-                    )
-                    .and(Expressions.booleanTemplate("ST_Contains({0}, {1})", neighborArea.geom,
-                        product.location))
-            )
-            .exists()
-            : null;
+        // 활동 지역이 있는 경우에만 필터 적용
+        BooleanExpression inNeighborArea = null;
+        if (userId != null && queryFactory.selectOne()
+            .from(activityArea)
+            .where(activityArea.users.id.eq(userId))
+            .fetchFirst() != null) {
+            inNeighborArea = JPAExpressions.selectOne()
+                .from(neighborArea)
+                .where(
+                    neighborArea.emdArea.id.in(
+                            JPAExpressions.select(activityArea.emdArea.id)
+                                .from(activityArea)
+                                .where(activityArea.users.id.eq(userId))
+                        )
+                        .and(Expressions.booleanTemplate("ST_Contains({0}, {1})", neighborArea.geom,
+                            product.location))
+                )
+                .exists();
+        }
 
         if (inNeighborArea != null) {
             builder.and(inNeighborArea);
@@ -142,6 +147,7 @@ public class CustomProductRepositoryImpl implements CustomProductRepository {
                 product.dayPrice,
                 product.weekPrice,
                 product.viewCount,
+                product.address,
                 productImage.imageUrl.as("thumbnailUrl"),
                 isFavorite.as("favorite"),
                 ExpressionUtils.as(favoriteCnt, "favoriteCnt"),
