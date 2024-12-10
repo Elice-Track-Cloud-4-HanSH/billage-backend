@@ -13,7 +13,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -170,7 +169,8 @@ public class ProductReviewController {
         @Parameter(description = "페이징 처리를 위한 Pageable 객체입니다.", example = "page=0&size=20&sort=createdAt,desc")
         Pageable pageable) {
 
-        Slice<ShowReviewResponseDto> response = productReviewService.readProductReviews(productId, lastStandard, pageable;
+        Slice<ShowReviewResponseDto> response = productReviewService.readProductReviews(productId,
+            lastStandard, pageable);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
