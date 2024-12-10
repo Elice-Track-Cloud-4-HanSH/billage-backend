@@ -22,6 +22,7 @@ public class ChatroomWithRecentChatDTO {
     public static class User {
         private Long id;
         private String nickname;
+        private String profileUrl;
     }
 
     @Getter
@@ -38,5 +39,6 @@ public class ChatroomWithRecentChatDTO {
     public static class Product {
         private Long id;
         private String name;
+        private String imageUrl;
     }
 }
