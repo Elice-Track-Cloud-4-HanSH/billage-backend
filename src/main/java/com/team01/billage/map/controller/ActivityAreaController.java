@@ -44,6 +44,9 @@ public class ActivityAreaController {
     @GetMapping
     public ResponseEntity<ActivityAreaResponseDto> getActivityArea(
         @AuthenticationPrincipal CustomUserDetails userDetails) {
+        if (userDetails == null) {
+            return ResponseEntity.status(HttpStatus.OK).body(null);
+        }
 
 
         Users user = determineUser.determineUser(userDetails);
@@ -51,5 +54,18 @@ public class ActivityAreaController {
 
         ActivityAreaResponseDto responseDto = activityAreaService.getActivityArea(user.getId());
         return ResponseEntity.status(HttpStatus.OK).body(responseDto);
+    }
+    // 활동 지역 삭제
+    @DeleteMapping
+    public ResponseEntity<Void> deleteActivityArea(
+        @AuthenticationPrincipal CustomUserDetails userDetails) {
+        if (userDetails == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build(); // 인증되지 않은 사용자 처리
+        }
+
+        Users user = determineUser.determineUser(userDetails);
+
+        activityAreaService.deleteActivityArea(user.getId());
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 }
