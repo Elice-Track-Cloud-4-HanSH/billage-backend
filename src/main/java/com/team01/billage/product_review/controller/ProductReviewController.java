@@ -160,11 +160,17 @@ public class ProductReviewController {
         ),
     })
     @GetMapping("/product-details/{productId}")
-    public ResponseEntity<List<ShowReviewResponseDto>> productDetailsReview(
+    public ResponseEntity<Slice<ShowReviewResponseDto>> productDetailsReview(
         @Parameter(description = "상품 ID", example = "1")
-        @PathVariable("productId") long productId) {
+        @PathVariable("productId") long productId,
 
-        List<ShowReviewResponseDto> response = productReviewService.readProductReviews(productId);
+        @Parameter(description = "이전 요청에서 마지막으로 확인한 상품 후기 ID입니다.", example = "123")
+        @RequestParam(name = "lastStandard", required = false) Long lastStandard,
+
+        @Parameter(description = "페이징 처리를 위한 Pageable 객체입니다.", example = "page=0&size=20&sort=createdAt,desc")
+        Pageable pageable) {
+
+        Slice<ShowReviewResponseDto> response = productReviewService.readProductReviews(productId, lastStandard, pageable;
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 

@@ -9,7 +9,7 @@ public interface CustomProductReviewRepository {
 
     List<ShowReviewResponseDto> findByAuthor(long userId, Long lastStandard, Pageable pageable);
 
-    List<ShowReviewResponseDto> findByProduct(Long productId);
+    List<ShowReviewResponseDto> findByProduct(Long productId, Long lastStandard, Pageable pageable);
 
     Optional<Double> scoreAverage(long productId);
 

@@ -212,9 +212,16 @@ public class UserReviewController {
     @GetMapping("/target/{userId}")
     public ResponseEntity<List<ShowReviewResponseDto>> targetReview(
         @Parameter(description = "유저 ID", example = "1")
-        @PathVariable("userId") long userId) {
+        @PathVariable("userId") long userId,
 
-        List<ShowReviewResponseDto> responseDtos = userReviewService.readTargetReviews(userId);
+        @Parameter(description = "이전 요청에서 마지막으로 확인한 유저 후기 ID입니다.", example = "123")
+        @RequestParam(name = "lastStandard", required = false) Long lastStandard,
+
+        @Parameter(description = "페이징 처리를 위한 Pageable 객체입니다.", example = "page=0&size=20&sort=createdAt,desc")
+        Pageable pageable) {
+
+        Slice<ShowReviewResponseDto> responseDtos = userReviewService.readTargetReviews(userId,
+            lastStandard, pageable);
         return ResponseEntity.status(HttpStatus.OK).body(responseDtos);
     }
 
@@ -244,12 +251,18 @@ public class UserReviewController {
         ),
     })
     @GetMapping("/target")
-    public ResponseEntity<List<ShowReviewResponseDto>> targetReview(
+    public ResponseEntity<Slice<ShowReviewResponseDto>> targetReview(
         @Parameter(description = "유저 ID", example = "1")
-        @AuthenticationPrincipal CustomUserDetails userDetails) {
+        @AuthenticationPrincipal CustomUserDetails userDetails,
 
-        List<ShowReviewResponseDto> responseDtos = userReviewService.readTargetReviews(
-            userDetails.getId());
+        @Parameter(description = "이전 요청에서 마지막으로 확인한 유저 후기 ID입니다.", example = "123")
+        @RequestParam(name = "lastStandard", required = false) Long lastStandard,
+
+        @Parameter(description = "페이징 처리를 위한 Pageable 객체입니다.", example = "page=0&size=20&sort=createdAt,desc")
+        Pageable pageable) {
+
+        Slice<ShowReviewResponseDto> responseDtos = userReviewService.readTargetReviews(
+            userDetails.getId(), lastStandard, pageable);
         return ResponseEntity.status(HttpStatus.OK).body(responseDtos);
     }
 }

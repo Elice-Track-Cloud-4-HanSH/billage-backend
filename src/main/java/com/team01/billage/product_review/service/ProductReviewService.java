@@ -75,9 +75,25 @@ public class ProductReviewService {
         return new CustomSlice<>(content, pageable, hasNext, nextLastStandard);
     }
 
-    public List<ShowReviewResponseDto> readProductReviews(long productId) {
+    public Slice<ShowReviewResponseDto> readProductReviews(long productId, Long lastStandard,
+        Pageable pageable) {
 
-        return productReviewRepository.findByProduct(productId);
+        List<ShowReviewResponseDto> content = productReviewRepository.findByProduct(productId,
+            lastStandard, pageable);
+
+        boolean hasNext = content.size() > pageable.getPageSize();
+
+        if (hasNext) {
+            content.remove(content.size() - 1);
+        }
+
+        Long nextLastStandard = null;
+
+        if (!content.isEmpty()) {
+            nextLastStandard = content.get(content.size() - 1).getReviewId();
+        }
+
+        return new CustomSlice<>(content, pageable, hasNext, nextLastStandard);
     }
 
     public ReviewSubjectResponseDto getReviewSubject(long rentalRecordId) {

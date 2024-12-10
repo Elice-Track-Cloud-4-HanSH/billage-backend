@@ -55,9 +55,17 @@ public class CustomProductReviewRepositoryImpl implements CustomProductReviewRep
     }
 
     @Override
-    public List<ShowReviewResponseDto> findByProduct(Long productId) {
+    public List<ShowReviewResponseDto> findByProduct(Long productId, Long lastStandard,
+        Pageable pageable) {
         QProductReview productReview = QProductReview.productReview;
         QUsers author = QUsers.users;
+
+        BooleanBuilder condition = new BooleanBuilder();
+        condition.and(productReview.rentalRecord.product.id.eq(productId));
+
+        if (lastStandard != null) {
+            condition.and(productReview.id.lt(lastStandard));
+        }
 
         return queryFactory.select(
                 Projections.constructor(
@@ -72,9 +80,9 @@ public class CustomProductReviewRepositoryImpl implements CustomProductReviewRep
             )
             .from(productReview)
             .join(productReview.author, author)
-            .where(productReview.rentalRecord.product.id.eq(productId))
+            .where(condition)
             .orderBy(productReview.id.desc())
-            //.limit()
+            .limit(pageable.getPageSize() + 1)
             .fetch();
     }
 
