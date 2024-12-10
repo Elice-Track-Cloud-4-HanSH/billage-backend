@@ -22,10 +22,10 @@ public class ChatroomResponseDto {
 
     public ChatroomResponseDto(ChatroomWithRecentChatDTO dto, Long userId, Long unreadCount) {
         this.chatroomId = dto.getChatroomId();
-        this.buyer = new CustomChatResponseUser(dto.getBuyer().getId(), dto.getBuyer().getNickname());
-        this.seller = new CustomChatResponseUser(dto.getSeller().getId(), dto.getSeller().getNickname());
+        this.buyer = new CustomChatResponseUser(dto.getBuyer().getId(), dto.getBuyer().getNickname(), dto.getBuyer().getProfileUrl());
+        this.seller = new CustomChatResponseUser(dto.getSeller().getId(), dto.getSeller().getNickname(), dto.getSeller().getProfileUrl());
         this.lastChat = new CustomChatResponse(dto.getLastChat().getMessage(), dto.getLastChat().getLastSentTime());
-        this.product = new CustomChatResponseProduct(dto.getProduct().getId(), dto.getProduct().getName());
+        this.product = new CustomChatResponseProduct(dto.getProduct().getId(), dto.getProduct().getName(), dto.getProduct().getImageUrl());
         this.opponent = userId.equals(this.buyer.getId()) ? this.seller : this.buyer;
         this.unreadCount = unreadCount;
     }

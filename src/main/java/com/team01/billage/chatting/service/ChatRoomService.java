@@ -92,17 +92,26 @@ public class ChatRoomService {
                 checkValidChatroomDto.getProductId()
         ).orElseGet(() -> createChatRoom(checkValidChatroomDto));
 
+        Product product = chatroom.getProduct();
+
+        String opponentName;
         if (user.getId().equals(checkValidChatroomDto.getSellerId())) {
             if (chatroom.getSellerExitAt() != null) {
                 chatroom.setSellerJoinAt();
             }
+            opponentName = chatroom.getBuyer().getNickname();
         } else {
             if (chatroom.getBuyerExitAt() != null) {
                 chatroom.setBuyerJoinAt();
             }
+            opponentName = chatroom.getSeller().getNickname();
         }
 
-        return new CheckValidChatroomResponseDto(chatroom.getId());
+        return new CheckValidChatroomResponseDto(
+                chatroom.getId(),
+                opponentName,
+                product.getTitle()
+        );
     }
 
     public List<ChatResponseDto> getChatsInChatroom(Long chatroomId, Long userId, int page, int pageSize, Long lastChatId) {
