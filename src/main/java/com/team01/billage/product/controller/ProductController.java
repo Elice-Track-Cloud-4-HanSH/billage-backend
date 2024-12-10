@@ -21,8 +21,13 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
+import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.format.annotation.DateTimeFormat.ISO;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -94,11 +99,17 @@ public class ProductController {
         )
     })
     @GetMapping("/on-sale")
-    public ResponseEntity<List<OnSaleResponseDto>> findAllOnSale(
+    public ResponseEntity<Slice<OnSaleResponseDto>> findAllOnSale(
         @Parameter(hidden = true)
-        @AuthenticationPrincipal CustomUserDetails userDetails) {
+        @AuthenticationPrincipal CustomUserDetails userDetails,
+
+        @Parameter(description = "이전 요청에서 마지막으로 확인한 상품 수정 시간입니다.", example = "123")
+        @RequestParam(name = "lastStandard", required = false) @DateTimeFormat(iso = ISO.DATE_TIME) LocalDateTime lastStandard,
+
+        @Parameter(description = "페이징 처리를 위한 Pageable 객체입니다.", example = "page=0&size=20&sort=createdAt,desc")
+        Pageable pageable) {
         return ResponseEntity.status(HttpStatus.OK)
-            .body(productService.findAllOnSale(userDetails.getId()));
+            .body(productService.findAllOnSale(userDetails.getId(), lastStandard, pageable));
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -154,7 +165,8 @@ public class ProductController {
     public ResponseEntity<List<ProductResponseDto>> findProductsInNeighborArea(
         @AuthenticationPrincipal CustomUserDetails userDetails) {
 
-        List<ProductResponseDto> products = productService.findProductsInNeighborArea(userDetails.getId());
+        List<ProductResponseDto> products = productService.findProductsInNeighborArea(
+            userDetails.getId());
 
         return ResponseEntity.status(HttpStatus.OK).body(products);
     }
