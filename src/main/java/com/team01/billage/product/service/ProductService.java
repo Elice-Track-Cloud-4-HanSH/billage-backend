@@ -327,7 +327,6 @@ public class ProductService {
     }
 
     public Users checkUser(Long userId) {
-        System.out.println("회원 확인: " + userId);
         return userRepository.findById(userId)
             .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
     }

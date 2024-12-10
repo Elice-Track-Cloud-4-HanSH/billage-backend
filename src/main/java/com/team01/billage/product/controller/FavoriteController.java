@@ -28,9 +28,6 @@ public class FavoriteController {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable("productId") Long productId){
 
-        if(userDetails != null){
-            System.out.println("회원: " + userDetails.getId());
-        }
         return ResponseEntity.status(HttpStatus.OK).body(favoriteService.checkFavorite(userDetails, productId));
     }
 
