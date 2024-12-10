@@ -112,9 +112,9 @@ public class UserApiController {
     })
     @DeleteMapping("")
     public ResponseEntity<UserDeleteResponseDto> deleteUser(
-        @AuthenticationPrincipal UserDetails userDetails,
+        @AuthenticationPrincipal CustomUserDetails userDetails,
         HttpServletResponse response) {
-        UserDeleteResponseDto deleteResponse = userService.deleteUser(userDetails.getUsername());
+        UserDeleteResponseDto deleteResponse = userService.deleteUser(userDetails.getEmail());
 
         if (deleteResponse.isDeleted()) {
             clearAuthCookies(response);
@@ -181,11 +181,11 @@ public class UserApiController {
     })
     @PostMapping("/check-password")
     public ResponseEntity<UserPasswordResponseDto> checkPassword(
-        @AuthenticationPrincipal UserDetails userDetails,
+        @AuthenticationPrincipal CustomUserDetails userDetails,
         @Valid @RequestBody UserPasswordRequestDto requestDto
     ) {
         UserPasswordResponseDto response = userService.verifyPassword(
-            userDetails.getUsername(),  // email
+            userDetails.getEmail(),  // email
             requestDto.password()
         );
 
