@@ -15,6 +15,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -23,6 +25,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -128,12 +131,18 @@ public class UserReviewController {
         )
     })
     @GetMapping
-    public ResponseEntity<List<ShowReviewResponseDto>> showUserReview(
+    public ResponseEntity<Slice<ShowReviewResponseDto>> showUserReview(
         @Parameter(hidden = true)
-        @AuthenticationPrincipal CustomUserDetails userDetails) {
+        @AuthenticationPrincipal CustomUserDetails userDetails,
 
-        List<ShowReviewResponseDto> responseDtos = userReviewService.readUserReviews(
-            userDetails.getId());
+        @Parameter(description = "이전 요청에서 마지막으로 확인한 유저 후기 ID입니다.", example = "123")
+        @RequestParam(name = "lastStandard", required = false) Long lastStandard,
+
+        @Parameter(description = "페이징 처리를 위한 Pageable 객체입니다.", example = "page=0&size=20&sort=createdAt,desc")
+        Pageable pageable) {
+
+        Slice<ShowReviewResponseDto> responseDtos = userReviewService.readUserReviews(
+            userDetails.getId(), lastStandard, pageable);
         return ResponseEntity.status(HttpStatus.OK).body(responseDtos);
     }
 

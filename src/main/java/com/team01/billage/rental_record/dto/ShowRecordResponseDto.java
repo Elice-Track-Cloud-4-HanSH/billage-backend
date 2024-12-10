@@ -23,6 +23,12 @@ public class ShowRecordResponseDto {
     @Parameter(description = "반납일", example = "2024-12-21")
     private LocalDate returnDate;
 
+    @Parameter(description = "판매자 ID", example = "7")
+    private long sellerId;
+
+    @Parameter(description = "구매자 ID", example = "11")
+    private long buyerId;
+
     @Parameter(description = "상품 ID", example = "1")
     private long productId;
 
@@ -31,6 +37,9 @@ public class ShowRecordResponseDto {
 
     @Parameter(description = "상품 제목", example = "디지털 카메라")
     private String title;
+
+    @Parameter(description = "거래 상대방 ID", example = "7")
+    private long counterpartyId;
 
     @Parameter(description = "유저 프로필 이미지", example = "http://example.com/image.jpg")
     private String userImageUrl;

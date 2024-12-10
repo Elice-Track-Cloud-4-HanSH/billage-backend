@@ -1,5 +1,6 @@
 package com.team01.billage.user_review.repository;
 
+import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.team01.billage.product_review.dto.ShowReviewResponseDto;
@@ -8,6 +9,7 @@ import com.team01.billage.user_review.domain.QUserReview;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 
 @RequiredArgsConstructor
 public class CustomUserReviewRepositoryImpl implements CustomUserReviewRepository {
@@ -15,9 +17,17 @@ public class CustomUserReviewRepositoryImpl implements CustomUserReviewRepositor
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public List<ShowReviewResponseDto> findByAuthor(long userId) {
+    public List<ShowReviewResponseDto> findByAuthor(long userId, Long lastStandard,
+        Pageable pageable) {
         QUserReview userReview = QUserReview.userReview;
         QUsers target = QUsers.users;
+
+        BooleanBuilder condition = new BooleanBuilder();
+        condition.and(userReview.author.id.eq(userId));
+
+        if (lastStandard != null) {
+            condition.and(userReview.id.lt(lastStandard));
+        }
 
         return queryFactory.select(
                 Projections.constructor(
@@ -32,9 +42,9 @@ public class CustomUserReviewRepositoryImpl implements CustomUserReviewRepositor
             )
             .from(userReview)
             .join(userReview.target, target)
-            .where(userReview.author.id.eq(userId))
-            .orderBy(userReview.createdAt.desc())
-            //.limit()
+            .where(condition)
+            .orderBy(userReview.id.desc())
+            .limit(pageable.getPageSize() + 1)
             .fetch();
     }
 

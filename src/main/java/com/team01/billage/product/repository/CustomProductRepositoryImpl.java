@@ -34,7 +34,8 @@ public class CustomProductRepositoryImpl implements CustomProductRepository {
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public List<OnSaleResponseDto> findAllOnSale(long userId) {
+    public List<OnSaleResponseDto> findAllOnSale(long userId, LocalDateTime lastStandard,
+        Pageable pageable) {
         QProduct product = QProduct.product;
         QProductImage productImage = QProductImage.productImage;
 
@@ -43,25 +44,25 @@ public class CustomProductRepositoryImpl implements CustomProductRepository {
             .and(product.rentalStatus.eq(RentalStatus.AVAILABLE))
             .and(product.deletedAt.isNull());
 
+        if (lastStandard != null) {
+            whereClause.and(product.updatedAt.lt(lastStandard));
+        }
+
         return queryFactory
             .select(Projections.constructor(
                 OnSaleResponseDto.class,
                 product.id,
                 productImage.imageUrl,
                 product.title,
-                Expressions.dateTimeTemplate(LocalDateTime.class, "COALESCE({0}, {1})",
-                    product.updatedAt,
-                    product.createdAt)
+                product.updatedAt
             ))
             .from(product)
             .leftJoin(productImage)
             .on(productImage.product.eq(product)
                 .and(productImage.thumbnail.eq("Y")))
             .where(whereClause)
-            .orderBy(Expressions.dateTimeTemplate(LocalDateTime.class, "COALESCE({0}, {1})",
-                product.updatedAt,
-                product.createdAt).desc())
-            //.limit()
+            .orderBy(product.updatedAt.desc())
+            .limit(pageable.getPageSize() + 1)
             .fetch();
     }
 
@@ -122,7 +123,8 @@ public class CustomProductRepositoryImpl implements CustomProductRepository {
                             .from(activityArea)
                             .where(activityArea.users.id.eq(userId))
                     )
-                    .and(Expressions.booleanTemplate("ST_Contains({0}, {1})", neighborArea.geom, product.location))
+                    .and(Expressions.booleanTemplate("ST_Contains({0}, {1})", neighborArea.geom,
+                        product.location))
             )
             .exists()
             : null;
