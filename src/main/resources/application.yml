@@ -58,6 +58,9 @@ spring:
             scope:
               - email
               - profile
+            redirect-uri: ${BASE_URL}/login/oauth2/code/google
+            authorization-grant-type: authorization_code
+            client-name: Google
 
 
 jwt:
@@ -79,9 +82,9 @@ custom:
 
 app:
   cors:
-    allowed-origins: http://localhost:3000
+    allowed-origins: ${ALLOWED_ORIGIN_URL}
   oauth2:
-    authorized-redirect-urls: http://localhost:3000/chat
+    after-authorize-redirect-url: ${AFTER_OAUTH_REDIRECT_URL}
 
 server:
   servlet:
