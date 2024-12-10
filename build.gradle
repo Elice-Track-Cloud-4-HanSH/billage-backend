@@ -70,6 +70,7 @@ dependencies {
     implementation 'org.hibernate.orm:hibernate-spatial:6.2.9.Final'
     // geometry
     implementation 'org.locationtech.jts:jts-core:1.19.0'
+    implementation 'org.json:json:20230227'
 }
 
 def generated = 'src/main/generated'

@@ -62,10 +62,11 @@ public class ProductController {
         @RequestParam(value = "categoryId", required = false, defaultValue = "1") String categoryId,
         @RequestParam(value = "rentalStatus", required = false, defaultValue = "ALL") String rentalStatus,
         @RequestParam(value = "search", required = false, defaultValue = "ALL") String search,
-        @RequestParam(value = "page", required = false, defaultValue = "0") int page) {
+        @RequestParam(value = "page", required = false, defaultValue = "0") int page,
+        @RequestParam(value = "pageSize", required = false, defaultValue = "10") int pageSize) {
         return ResponseEntity.status(HttpStatus.OK)
             .body(productService.findAllProducts(userDetails, categoryId, rentalStatus, search,
-                page));
+                page, pageSize));
     }
 
     @Operation(
