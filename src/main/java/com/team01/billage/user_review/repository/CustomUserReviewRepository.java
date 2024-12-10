@@ -9,7 +9,7 @@ public interface CustomUserReviewRepository {
 
     List<ShowReviewResponseDto> findByAuthor(long userId, Long lastStandard, Pageable pageable);
 
-    List<ShowReviewResponseDto> findByTarget(long userId);
+    List<ShowReviewResponseDto> findByTarget(long userId, Long lastStandard, Pageable pageable);
 
     Optional<Double> scoreAverage(long userId);
 

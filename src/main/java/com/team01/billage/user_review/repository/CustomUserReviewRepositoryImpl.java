@@ -49,9 +49,17 @@ public class CustomUserReviewRepositoryImpl implements CustomUserReviewRepositor
     }
 
     @Override
-    public List<ShowReviewResponseDto> findByTarget(long userId) {
+    public List<ShowReviewResponseDto> findByTarget(long userId, Long lastStandard,
+        Pageable pageable) {
         QUserReview userReview = QUserReview.userReview;
         QUsers author = QUsers.users;
+
+        BooleanBuilder condition = new BooleanBuilder();
+        condition.and(userReview.target.id.eq(userId));
+
+        if (lastStandard != null) {
+            condition.and(userReview.id.lt(lastStandard));
+        }
 
         return queryFactory.select(
                 Projections.constructor(
@@ -66,9 +74,9 @@ public class CustomUserReviewRepositoryImpl implements CustomUserReviewRepositor
             )
             .from(userReview)
             .join(userReview.author, author)
-            .where(userReview.target.id.eq(userId))
-            .orderBy(userReview.createdAt.desc())
-            //.limit()
+            .where(condition)
+            .orderBy(userReview.id.desc())
+            .limit(pageable.getPageSize() + 1)
             .fetch();
     }
 
