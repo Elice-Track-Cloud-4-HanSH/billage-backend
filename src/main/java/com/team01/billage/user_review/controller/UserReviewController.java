@@ -13,7 +13,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -210,7 +209,7 @@ public class UserReviewController {
         ),
     })
     @GetMapping("/target/{userId}")
-    public ResponseEntity<List<ShowReviewResponseDto>> targetReview(
+    public ResponseEntity<Slice<ShowReviewResponseDto>> targetReview(
         @Parameter(description = "유저 ID", example = "1")
         @PathVariable("userId") long userId,
 
