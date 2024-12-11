@@ -53,6 +53,9 @@ public class ProductController {
     private final ProductImageService productImageService;
 
     @GetMapping("/{productId}")
+    @Operation(summary = "상품 상세 조회", description = "특정 대여 상품을 상세 조회합니다.", tags = {"상품"})
+    @ApiResponse(responseCode = "200", description = "상품 상세 조회 성공", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProductDetailWrapperResponseDto.class)))
+    @ApiResponse(responseCode = "404", description = "존재하지 않는 상품", content = @Content(mediaType = "application/json", schema = @Schema(example = "{\"message\":\"해당 상품을 찾을 수 없습니다.\",\"code\":\"PRODUCT_NOT_FOUND\"}")))
     public ResponseEntity<ProductDetailWrapperResponseDto> findProduct(
         @AuthenticationPrincipal CustomUserDetails userDetails,
         @PathVariable("productId") Long productId) {
@@ -62,6 +65,8 @@ public class ProductController {
     }
 
     @GetMapping
+    @Operation(summary = "전체 상품 조회", description = "전체 대여 상품을 조회합니다.", tags = {"상품"})
+    @ApiResponse(responseCode = "200", description = "전체 상품 조회 성공", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProductWrapperResponseDto.class)))
     public ResponseEntity<ProductWrapperResponseDto> findAllProducts(
         @AuthenticationPrincipal CustomUserDetails userDetails,
         @RequestParam(value = "categoryId", required = false, defaultValue = "1") String categoryId,
@@ -69,6 +74,7 @@ public class ProductController {
         @RequestParam(value = "search", required = false, defaultValue = "ALL") String search,
         @RequestParam(value = "page", required = false, defaultValue = "0") int page,
         @RequestParam(value = "pageSize", required = false, defaultValue = "10") int pageSize) {
+
         return ResponseEntity.status(HttpStatus.OK)
             .body(productService.findAllProducts(userDetails, categoryId, rentalStatus, search,
                 page, pageSize));
@@ -114,6 +120,11 @@ public class ProductController {
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "상품 등록", description = "대여 상품을 등록합니다.", tags = {"상품"})
+    @ApiResponse(responseCode = "201", description = "상품 등록 성공", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProductDetailResponseDto.class)))
+    @ApiResponse(responseCode = "404", description = "존재하지 않는 회원", content = @Content(mediaType = "application/json", schema = @Schema(example = "{\"message\":\"해당 유저를 찾을 수 없습니다.\",\"code\":\"USER_NOT_FOUND\"}")))
+    @ApiResponse(responseCode = "404", description = "존재하지 않는 카테고리", content = @Content(mediaType = "application/json", schema = @Schema(example = "{\"message\":\"해당 카테고리를 찾을 수 없습니다.\",\"code\":\"CATEGORY_NOT_FOUND\"}")))
+    @ApiResponse(responseCode = "500", description = "이미지 업로드 실패", content = @Content(mediaType = "application/json", schema = @Schema(example = "{\"message\":\"S3 업로드 중 오류가 발생했습니다.\",\"code\":\"PUT_OBJECT_EXCEPTION\"}")))
     public ResponseEntity<ProductDetailResponseDto> createProduct(
         @AuthenticationPrincipal CustomUserDetails userDetails,
         @Valid @ModelAttribute ProductRequestDto productRequestDto) {
@@ -125,6 +136,15 @@ public class ProductController {
     }
 
     @PutMapping(value = "/{productId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "상품 수정", description = "대여 상품을 수정합니다.", tags = {"상품"})
+    @ApiResponse(responseCode = "200", description = "상품 수정 성공", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProductDetailResponseDto.class)))
+    @ApiResponse(responseCode = "400", description = "대여 중인 상품은 수정 불가", content = @Content(mediaType = "application/json", schema = @Schema(example = "{\"message\":\"현재 대여 중인 상품은 수정/삭제할 수 없습니다.\",\"code\":\"PRODUCT_MODIFICATION_NOT_ALLOWED\"}")))
+    @ApiResponse(responseCode = "403", description = "권한이 없는 회원", content = @Content(mediaType = "application/json", schema = @Schema(example = "{\"message\":\"접근 권한이 없습니다.\",\"code\":\"ACCESS_DENIED\"}")))
+    @ApiResponse(responseCode = "404", description = "존재하지 않는 회원", content = @Content(mediaType = "application/json", schema = @Schema(example = "{\"message\":\"해당 유저를 찾을 수 없습니다.\",\"code\":\"USER_NOT_FOUND\"}")))
+    @ApiResponse(responseCode = "404", description = "존재하지 않는 상품", content = @Content(mediaType = "application/json", schema = @Schema(example = "{\"message\":\"해당 상품을 찾을 수 없습니다.\",\"code\":\"PRODUCT_NOT_FOUND\"}")))
+    @ApiResponse(responseCode = "404", description = "존재하지 않는 카테고리", content = @Content(mediaType = "application/json", schema = @Schema(example = "{\"message\":\"해당 카테고리를 찾을 수 없습니다.\",\"code\":\"CATEGORY_NOT_FOUND\"}")))
+    @ApiResponse(responseCode = "404", description = "존재하지 않는 기존 이미지", content = @Content(mediaType = "application/json", schema = @Schema(example = "{\"message\":\"해당 상품 이미지를 찾을 수 없습니다.\",\"code\":\"PRODUCT_IMAGE_NOT_FOUND\"}")))
+    @ApiResponse(responseCode = "500", description = "이미지 업로드 실패", content = @Content(mediaType = "application/json", schema = @Schema(example = "{\"message\":\"S3 업로드 중 오류가 발생했습니다.\",\"code\":\"PUT_OBJECT_EXCEPTION\"}")))
     public ResponseEntity<ProductDetailResponseDto> updateProduct(
         @AuthenticationPrincipal CustomUserDetails userDetails,
         @PathVariable("productId") Long productId,
@@ -139,6 +159,12 @@ public class ProductController {
 
     // 상품 이미지 삭제
     @DeleteMapping("/images")
+    @Operation(summary = "상품 이미지 삭제", description = "대여 상품의 기존 이미지를 삭제합니다.", tags = {"상품"})
+    @ApiResponse(responseCode = "200", description = "상품 이미지 삭제 성공", content = @Content())
+    @ApiResponse(responseCode = "403", description = "권한이 없는 회원", content = @Content(mediaType = "application/json", schema = @Schema(example = "{\"message\":\"접근 권한이 없습니다.\",\"code\":\"ACCESS_DENIED\"}")))
+    @ApiResponse(responseCode = "404", description = "존재하지 않는 회원", content = @Content(mediaType = "application/json", schema = @Schema(example = "{\"message\":\"해당 유저를 찾을 수 없습니다.\",\"code\":\"USER_NOT_FOUND\"}")))
+    @ApiResponse(responseCode = "404", description = "존재하지 않는 상품", content = @Content(mediaType = "application/json", schema = @Schema(example = "{\"message\":\"해당 상품을 찾을 수 없습니다.\",\"code\":\"PRODUCT_NOT_FOUND\"}")))
+    @ApiResponse(responseCode = "500", description = "이미지 삭제 실패", content = @Content(mediaType = "application/json", schema = @Schema(example = "{\"message\":\"이미지 삭제 중 오류가 발생했습니다.\",\"code\":\"IO_EXCEPTION_ON_FILE_DELETE\"}")))
     public ResponseEntity<Void> deleteProductImages(
         @AuthenticationPrincipal CustomUserDetails userDetails,
         @RequestParam("productId") String productId,
@@ -152,6 +178,12 @@ public class ProductController {
     }
 
     @DeleteMapping("/{productId}")
+    @Operation(summary = "상품 삭제", description = "대여 상품을 삭제합니다.", tags = {"상품"})
+    @ApiResponse(responseCode = "200", description = "상품 삭제 성공", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ProductDeleteCheckDto.class)))
+    @ApiResponse(responseCode = "400", description = "대여 중인 상품은 삭제 불가", content = @Content(mediaType = "application/json", schema = @Schema(example = "{\"message\":\"현재 대여 중인 상품은 수정/삭제할 수 없습니다.\",\"code\":\"PRODUCT_MODIFICATION_NOT_ALLOWED\"}")))
+    @ApiResponse(responseCode = "403", description = "권한이 없는 회원", content = @Content(mediaType = "application/json", schema = @Schema(example = "{\"message\":\"접근 권한이 없습니다.\",\"code\":\"ACCESS_DENIED\"}")))
+    @ApiResponse(responseCode = "404", description = "존재하지 않는 회원", content = @Content(mediaType = "application/json", schema = @Schema(example = "{\"message\":\"해당 유저를 찾을 수 없습니다.\",\"code\":\"USER_NOT_FOUND\"}")))
+    @ApiResponse(responseCode = "500", description = "이미지 삭제 실패", content = @Content(mediaType = "application/json", schema = @Schema(example = "{\"message\":\"이미지 삭제 중 오류가 발생했습니다.\",\"code\":\"IO_EXCEPTION_ON_FILE_DELETE\"}")))
     public ResponseEntity<ProductDeleteCheckDto> deleteProduct(
         @AuthenticationPrincipal CustomUserDetails userDetails,
         @PathVariable("productId") Long productId) {
