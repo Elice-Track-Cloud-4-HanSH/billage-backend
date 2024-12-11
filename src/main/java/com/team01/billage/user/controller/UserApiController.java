@@ -112,9 +112,9 @@ public class UserApiController {
     })
     @DeleteMapping("")
     public ResponseEntity<UserDeleteResponseDto> deleteUser(
-        @AuthenticationPrincipal UserDetails userDetails,
+        @AuthenticationPrincipal CustomUserDetails userDetails,
         HttpServletResponse response) {
-        UserDeleteResponseDto deleteResponse = userService.deleteUser(userDetails.getUsername());
+        UserDeleteResponseDto deleteResponse = userService.deleteUser(userDetails.getEmail());
 
         if (deleteResponse.isDeleted()) {
             clearAuthCookies(response);
