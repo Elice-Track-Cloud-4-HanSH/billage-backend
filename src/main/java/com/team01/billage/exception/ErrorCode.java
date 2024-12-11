@@ -13,7 +13,6 @@ public enum ErrorCode {
     PASSWORD_NOT_MATCH(HttpStatus.BAD_REQUEST, "비밀번호가 올바르지 않습니다."),
     EMPTY_LOGIN_REQUEST(HttpStatus.BAD_REQUEST, "이메일 또는 비밀번호가 비어있습니다."),
     PRODUCT_ID_REQUIRED(HttpStatus.BAD_REQUEST, "상품 ID는 필수입니다."),
-    CHATROOM_VALIDATE_FAILED(HttpStatus.BAD_REQUEST, "구매자 또는 판매자가 토큰의 값과 다릅니다."),
     INVALID_QUERY_PARAMETER_TYPE(HttpStatus.BAD_REQUEST, "유효하지 않은 쿼리 파라미터 유형입니다."),
     INVALID_CHAT_TYPE(HttpStatus.BAD_REQUEST, "올바르지 않은 채팅방 조회 타입입니다."),
 
@@ -31,6 +30,7 @@ public enum ErrorCode {
     NOT_PRODUCT_OWNER(HttpStatus.FORBIDDEN, "상품의 주인이 아닙니다."),
     UNAUTHORIZED_WEBSOCKET_CONNECTION(HttpStatus.FORBIDDEN, "웹소켓 연결을 다시 확인해주세요. 토큰이 있나요?"),
     ACCESS_DENIED(HttpStatus.FORBIDDEN, "접근 권한이 없습니다."),
+    CHATROOM_VALIDATE_FAILED(HttpStatus.FORBIDDEN, "구매자 또는 판매자가 토큰의 값과 다릅니다."),
 
     /* 404 NOT_FOUND : Resource를 찾을 수 없음 */
     CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 카테고리를 찾을 수 없습니다."),
