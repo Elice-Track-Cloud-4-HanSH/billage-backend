@@ -1,7 +1,6 @@
 package com.team01.billage.chatting.controller;
 
 import com.team01.billage.chatting.dto.*;
-import com.team01.billage.chatting.service.ChatRedisService;
 import com.team01.billage.chatting.service.ChatRoomService;
 import com.team01.billage.chatting.service.ChatService;
 import com.team01.billage.exception.CustomException;
@@ -10,12 +9,12 @@ import com.team01.billage.user.domain.CustomUserDetails;
 import com.team01.billage.user.domain.Users;
 import com.team01.billage.utils.DetermineUser;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -40,8 +39,8 @@ public class ChatRoomController {
     private final Set<String> chatTypes = new HashSet<>(Arrays.asList("ALL", "PR", "LENT", "RENT"));
 
     @GetMapping("/unread-chat")
-    @Operation(summary = "읽지 않은 전체 채팅 개수 반환", description = "해당 유저의 읽지 않은 전체 채팅 개수를 반환합니다.")
-    @ApiResponses(value = {
+    @Operation(summary = "읽지 않은 전체 채팅 개수 반환", description = "해당 유저의 읽지 않은 전체 채팅 개수를 반환합니다.",
+        responses = {
             @ApiResponse(
                     responseCode = "200",
                     description = "읽지 않은 채팅 개수가 없거나 로그인을 하지 않았다면 0을 반환합니다.",
@@ -57,11 +56,11 @@ public class ChatRoomController {
     }
 
     @GetMapping
-    @Operation(summary = "모든 채팅방 조회", description = "사용자의 모든 채팅방을 페이지네이션하여 가져옵니다.")
-    @ApiResponses(value = {
+    @Operation(summary = "모든 채팅방 조회", description = "사용자의 모든 채팅방을 페이지네이션하여 가져옵니다.",
+            responses = {
             @ApiResponse(
                     responseCode = "200",
-                    description = "읽지 않은 채팅 개수가 없거나 로그인을 하지 않았다면 0을 반환합니다.",
+                    description = "사용자가 속한 모든 채팅방을 조회합니다.<br/>채팅방 타입에 따라 필터링하여 조회합니다.",
                     content = @Content(
                             mediaType = "application/json",
                             array = @ArraySchema(
@@ -89,6 +88,7 @@ public class ChatRoomController {
     })
     public ResponseEntity<List<ChatroomResponseDto>> getAllChatRooms(
             @AuthenticationPrincipal CustomUserDetails userDetails,
+            @Parameter(description = "조회할 채팅방 타입<br/> ALL, LENT, RENT, PR")
             @RequestParam(name = "type", required = false, defaultValue="ALL") String type,
             @RequestParam(name = "productId", required = false) Long productId,
             @RequestParam(name = "page", required = false, defaultValue="0") int page,
@@ -108,11 +108,11 @@ public class ChatRoomController {
 
 
     @PostMapping("/valid")
-    @Operation(summary = "채팅방 검증", description = "채팅방을 검증합니다.")
-    @ApiResponses(value = {
+    @Operation(summary = "채팅방 검증", description = "채팅방을 검증합니다.<br/>만약 채팅방이 존재하지 않는다면 채팅방을 새로 생성합니다.",
+            responses = {
             @ApiResponse(
                     responseCode = "200",
-                    description = "읽지 않은 채팅 개수가 없거나 로그인을 하지 않았다면 0을 반환합니다.",
+                    description = "채팅방의 id, 상대 닉네임, 상품 이름을 반환합니다.",
                     content = @Content(
                             mediaType = "application/json",
                             schema = @Schema(
@@ -140,8 +140,8 @@ public class ChatRoomController {
 
     // 특정 채팅방의 이전 채팅 목록가져오기
     @GetMapping("/{chatroomId}")
-    @Operation(summary = "채팅방의 채팅 기록 조회", description = "채팅방의 채팅 기록을 페이지네이션하여 가져옵니다.")
-    @ApiResponses(value = {
+    @Operation(summary = "채팅방의 채팅 기록 조회", description = "채팅방의 채팅 기록을 페이지네이션하여 가져옵니다.",
+            responses= {
             @ApiResponse(
                     responseCode = "200",
                     description = "채팅방의 채팅 기록을 반환합니다.",
@@ -185,7 +185,8 @@ public class ChatRoomController {
 
     @Transactional
     @PostMapping("/{chatroomId}")
-    @ApiResponses(value = {
+    @Operation(summary = "채팅을 읽음으로 처리", description = "특정 채팅방의 상대 메시지를 읽음으로 처리합니다.",
+            responses = {
             @ApiResponse(
                     responseCode = "200",
                     description = "읽음 처리 성공"
@@ -200,8 +201,8 @@ public class ChatRoomController {
 
     @Transactional
     @DeleteMapping("/{chatroomId}")    
-    @Operation(summary = "채팅방 나가기", description = "채팅방에서 나갑니다.")
-    @ApiResponses(value = {
+    @Operation(summary = "채팅방 나가기", description = "채팅방에서 나갑니다.",
+            responses = {
             @ApiResponse(
                     responseCode="204",
                     description="채팅방에서 성공적으로 나갔습니다."
