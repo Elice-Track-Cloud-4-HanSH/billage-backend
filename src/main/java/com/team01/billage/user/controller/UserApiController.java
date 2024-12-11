@@ -181,11 +181,11 @@ public class UserApiController {
     })
     @PostMapping("/check-password")
     public ResponseEntity<UserPasswordResponseDto> checkPassword(
-        @AuthenticationPrincipal UserDetails userDetails,
+        @AuthenticationPrincipal CustomUserDetails userDetails,
         @Valid @RequestBody UserPasswordRequestDto requestDto
     ) {
         UserPasswordResponseDto response = userService.verifyPassword(
-            userDetails.getUsername(),  // email
+            userDetails.getEmail(),  // email
             requestDto.password()
         );
 

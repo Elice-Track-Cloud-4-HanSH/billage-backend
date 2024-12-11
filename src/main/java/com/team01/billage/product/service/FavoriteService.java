@@ -47,9 +47,9 @@ public class FavoriteService {
     }
 
     // 회원의 관심 상품 목록 조회
-    public List<ProductResponseDto> findAllFavorite(Long userId, int page) {
+    public List<ProductResponseDto> findAllFavorite(Long userId, int page, int pageSize) {
 
-        Pageable pageable = PageRequest.of(page, 10);
+        Pageable pageable = PageRequest.of(page, pageSize);
 
         return favoriteRepository.findAllByUserId(userId, pageable);
     }

@@ -27,7 +27,6 @@ public class ChatRoomController {
     private final ChatRoomService chatroomService;
     private final ChatService chatService;
     private final DetermineUser determineUser;
-    private final ChatRedisService chatRedisService;
 
     private final Set<String> chatTypes = new HashSet<>(Arrays.asList("ALL", "PR", "LENT", "RENT"));
 
@@ -35,8 +34,8 @@ public class ChatRoomController {
     public ResponseEntity<ChatMessage.UnreadCount> getUnreadChatCount(
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        Long counts = chatRedisService.sumOfKeysValue("*_" + userDetails.getId());
-        return ResponseEntity.ok(new ChatMessage.UnreadCount(counts));
+        ChatMessage.UnreadCount unreadChatCountResponseDto = chatroomService.getUnreadChatCount(userDetails);
+        return ResponseEntity.ok(unreadChatCountResponseDto);
     }
 
     @GetMapping
@@ -44,7 +43,8 @@ public class ChatRoomController {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestParam(name = "type", required = false, defaultValue="ALL") String type,
             @RequestParam(name = "productId", required = false) Long productId,
-            @RequestParam(name = "page", required = false, defaultValue="0") int page
+            @RequestParam(name = "page", required = false, defaultValue="0") int page,
+            @RequestParam(name = "pageSize", required = false, defaultValue="10") int pageSize
     ) {
         if (!chatTypes.contains(type)) {
             throw new CustomException(ErrorCode.INVALID_CHAT_TYPE);
@@ -54,7 +54,7 @@ public class ChatRoomController {
 
         chatroomService.checkValidProductChatGetType(type, productId);
 
-        List<ChatroomResponseDto> responseDto = chatroomService.getAllChatroomsWithDSL(type, page, user.getId(), productId);
+        List<ChatroomResponseDto> responseDto = chatroomService.getAllChatroomsWithDSL(type, page, pageSize, user.getId(), productId);
         return ResponseEntity.ok(responseDto);
     }
 
@@ -76,11 +76,12 @@ public class ChatRoomController {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @PathVariable(name = "chatroomId") Long chatroomId,
             @RequestParam(name = "page", defaultValue="0") int page,
+            @RequestParam(name = "pageSize", defaultValue="50") int pageSize,
             @RequestParam(name = "lastLoadChatId", required = false, defaultValue = "" + Long.MAX_VALUE) Long lastLoadChatId
     ) {
         Users user = determineUser.determineUser(userDetails);
 
-        List<ChatResponseDto> responseDto = chatroomService.getChatsInChatroom(chatroomId, user.getId(), page, lastLoadChatId);
+        List<ChatResponseDto> responseDto = chatroomService.getChatsInChatroom(chatroomId, user.getId(), page, pageSize, lastLoadChatId);
         return ResponseEntity.ok(responseDto);
     }
 

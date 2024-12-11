@@ -10,7 +10,9 @@ import static com.team01.billage.exception.ErrorCode.USER_NOT_FOUND;
 import com.team01.billage.category.domain.Category;
 import com.team01.billage.category.dto.CategoryProductResponseDto;
 import com.team01.billage.category.repository.CategoryRepository;
+import com.team01.billage.common.CustomSlice;
 import com.team01.billage.exception.CustomException;
+import com.team01.billage.map.service.AddressService;
 import com.team01.billage.product.domain.Product;
 import com.team01.billage.product.domain.ProductImage;
 import com.team01.billage.product.dto.ExistProductImageRequestDto;
@@ -41,6 +43,7 @@ import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -68,6 +71,13 @@ public class ProductService {
 
         increaseViewCount(product); // 조회수 단순 증가
 
+        Double avgScore = productReviewRepository.scoreAverage(product.getId())
+            .map(score -> Math.round(score * 10) / 10.0).orElse(0.0);
+        Integer reviewCount = productReviewRepository.reviewCount(product.getId()).orElse(0);
+
+        productDetail.setAvgScore(avgScore);
+        productDetail.setReviewCount(reviewCount);
+
         productDetail.setLongitude(product.getLocation().getX());
         productDetail.setLatitude(product.getLocation().getY());
 
@@ -90,7 +100,8 @@ public class ProductService {
         String categoryId,
         String rentalStatus,
         String search,
-        int page) {
+        int page,
+        int pageSize) {
 
         Long userId = null;
 
@@ -99,7 +110,7 @@ public class ProductService {
             userId = userDetails.getId();
         }
 
-        Pageable pageable = PageRequest.of(page, 10);
+        Pageable pageable = PageRequest.of(page, pageSize);
 
         List<ProductResponseDto> products = productRepository.findAllProducts(
             userId,
@@ -114,9 +125,25 @@ public class ProductService {
             .build();
     }
 
-    public List<OnSaleResponseDto> findAllOnSale(long userId) {
+    public Slice<OnSaleResponseDto> findAllOnSale(long userId, LocalDateTime lastStandard,
+        Pageable pageable) {
 
-        return productRepository.findAllOnSale(userId);
+        List<OnSaleResponseDto> content = productRepository.findAllOnSale(userId, lastStandard,
+            pageable);
+
+        boolean hasNext = content.size() > pageable.getPageSize();
+
+        if (hasNext) {
+            content.remove(content.size() - 1);
+        }
+
+        LocalDateTime nextLastStandard = null;
+
+        if (!content.isEmpty()) {
+            nextLastStandard = content.get(content.size() - 1).getTime();
+        }
+
+        return new CustomSlice<>(content, pageable, hasNext, nextLastStandard);
     }
 
     @Transactional
@@ -125,6 +152,9 @@ public class ProductService {
         Category category = categoryRepository.findById(productRequestDto.getCategoryId())
             .orElseThrow(() -> new CustomException(CATEGORY_NOT_FOUND));
         Point location = toPoint(productRequestDto.getLongitude(), productRequestDto.getLatitude());
+        AddressService addressService = new AddressService();
+        String address = addressService.getAddressFromCoordinates(productRequestDto.getLatitude(), productRequestDto.getLongitude());
+
 
         // 상품 생성
         Product product = Product.builder()
@@ -134,10 +164,11 @@ public class ProductService {
             .description(productRequestDto.getDescription())
             .dayPrice(Integer.parseInt(productRequestDto.getDayPrice()))
             .weekPrice(
-                    (productRequestDto.getWeekPrice() != null) ?
+                (productRequestDto.getWeekPrice() != null) ?
                     Integer.parseInt(productRequestDto.getWeekPrice()) : null
             )
             .location(toPoint(productRequestDto.getLongitude(), productRequestDto.getLatitude()))
+            .address(address)
             .updatedAt(LocalDateTime.now())
             .build();
 
@@ -248,11 +279,6 @@ public class ProductService {
             .categoryName(product.getCategory().getName())
             .build();
 
-        Double avgScore = productReviewRepository.scoreAverage(product.getId())
-            .map(score -> Math.round(score * 10) / 10.0).orElse(0.0);
-
-        Integer reviewCount = productReviewRepository.reviewCount(product.getId()).orElse(0);
-
         return ProductDetailResponseDto.builder()
             .productId(product.getId())
             .category(category)
@@ -267,8 +293,6 @@ public class ProductService {
             .updatedAt(product.getUpdatedAt())
             .seller(sellerDto)
             .productImages(imageDtos)
-            .avgScore(avgScore)
-            .reviewCount(reviewCount)
             .build();
 
     }
@@ -303,7 +327,6 @@ public class ProductService {
     }
 
     public Users checkUser(Long userId) {
-        System.out.println("회원 확인: " + userId);
         return userRepository.findById(userId)
             .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
     }

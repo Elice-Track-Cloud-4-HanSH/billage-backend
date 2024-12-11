@@ -34,7 +34,8 @@ public class CustomProductRepositoryImpl implements CustomProductRepository {
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public List<OnSaleResponseDto> findAllOnSale(long userId) {
+    public List<OnSaleResponseDto> findAllOnSale(long userId, LocalDateTime lastStandard,
+        Pageable pageable) {
         QProduct product = QProduct.product;
         QProductImage productImage = QProductImage.productImage;
 
@@ -43,25 +44,25 @@ public class CustomProductRepositoryImpl implements CustomProductRepository {
             .and(product.rentalStatus.eq(RentalStatus.AVAILABLE))
             .and(product.deletedAt.isNull());
 
+        if (lastStandard != null) {
+            whereClause.and(product.updatedAt.lt(lastStandard));
+        }
+
         return queryFactory
             .select(Projections.constructor(
                 OnSaleResponseDto.class,
                 product.id,
                 productImage.imageUrl,
                 product.title,
-                Expressions.dateTimeTemplate(LocalDateTime.class, "COALESCE({0}, {1})",
-                    product.updatedAt,
-                    product.createdAt)
+                product.updatedAt
             ))
             .from(product)
             .leftJoin(productImage)
             .on(productImage.product.eq(product)
                 .and(productImage.thumbnail.eq("Y")))
             .where(whereClause)
-            .orderBy(Expressions.dateTimeTemplate(LocalDateTime.class, "COALESCE({0}, {1})",
-                product.updatedAt,
-                product.createdAt).desc())
-            //.limit()
+            .orderBy(product.updatedAt.desc())
+            .limit(pageable.getPageSize() + 1)
             .fetch();
     }
 
@@ -113,19 +114,25 @@ public class CustomProductRepositoryImpl implements CustomProductRepository {
                 .and(rentalRecord.returnDate.isNull())
                 .and(rentalRecord.product.id.eq(product.id)));
 
-        BooleanExpression inNeighborArea = userId != null
-            ? JPAExpressions.selectOne()
-            .from(neighborArea)
-            .where(
-                neighborArea.emdArea.id.in(
-                        JPAExpressions.select(activityArea.emdArea.id)
-                            .from(activityArea)
-                            .where(activityArea.users.id.eq(userId))
-                    )
-                    .and(Expressions.booleanTemplate("ST_Contains({0}, {1})", neighborArea.geom, product.location))
-            )
-            .exists()
-            : null;
+        // 활동 지역이 있는 경우에만 필터 적용
+        BooleanExpression inNeighborArea = null;
+        if (userId != null && queryFactory.selectOne()
+            .from(activityArea)
+            .where(activityArea.users.id.eq(userId))
+            .fetchFirst() != null) {
+            inNeighborArea = JPAExpressions.selectOne()
+                .from(neighborArea)
+                .where(
+                    neighborArea.emdArea.id.in(
+                            JPAExpressions.select(activityArea.emdArea.id)
+                                .from(activityArea)
+                                .where(activityArea.users.id.eq(userId))
+                        )
+                        .and(Expressions.booleanTemplate("ST_Contains({0}, {1})", neighborArea.geom,
+                            product.location))
+                )
+                .exists();
+        }
 
         if (inNeighborArea != null) {
             builder.and(inNeighborArea);
@@ -140,6 +147,7 @@ public class CustomProductRepositoryImpl implements CustomProductRepository {
                 product.dayPrice,
                 product.weekPrice,
                 product.viewCount,
+                product.address,
                 productImage.imageUrl.as("thumbnailUrl"),
                 isFavorite.as("favorite"),
                 ExpressionUtils.as(favoriteCnt, "favoriteCnt"),
