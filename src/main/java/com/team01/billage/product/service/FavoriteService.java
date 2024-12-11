@@ -19,8 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-import static com.team01.billage.exception.ErrorCode.PRODUCT_NOT_FOUND;
-import static com.team01.billage.exception.ErrorCode.USER_NOT_FOUND;
+import static com.team01.billage.exception.ErrorCode.*;
 
 @Service
 @RequiredArgsConstructor
@@ -60,6 +59,10 @@ public class FavoriteService {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new CustomException(PRODUCT_NOT_FOUND));
 
+        if(favoriteRepository.existsByUserIdAndProductId(user.getId(), productId)){
+            throw new CustomException(LIKE_ALREADY_EXISTS);
+        }
+
         FavoriteProduct favoriteProduct = FavoriteProduct.builder()
                 .user(user)
                 .product(product)
@@ -85,7 +88,6 @@ public class FavoriteService {
     }
 
     public Users checkUser(Long userId){
-        System.out.println("회원: " + userId);
         return userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
     }

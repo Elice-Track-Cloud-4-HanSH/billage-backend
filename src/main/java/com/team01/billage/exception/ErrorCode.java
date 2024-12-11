@@ -52,6 +52,7 @@ public enum ErrorCode {
     NICKNAME_ALREADY_EXISTS(HttpStatus.CONFLICT, "해당 닉네임이 이미 존재합니다."),
     REVIEW_ALREADY_EXISTS(HttpStatus.CONFLICT, "해당 거래에 대한 리뷰가 이미 존재합니다."),
     PRODUCT_ALREADY_RETURNED(HttpStatus.CONFLICT, "이미 반납이 완료된 상품입니다."),
+    LIKE_ALREADY_EXISTS(HttpStatus.CONFLICT, "이미 좋아요를 한 상품입니다."),
 
     /* 410 : GONE : 리소스가 더 이상 유효하지 않음 */
 
