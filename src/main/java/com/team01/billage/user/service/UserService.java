@@ -171,7 +171,11 @@ public class UserService {
         if (user.isDeleted()) {
             throw new CustomException(ErrorCode.USER_ALREADY_DELETED);
         }
-        return user.deleteUser();
+        user.deleteUser();
+        return UserDeleteResponseDto.builder()
+                .isDeleted(true)
+                .message("회원 삭제 성공")
+                .build();
     }
 
     /**
