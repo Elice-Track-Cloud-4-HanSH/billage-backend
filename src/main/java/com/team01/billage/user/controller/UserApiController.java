@@ -59,6 +59,15 @@ public class UserApiController {
     private final UserService userService;
     private final ProfileService profileService;
 
+    @Operation(summary = "회원가입", description = "새로운 사용자를 등록합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "간단한 유저 프로필 정보 조회 성공",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = SimpleUserInfoResponseDto.class))
+            ),
+    })
     @PostMapping("/after-login")
     public ResponseEntity<SimpleUserInfoResponseDto> getSimpleUserInfo(
         @AuthenticationPrincipal CustomUserDetails userDetails) {
