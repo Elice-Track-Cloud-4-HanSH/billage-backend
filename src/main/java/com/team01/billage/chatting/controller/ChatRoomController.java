@@ -27,7 +27,6 @@ public class ChatRoomController {
     private final ChatRoomService chatroomService;
     private final ChatService chatService;
     private final DetermineUser determineUser;
-    private final ChatRedisService chatRedisService;
 
     private final Set<String> chatTypes = new HashSet<>(Arrays.asList("ALL", "PR", "LENT", "RENT"));
 
@@ -35,9 +34,8 @@ public class ChatRoomController {
     public ResponseEntity<ChatMessage.UnreadCount> getUnreadChatCount(
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        Long chatroomCount = chatroomService.chatroomCount(userDetails.getId());
-        Long unreadChatCount = chatRedisService.sumOfKeysValue("*_" + userDetails.getId(), chatroomCount);
-        return ResponseEntity.ok(new ChatMessage.UnreadCount(unreadChatCount));
+        ChatMessage.UnreadCount unreadChatCountResponseDto = chatroomService.getUnreadChatCount(userDetails);
+        return ResponseEntity.ok(unreadChatCountResponseDto);
     }
 
     @GetMapping

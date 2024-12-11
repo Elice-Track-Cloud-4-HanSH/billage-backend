@@ -1,10 +1,7 @@
 package com.team01.billage.chatting.service;
 
 import com.team01.billage.chatting.domain.ChatRoom;
-import com.team01.billage.chatting.dto.ChatResponseDto;
-import com.team01.billage.chatting.dto.ChatroomResponseDto;
-import com.team01.billage.chatting.dto.CheckValidChatroomRequestDto;
-import com.team01.billage.chatting.dto.CheckValidChatroomResponseDto;
+import com.team01.billage.chatting.dto.*;
 import com.team01.billage.chatting.dto.querydsl.ChatroomWithRecentChatDTO;
 import com.team01.billage.chatting.repository.ChatRoomQueryDSL;
 import com.team01.billage.chatting.repository.ChatRoomRepository;
@@ -12,6 +9,7 @@ import com.team01.billage.exception.CustomException;
 import com.team01.billage.exception.ErrorCode;
 import com.team01.billage.product.domain.Product;
 import com.team01.billage.product.repository.ProductRepository;
+import com.team01.billage.user.domain.CustomUserDetails;
 import com.team01.billage.user.domain.Users;
 import com.team01.billage.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +35,16 @@ public class ChatRoomService {
 
     public Long chatroomCount(Long userId) {
         return chatroomRepository.countByUserId(userId);
+    }
+
+    public ChatMessage.UnreadCount getUnreadChatCount(CustomUserDetails userDetails) {
+        try {
+            Long chatroomCount = chatroomCount(userDetails.getId());
+            Long unreadChatCount = chatRedisService.sumOfKeysValue("*_" + userDetails.getId(), chatroomCount);
+            return new ChatMessage.UnreadCount(unreadChatCount);
+        } catch (Exception e) {
+            return new ChatMessage.UnreadCount(0L);
+        }
     }
 
     public ChatRoom isChatroomExists(Long chatroomId) {
