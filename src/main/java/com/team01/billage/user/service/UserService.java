@@ -247,6 +247,20 @@ public class UserService {
         }
     }
 
+    @Transactional
+    public UserPasswordResponseDto resetPassword(String email, String password) {
+        if (!"true".equals(redisTemplate.opsForValue().get("EmailVerified:"+email))) {
+            throw new CustomException(ErrorCode.EMAIL_NOT_VERIFIED);
+        }
+
+        Users user = findByEmail(email);
+        user.setPassword(passwordEncoder.encode(password));
+
+        redisTemplate.delete("EmailVerified:"+email);
+
+        return new UserPasswordResponseDto(true, "비밀번호 재설정 완료했습니다");
+    }
+
     /**
      * 비밀번호 확인
      */
