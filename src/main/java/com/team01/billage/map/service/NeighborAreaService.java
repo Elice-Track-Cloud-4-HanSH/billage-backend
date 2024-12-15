@@ -28,7 +28,7 @@ public class NeighborAreaService {
         Object result = neighborAreaRepository.findNeighborAreaWithGeoJsonByEmdCdAndDepth(emdCd, depth);
 
         if (result == null) {
-            throw new IllegalArgumentException("해당 조건에 맞는 NeighborArea가 없습니다.");
+            throw new CustomException(ErrorCode.NEIGHBOR_AREA_NOT_FOUND);
         }
 
         // Object를 배열로 변환하여 DTO 생성

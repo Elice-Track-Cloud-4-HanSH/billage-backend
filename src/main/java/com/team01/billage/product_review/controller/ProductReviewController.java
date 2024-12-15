@@ -13,8 +13,9 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -122,12 +124,18 @@ public class ProductReviewController {
         )
     })
     @GetMapping
-    public ResponseEntity<List<ShowReviewResponseDto>> showProductReview(
+    public ResponseEntity<Slice<ShowReviewResponseDto>> showProductReview(
         @Parameter(hidden = true)
-        @AuthenticationPrincipal CustomUserDetails userDetails) {
+        @AuthenticationPrincipal CustomUserDetails userDetails,
 
-        List<ShowReviewResponseDto> response = productReviewService.readMyProductReviews(
-            userDetails.getId());
+        @Parameter(description = "이전 요청에서 마지막으로 확인한 상품 후기 ID입니다.", example = "123")
+        @RequestParam(name = "lastStandard", required = false) Long lastStandard,
+
+        @Parameter(description = "페이징 처리를 위한 Pageable 객체입니다.", example = "page=0&size=20&sort=createdAt,desc")
+        Pageable pageable) {
+
+        Slice<ShowReviewResponseDto> response = productReviewService.readMyProductReviews(
+            userDetails.getId(), lastStandard, pageable);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
@@ -151,11 +159,18 @@ public class ProductReviewController {
         ),
     })
     @GetMapping("/product-details/{productId}")
-    public ResponseEntity<List<ShowReviewResponseDto>> productDetailsReview(
+    public ResponseEntity<Slice<ShowReviewResponseDto>> productDetailsReview(
         @Parameter(description = "상품 ID", example = "1")
-        @PathVariable("productId") long productId) {
+        @PathVariable("productId") long productId,
 
-        List<ShowReviewResponseDto> response = productReviewService.readProductReviews(productId);
+        @Parameter(description = "이전 요청에서 마지막으로 확인한 상품 후기 ID입니다.", example = "123")
+        @RequestParam(name = "lastStandard", required = false) Long lastStandard,
+
+        @Parameter(description = "페이징 처리를 위한 Pageable 객체입니다.", example = "page=0&size=20&sort=createdAt,desc")
+        Pageable pageable) {
+
+        Slice<ShowReviewResponseDto> response = productReviewService.readProductReviews(productId,
+            lastStandard, pageable);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 

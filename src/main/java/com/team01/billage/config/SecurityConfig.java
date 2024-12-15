@@ -48,8 +48,6 @@ public class SecurityConfig {
 
     @Value("${app.cors.allowed-origins}")
     private String allowedOrigins;
-    @Value("${app.oauth2.authorized-redirect-urls}")
-    private String oauthRedirectPage;
 
     private final LogoutSuccessHandler logoutSuccessHandler;
     private final OAuth2UserCustomService oAuth2UserCustomService;
@@ -85,7 +83,7 @@ public class SecurityConfig {
                 //###### OAuth2 로그인 설정 ########
                 // OAuth2 로그인 설정
                 .oauth2Login(oauth2Login -> oauth2Login
-                        .loginPage(oauthRedirectPage)  // 커스텀 로그인 페이지 경로 설정
+//                        .loginPage(oauthRedirectPage)  // 커스텀 로그인 페이지 경로 설정
                         .authorizationEndpoint(authorizationEndpoint ->
                                 authorizationEndpoint
                                         .authorizationRequestRepository(cookieRepository)  // 쿠키 기반 OAuth2 요청 저장소

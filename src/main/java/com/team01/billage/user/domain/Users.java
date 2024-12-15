@@ -1,13 +1,11 @@
 package com.team01.billage.user.domain;
 
-import com.team01.billage.exception.CustomException;
-import com.team01.billage.exception.ErrorCode;
-import com.team01.billage.user.dto.Response.UserDeleteResponseDto;
 import com.team01.billage.user.dto.Response.UserResponseDto;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
@@ -30,22 +28,22 @@ public class Users extends BaseTimeEntity implements UserDetails {
     @Column(nullable = false)
     private String nickname;
 
-    @Column(nullable = false, unique = true)
+    @Column(unique = true)
     private String email;
 
     @Column
     private String password;
 
-    @Column(name = "image_url", nullable = true)
+    @Column(name = "image_url")
     private String imageUrl;
 
     @Column(length = 1000)
     private String description;
 
-    @Column(nullable = false)
+    @Column
     private UserRole role;
 
-    @Column(nullable = false)
+    @Column
     private Provider provider;
 
     @Column(name = "deleted_at")
@@ -99,19 +97,18 @@ public class Users extends BaseTimeEntity implements UserDetails {
     }
 
     // 회원 삭제 메서드
-    public UserDeleteResponseDto deleteUser() {
-        // 이미 삭제된 경우
-        if (this.isDeleted()) { // isDeleted 메서드를 활용
-            throw new CustomException(ErrorCode.USER_ALREADY_DELETED);
-        }
-
+    @Transactional
+    public void deleteUser() {
         // 삭제 처리: deletedAt에 현재 시간 저장
         this.deletedAt = Timestamp.valueOf(LocalDateTime.now());
 
-        return UserDeleteResponseDto.builder()
-                .isDeleted(true)
-                .message("회원 삭제 성공")
-                .build();
+        this.nickname = "탈퇴한 회원";
+        this.email = null;
+        this.password = null;
+        this.imageUrl = null;
+        this.description = null;
+        this.role = null;
+        this.provider = null;
     }
 
     public void updateProfile(String nickname, String description, String imageUrl) {
