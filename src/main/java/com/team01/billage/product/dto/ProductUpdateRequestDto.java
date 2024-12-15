@@ -1,6 +1,7 @@
 package com.team01.billage.product.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import lombok.Getter;
 import lombok.Setter;
@@ -11,7 +12,7 @@ import java.util.List;
 @Setter
 public class ProductUpdateRequestDto {
 
-    @NotBlank(message = "카테고리를 선택해 주세요.")
+    @NotNull(message = "카테고리를 선택해 주세요.")
     private Long categoryId;
 
     @NotBlank(message = "제목을 입력해 주세요.")

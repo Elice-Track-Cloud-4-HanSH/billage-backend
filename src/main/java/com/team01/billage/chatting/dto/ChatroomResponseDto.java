@@ -1,10 +1,9 @@
 package com.team01.billage.chatting.dto;
 
-import com.team01.billage.chatting.domain.Chat;
-import com.team01.billage.chatting.domain.ChatRoom;
 import com.team01.billage.chatting.dto.object.CustomChatResponse;
 import com.team01.billage.chatting.dto.object.CustomChatResponseProduct;
 import com.team01.billage.chatting.dto.object.CustomChatResponseUser;
+import com.team01.billage.chatting.dto.querydsl.ChatroomWithRecentChatDTO;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -21,15 +20,13 @@ public class ChatroomResponseDto {
     private CustomChatResponseUser opponent;
     private Long unreadCount;
 
-    public ChatroomResponseDto(ChatRoom chatroom, Chat lastChat, Long userId, Long unreadCount) {
-        this.chatroomId = chatroom.getId();
-        this.buyer = new CustomChatResponseUser(chatroom.getBuyer());
-        this.seller = new CustomChatResponseUser(chatroom.getSeller());
-        this.lastChat = new CustomChatResponse(lastChat);
-        this.product = new CustomChatResponseProduct(chatroom.getProduct());
-        this.opponent = userId.equals(chatroom.getBuyer().getId())
-                ? new CustomChatResponseUser(chatroom.getSeller())
-                : new CustomChatResponseUser(chatroom.getBuyer());
+    public ChatroomResponseDto(ChatroomWithRecentChatDTO dto, Long userId, Long unreadCount) {
+        this.chatroomId = dto.getChatroomId();
+        this.buyer = new CustomChatResponseUser(dto.getBuyer().getId(), dto.getBuyer().getNickname(), dto.getBuyer().getProfileUrl());
+        this.seller = new CustomChatResponseUser(dto.getSeller().getId(), dto.getSeller().getNickname(), dto.getSeller().getProfileUrl());
+        this.lastChat = new CustomChatResponse(dto.getLastChat().getMessage(), dto.getLastChat().getLastSentTime());
+        this.product = new CustomChatResponseProduct(dto.getProduct().getId(), dto.getProduct().getName(), dto.getProduct().getImageUrl());
+        this.opponent = userId.equals(this.buyer.getId()) ? this.seller : this.buyer;
         this.unreadCount = unreadCount;
     }
 }

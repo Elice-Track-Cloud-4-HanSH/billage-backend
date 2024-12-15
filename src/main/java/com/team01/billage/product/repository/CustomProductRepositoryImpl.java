@@ -9,6 +9,8 @@ import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.JPQLQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.team01.billage.category.dto.CategoryProductResponseDto;
+import com.team01.billage.map.domain.QActivityArea;
+import com.team01.billage.map.domain.QNeighborArea;
 import com.team01.billage.product.domain.QFavoriteProduct;
 import com.team01.billage.product.domain.QProduct;
 import com.team01.billage.product.domain.QProductImage;
@@ -32,7 +34,8 @@ public class CustomProductRepositoryImpl implements CustomProductRepository {
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public List<OnSaleResponseDto> findAllOnSale(long userId) {
+    public List<OnSaleResponseDto> findAllOnSale(long userId, LocalDateTime lastStandard,
+        Pageable pageable) {
         QProduct product = QProduct.product;
         QProductImage productImage = QProductImage.productImage;
 
@@ -41,25 +44,25 @@ public class CustomProductRepositoryImpl implements CustomProductRepository {
             .and(product.rentalStatus.eq(RentalStatus.AVAILABLE))
             .and(product.deletedAt.isNull());
 
+        if (lastStandard != null) {
+            whereClause.and(product.updatedAt.lt(lastStandard));
+        }
+
         return queryFactory
             .select(Projections.constructor(
                 OnSaleResponseDto.class,
                 product.id,
                 productImage.imageUrl,
                 product.title,
-                Expressions.dateTimeTemplate(LocalDateTime.class, "COALESCE({0}, {1})",
-                    product.updatedAt,
-                    product.createdAt)
+                product.updatedAt
             ))
             .from(product)
             .leftJoin(productImage)
             .on(productImage.product.eq(product)
                 .and(productImage.thumbnail.eq("Y")))
             .where(whereClause)
-            .orderBy(Expressions.dateTimeTemplate(LocalDateTime.class, "COALESCE({0}, {1})",
-                product.updatedAt,
-                product.createdAt).desc())
-            //.limit()
+            .orderBy(product.updatedAt.desc())
+            .limit(pageable.getPageSize() + 1)
             .fetch();
     }
 
@@ -70,6 +73,8 @@ public class CustomProductRepositoryImpl implements CustomProductRepository {
         QProductImage productImage = QProductImage.productImage;
         QFavoriteProduct favoriteProduct = QFavoriteProduct.favoriteProduct;
         QRentalRecord rentalRecord = QRentalRecord.rentalRecord;
+        QNeighborArea neighborArea = QNeighborArea.neighborArea;
+        QActivityArea activityArea = QActivityArea.activityArea;
 
         // 동적 조건 처리
         BooleanBuilder builder = new BooleanBuilder();
@@ -106,7 +111,32 @@ public class CustomProductRepositoryImpl implements CustomProductRepository {
                 rentalRecord.expectedReturnDate)
             .from(rentalRecord)
             .where(product.rentalStatus.eq(RentalStatus.RENTED)
+                .and(rentalRecord.returnDate.isNull())
                 .and(rentalRecord.product.id.eq(product.id)));
+
+        // 활동 지역이 있는 경우에만 필터 적용
+        BooleanExpression inNeighborArea = null;
+        if (userId != null && queryFactory.selectOne()
+            .from(activityArea)
+            .where(activityArea.users.id.eq(userId))
+            .fetchFirst() != null) {
+            inNeighborArea = JPAExpressions.selectOne()
+                .from(neighborArea)
+                .where(
+                    neighborArea.emdArea.id.in(
+                            JPAExpressions.select(activityArea.emdArea.id)
+                                .from(activityArea)
+                                .where(activityArea.users.id.eq(userId))
+                        )
+                        .and(Expressions.booleanTemplate("ST_Contains({0}, {1})", neighborArea.geom,
+                            product.location))
+                )
+                .exists();
+        }
+
+        if (inNeighborArea != null) {
+            builder.and(inNeighborArea);
+        }
 
         return queryFactory
             .select(Projections.fields(
@@ -117,6 +147,7 @@ public class CustomProductRepositoryImpl implements CustomProductRepository {
                 product.dayPrice,
                 product.weekPrice,
                 product.viewCount,
+                product.address,
                 productImage.imageUrl.as("thumbnailUrl"),
                 isFavorite.as("favorite"),
                 ExpressionUtils.as(favoriteCnt, "favoriteCnt"),
@@ -126,9 +157,6 @@ public class CustomProductRepositoryImpl implements CustomProductRepository {
             .leftJoin(productImage)
             .on(product.id.eq(productImage.product.id).
                 and(productImage.thumbnail.eq("Y")))
-            .leftJoin(rentalRecord)
-            .on(product.rentalStatus.eq(RentalStatus.RENTED)
-                .and(product.id.eq(rentalRecord.product.id)))
             .where(builder)
             .orderBy(product.updatedAt.desc())
             .offset(pageable.getOffset())
@@ -175,7 +203,8 @@ public class CustomProductRepositoryImpl implements CustomProductRepository {
             .select(rentalRecord.expectedReturnDate)
             .from(rentalRecord)
             .where(rentalRecord.product.id.eq(productId)
-                .and(product.rentalStatus.eq(RentalStatus.RENTED)))
+                .and(product.rentalStatus.eq(RentalStatus.RENTED))
+                .and(rentalRecord.returnDate.isNull()))
             .fetchOne();
 
         // 이미지 리스트 가져오기

@@ -4,6 +4,8 @@ import com.team01.billage.chatting.domain.Chat;
 import com.team01.billage.chatting.domain.ChatRoom;
 import com.team01.billage.chatting.dto.ChatMessage;
 import com.team01.billage.chatting.dto.ChatResponseDto;
+import com.team01.billage.chatting.dto.querydsl.ChatWithChatroomAndBSDTO;
+import com.team01.billage.chatting.repository.ChatQueryDSL;
 import com.team01.billage.chatting.repository.ChatRepository;
 import com.team01.billage.chatting.repository.ChatRoomRepository;
 import com.team01.billage.exception.CustomException;
@@ -19,6 +21,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class ChatSocketService {
     private final ChatRoomRepository chatroomRepository;
+    private final ChatQueryDSL chatQueryDSL;
     private final ChatRepository chatRepository;
     private final ChatRedisService chatRedisService;
     private final SimpMessagingTemplate messagingTemplate;
@@ -61,14 +64,19 @@ public class ChatSocketService {
     public void markAsRead(Long chatId) {
         chatRepository.markAsRead(chatId);
 
-        Chat chat = chatRepository.findById(chatId).orElseThrow(() -> new CustomException(ErrorCode.CHAT_NOT_FOUND));
-        ChatRoom chatroom = chat.getChatRoom();
-        Long chatroomId = chatroom.getId();
+        ChatWithChatroomAndBSDTO chat = chatQueryDSL.getChatWithBuyerAndSeller(chatId);
+        if (chat == null) throw new CustomException(ErrorCode.CHAT_NOT_FOUND);
 
-        Long targetId = getTargetId(chatroom, chat.getSender());
-
+        Long targetId = getTargetId(chat, chat.getSenderId());
         sendUnreadChatCount(targetId, -1);
-        chatRedisService.resetUnreadChatCount(chatroomId, targetId);
+        chatRedisService.resetUnreadChatCount(chat.getChatroomId(), targetId);
+    }
+
+    private Long getTargetId(ChatWithChatroomAndBSDTO chat, Long senderId) {
+        Long buyerId = chat.getBuyer().getId();
+        Long sellerId = chat.getSeller().getId();
+
+        return buyerId.equals(senderId) ? sellerId : buyerId;
     }
 
     private Long getTargetId(ChatRoom chatroom, Users sender) {
