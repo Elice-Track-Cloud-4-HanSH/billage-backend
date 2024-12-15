@@ -39,6 +39,7 @@ public class CustomFavoriteRepositoryImpl implements CustomFavoriteRepository{
         JPQLQuery<LocalDate> expectedReturnDate = JPAExpressions.select(rentalRecord.expectedReturnDate)
                 .from(rentalRecord)
                 .where(product.rentalStatus.eq(RentalStatus.RENTED)
+                        .and(rentalRecord.returnDate.isNull())
                         .and(rentalRecord.product.id.eq(product.id)));
 
         return queryFactory
@@ -61,8 +62,6 @@ public class CustomFavoriteRepositoryImpl implements CustomFavoriteRepository{
                 .leftJoin(productImage)
                 .on(product.id.eq(productImage.product.id).
                         and(productImage.thumbnail.eq("Y")))
-                .leftJoin(rentalRecord)
-                .on(product.rentalStatus.eq(RentalStatus.RENTED).and(favoriteProduct.product.id.eq(rentalRecord.product.id)))
                 .where(favoriteProduct.user.id.eq(userId).and(product.deletedAt.isNull()))
                 .orderBy(favoriteProduct.createdAt.desc())
                 .offset(pageable.getOffset())

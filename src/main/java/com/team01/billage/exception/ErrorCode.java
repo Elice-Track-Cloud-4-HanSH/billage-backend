@@ -13,8 +13,9 @@ public enum ErrorCode {
     PASSWORD_NOT_MATCH(HttpStatus.BAD_REQUEST, "비밀번호가 올바르지 않습니다."),
     EMPTY_LOGIN_REQUEST(HttpStatus.BAD_REQUEST, "이메일 또는 비밀번호가 비어있습니다."),
     PRODUCT_ID_REQUIRED(HttpStatus.BAD_REQUEST, "상품 ID는 필수입니다."),
-    CHATROOM_VALIDATE_FAILED(HttpStatus.BAD_REQUEST, "구매자 또는 판매자가 토큰의 값과 다릅니다."),
     INVALID_QUERY_PARAMETER_TYPE(HttpStatus.BAD_REQUEST, "유효하지 않은 쿼리 파라미터 유형입니다."),
+    INVALID_CHAT_TYPE(HttpStatus.BAD_REQUEST, "올바르지 않은 채팅방 조회 타입입니다."),
+    EMAIL_NOT_VERIFIED(HttpStatus.BAD_REQUEST, "인증 완료되지 않은 이메일입니다."),
 
     /* 401 UNAUTHORIZED : 인증되지 않은 사용자 */
     INVALID_EMAIL_CODE(HttpStatus.UNAUTHORIZED, "잘못된 인증 코드입니다."),
@@ -30,6 +31,7 @@ public enum ErrorCode {
     NOT_PRODUCT_OWNER(HttpStatus.FORBIDDEN, "상품의 주인이 아닙니다."),
     UNAUTHORIZED_WEBSOCKET_CONNECTION(HttpStatus.FORBIDDEN, "웹소켓 연결을 다시 확인해주세요. 토큰이 있나요?"),
     ACCESS_DENIED(HttpStatus.FORBIDDEN, "접근 권한이 없습니다."),
+    CHATROOM_VALIDATE_FAILED(HttpStatus.FORBIDDEN, "구매자 또는 판매자가 토큰의 값과 다릅니다."),
 
     /* 404 NOT_FOUND : Resource를 찾을 수 없음 */
     CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 카테고리를 찾을 수 없습니다."),
@@ -43,6 +45,8 @@ public enum ErrorCode {
     EMD_AREA_NOT_FOUND(HttpStatus.NOT_FOUND, "행정 구역을 찾을 수 없습니다."),
     ACTIVITY_AREA_NOT_FOUND(HttpStatus.NOT_FOUND, "활동 지역을 찾을 수 없습니다."),
     NEIGHBOR_AREA_NOT_FOUND(HttpStatus.NOT_FOUND, "이웃 지역을 찾을 수 없습니다."),
+    ADDRESS_NOT_FOUND(HttpStatus.NOT_FOUND, "주소를 찾을 수 없습니다."),
+
 
     /* 409 : CONFLICT : Resource의 현재 상태와 충돌. 보통 중복된 데이터 존재, 조건을 만족하지 못함 */
     USER_ALREADY_EXISTS(HttpStatus.CONFLICT, "해당 유저가 이미 존재합니다."),
@@ -50,6 +54,7 @@ public enum ErrorCode {
     NICKNAME_ALREADY_EXISTS(HttpStatus.CONFLICT, "해당 닉네임이 이미 존재합니다."),
     REVIEW_ALREADY_EXISTS(HttpStatus.CONFLICT, "해당 거래에 대한 리뷰가 이미 존재합니다."),
     PRODUCT_ALREADY_RETURNED(HttpStatus.CONFLICT, "이미 반납이 완료된 상품입니다."),
+    LIKE_ALREADY_EXISTS(HttpStatus.CONFLICT, "이미 좋아요를 한 상품입니다."),
 
     /* 410 : GONE : 리소스가 더 이상 유효하지 않음 */
 

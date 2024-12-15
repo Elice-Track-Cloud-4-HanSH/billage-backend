@@ -8,7 +8,7 @@ import com.team01.billage.user.domain.CustomUserDetails;
 import com.team01.billage.user.dto.Request.EmailRequest;
 import com.team01.billage.user.dto.Request.EmailVerificationRequest;
 import com.team01.billage.user.dto.Request.ProfileUpdateRequest;
-import com.team01.billage.user.dto.Request.UserPasswordRequestDto;
+import com.team01.billage.user.dto.Request.UserPasswordResetRequestDto;
 import com.team01.billage.user.dto.Request.UserSignupRequestDto;
 import com.team01.billage.user.dto.Response.EmailAvailabilityResponse;
 import com.team01.billage.user.dto.Response.NicknameAvailabilityResponse;
@@ -36,7 +36,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -59,6 +58,15 @@ public class UserApiController {
     private final UserService userService;
     private final ProfileService profileService;
 
+    @Operation(summary = "회원가입", description = "새로운 사용자를 등록합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "간단한 유저 프로필 정보 조회 성공",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = SimpleUserInfoResponseDto.class))
+            ),
+    })
     @PostMapping("/after-login")
     public ResponseEntity<SimpleUserInfoResponseDto> getSimpleUserInfo(
         @AuthenticationPrincipal CustomUserDetails userDetails) {
@@ -112,9 +120,9 @@ public class UserApiController {
     })
     @DeleteMapping("")
     public ResponseEntity<UserDeleteResponseDto> deleteUser(
-        @AuthenticationPrincipal UserDetails userDetails,
+        @AuthenticationPrincipal CustomUserDetails userDetails,
         HttpServletResponse response) {
-        UserDeleteResponseDto deleteResponse = userService.deleteUser(userDetails.getUsername());
+        UserDeleteResponseDto deleteResponse = userService.deleteUser(userDetails.getEmail());
 
         if (deleteResponse.isDeleted()) {
             clearAuthCookies(response);
@@ -179,19 +187,16 @@ public class UserApiController {
         @ApiResponse(responseCode = "401", description = "비밀번호 불일치"),
         @ApiResponse(responseCode = "404", description = "사용자를 찾을 수 없음")
     })
-    @PostMapping("/check-password")
+    @PostMapping("/reset-password")
     public ResponseEntity<UserPasswordResponseDto> checkPassword(
-        @AuthenticationPrincipal UserDetails userDetails,
-        @Valid @RequestBody UserPasswordRequestDto requestDto
+        @Valid @RequestBody UserPasswordResetRequestDto requestDto
     ) {
-        UserPasswordResponseDto response = userService.verifyPassword(
-            userDetails.getUsername(),  // email
+        UserPasswordResponseDto response = userService.resetPassword(
+                requestDto.email(),  // email
             requestDto.password()
         );
 
-        return response.matches()
-            ? ResponseEntity.ok(response)
-            : ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        return ResponseEntity.ok(response);
     }
 
     // 이메일 인증 코드 발송

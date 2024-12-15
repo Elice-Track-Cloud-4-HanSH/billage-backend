@@ -37,7 +37,7 @@ public class JwtFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
-        try {
+
             String jwtAccessToken = resolveAccessTokenFromCookies(request);
 
             if (jwtAccessToken != null && tokenProvider.validateToken(jwtAccessToken)) {
@@ -46,10 +46,8 @@ public class JwtFilter extends OncePerRequestFilter {
             }
 
             filterChain.doFilter(request, response);
-        } finally {
-            SecurityContextHolder.clearContext();
         }
-    }
+
 
     // 쿠키에서 accessToken 을 추출
     private String resolveAccessTokenFromCookies(HttpServletRequest request) {

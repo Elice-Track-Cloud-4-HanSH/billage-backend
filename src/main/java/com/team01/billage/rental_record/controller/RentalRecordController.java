@@ -14,8 +14,11 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
+import java.time.LocalDate;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -122,15 +125,24 @@ public class RentalRecordController {
         )
     })
     @GetMapping
-    public ResponseEntity<List<ShowRecordResponseDto>> showRentalRecord(
+    public ResponseEntity<Slice<ShowRecordResponseDto>> showRentalRecord(
         @Parameter(description = "조회할 대여 기록의 유형을 지정합니다.", example = "대여중/판매")
         @RequestParam(name = "type") String type,
 
         @Parameter(hidden = true)
-        @AuthenticationPrincipal CustomUserDetails userDetails) {
+        @AuthenticationPrincipal CustomUserDetails userDetails,
 
-        List<ShowRecordResponseDto> responseDtos = rentalRecordService.readRentalRecords(type,
-            userDetails.getId());
+        @Parameter(description = "페이징 처리를 위한 Pageable 객체입니다.", example = "page=0&size=20&sort=createdAt,desc")
+        Pageable pageable,
+
+        @Parameter(description = "이전 요청에서 마지막으로 확인한 날짜입니다. null이면 첫 페이지로 간주됩니다.", example = "2024-12-06")
+        @RequestParam(name = "lastStandard", required = false) LocalDate lastStandard,
+
+        @Parameter(description = "이전 요청에서 마지막으로 확인한 대여기록 ID입니다.", example = "123")
+        @RequestParam(name = "lastId", required = false) Long lastId) {
+
+        Slice<ShowRecordResponseDto> responseDtos = rentalRecordService.readRentalRecords(type,
+            userDetails.getId(), pageable, lastStandard, lastId);
         return ResponseEntity.status(HttpStatus.OK).body(responseDtos);
     }
 

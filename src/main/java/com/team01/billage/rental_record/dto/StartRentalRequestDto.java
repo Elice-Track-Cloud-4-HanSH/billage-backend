@@ -1,6 +1,7 @@
 package com.team01.billage.rental_record.dto;
 
 import io.swagger.v3.oas.annotations.Parameter;
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
 import lombok.Getter;
@@ -19,4 +20,10 @@ public class StartRentalRequestDto {
     @Parameter(description = "반납 예정일", example = "2024-12-19")
     @NotNull
     private LocalDate expectedReturnDate;
+
+    @AssertTrue(message = "반납 예정일은 대여 시작일 이후여야 합니다.")
+    public boolean isReturnDateValid() {
+        return !expectedReturnDate.isBefore(
+            startDate);
+    }
 }

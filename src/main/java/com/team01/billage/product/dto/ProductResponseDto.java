@@ -22,6 +22,6 @@ public class ProductResponseDto { // 상품 목록 DTO
     private boolean favorite;
     private Long favoriteCnt;
     private LocalDate expectedReturnDate;
-    // 지역
+    private String address;
 
 }

@@ -171,7 +171,11 @@ public class UserService {
         if (user.isDeleted()) {
             throw new CustomException(ErrorCode.USER_ALREADY_DELETED);
         }
-        return user.deleteUser();
+        user.deleteUser();
+        return UserDeleteResponseDto.builder()
+                .isDeleted(true)
+                .message("회원 삭제 성공")
+                .build();
     }
 
     /**
@@ -241,6 +245,20 @@ public class UserService {
         if (dto.getDescription() != null) {
             user.setDescription(dto.getDescription());
         }
+    }
+
+    @Transactional
+    public UserPasswordResponseDto resetPassword(String email, String password) {
+        if (!"true".equals(redisTemplate.opsForValue().get("EmailVerified:"+email))) {
+            throw new CustomException(ErrorCode.EMAIL_NOT_VERIFIED);
+        }
+
+        Users user = findByEmail(email);
+        user.setPassword(passwordEncoder.encode(password));
+
+        redisTemplate.delete("EmailVerified:"+email);
+
+        return new UserPasswordResponseDto(true, "비밀번호 재설정 완료했습니다");
     }
 
     /**
