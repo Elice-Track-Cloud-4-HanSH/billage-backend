@@ -7,6 +7,7 @@ import static com.team01.billage.exception.ErrorCode.RENTAL_RECORD_NOT_FOUND;
 
 import com.team01.billage.chatting.domain.ChatRoom;
 import com.team01.billage.chatting.repository.ChatRoomRepository;
+import com.team01.billage.common.CustomSlice;
 import com.team01.billage.exception.CustomException;
 import com.team01.billage.product.domain.Product;
 import com.team01.billage.product.enums.RentalStatus;
@@ -18,8 +19,11 @@ import com.team01.billage.rental_record.dto.ShowRecordResponseDto;
 import com.team01.billage.rental_record.dto.StartRentalRequestDto;
 import com.team01.billage.rental_record.repository.RentalRecordRepository;
 import com.team01.billage.user.repository.UserRepository;
+import java.time.LocalDate;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -62,17 +66,59 @@ public class RentalRecordService {
         return rentalRecordRepository.loadPurchasersList(userId, productId);
     }
 
-    public List<ShowRecordResponseDto> readRentalRecords(String type, long userId) {
+    public Slice<ShowRecordResponseDto> readRentalRecords(String type, long userId,
+        Pageable pageable, LocalDate lastStandard, Long lastId) {
 
         RecordType recordType = RecordType.fromDescription(type);
 
-        return switch (recordType) {
-            case SELLER_RENTING -> rentalRecordRepository.findBySellerRenting(userId);
-            case SELLER_RECORD -> rentalRecordRepository.findBySellerRecord(userId);
-            case BUYER_RENTING -> rentalRecordRepository.findByBuyerRenting(userId);
-            case BUYER_RECORD -> rentalRecordRepository.findByBuyerRecord(userId);
-        };
+        List<ShowRecordResponseDto> content = List.of();
+        LocalDate nextLastStandard = null;
+        Long nextLastId = null;
+
+        switch (recordType) {
+            case SELLER_RENTING -> {
+                content = rentalRecordRepository.findBySellerRenting(userId, pageable, lastStandard,
+                    lastId);
+                if (!content.isEmpty()) {
+                    nextLastStandard = content.get(content.size() - 1).getExpectedReturnDate();
+                }
+            }
+            case SELLER_RECORD -> {
+                content = rentalRecordRepository.findBySellerRecord(userId, pageable, lastStandard,
+                    lastId);
+                if (!content.isEmpty()) {
+                    nextLastStandard = content.get(content.size() - 1).getReturnDate();
+                }
+            }
+            case BUYER_RENTING -> {
+                content = rentalRecordRepository.findByBuyerRenting(userId, pageable, lastStandard,
+                    lastId);
+                if (!content.isEmpty()) {
+                    nextLastStandard = content.get(content.size() - 1).getExpectedReturnDate();
+                }
+            }
+            case BUYER_RECORD -> {
+                content = rentalRecordRepository.findByBuyerRecord(userId, pageable, lastStandard,
+                    lastId);
+                if (!content.isEmpty()) {
+                    nextLastStandard = content.get(content.size() - 1).getReturnDate();
+                }
+            }
+        }
+
+        boolean hasNext = content.size() > pageable.getPageSize();
+
+        if (hasNext) {
+            content.remove(content.size() - 1);
+        }
+
+        if (!content.isEmpty()) {
+            nextLastId = content.get(content.size() - 1).getRentalRecordId();
+        }
+
+        return new CustomSlice<>(content, pageable, hasNext, nextLastStandard, nextLastId);
     }
+
 
     @Transactional
     public void updateRentalRecord(long rentalRecordId, long userId) {

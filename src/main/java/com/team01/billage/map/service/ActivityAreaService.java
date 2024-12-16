@@ -52,8 +52,12 @@ public class ActivityAreaService {
 
     // 활동 지역 조회
     public ActivityAreaResponseDto getActivityArea(Long userId) {
-        ActivityArea activityArea = activityAreaRepository.findByUsers_Id(userId)
-            .orElseThrow(() -> new CustomException(ErrorCode.ACTIVITY_AREA_NOT_FOUND));
+        ActivityArea activityArea = activityAreaRepository.findByUsers_Id(userId).orElse(null);
+
+        if (activityArea == null) {
+            // 활동 지역이 없는 경우 기본값 또는 null 반환
+            return null;
+        }
 
         EmdArea emdArea = activityArea.getEmdArea();
 
@@ -64,5 +68,12 @@ public class ActivityAreaService {
             .sggNm(emdArea.getSggNm())
 
             .build();
+    }
+    @Transactional
+    public void deleteActivityArea(Long userId) {
+        ActivityArea activityArea = activityAreaRepository.findByUsers_Id(userId)
+            .orElseThrow(() -> new CustomException(ErrorCode.ACTIVITY_AREA_NOT_FOUND));
+
+        activityAreaRepository.delete(activityArea); // 활동 지역 삭제
     }
 }

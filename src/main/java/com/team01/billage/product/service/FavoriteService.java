@@ -19,8 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-import static com.team01.billage.exception.ErrorCode.PRODUCT_NOT_FOUND;
-import static com.team01.billage.exception.ErrorCode.USER_NOT_FOUND;
+import static com.team01.billage.exception.ErrorCode.*;
 
 @Service
 @RequiredArgsConstructor
@@ -47,9 +46,9 @@ public class FavoriteService {
     }
 
     // 회원의 관심 상품 목록 조회
-    public List<ProductResponseDto> findAllFavorite(Long userId, int page) {
+    public List<ProductResponseDto> findAllFavorite(Long userId, int page, int pageSize) {
 
-        Pageable pageable = PageRequest.of(page, 10);
+        Pageable pageable = PageRequest.of(page, pageSize);
 
         return favoriteRepository.findAllByUserId(userId, pageable);
     }
@@ -59,6 +58,10 @@ public class FavoriteService {
 
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new CustomException(PRODUCT_NOT_FOUND));
+
+        if(favoriteRepository.existsByUserIdAndProductId(user.getId(), productId)){
+            throw new CustomException(LIKE_ALREADY_EXISTS);
+        }
 
         FavoriteProduct favoriteProduct = FavoriteProduct.builder()
                 .user(user)
@@ -85,7 +88,6 @@ public class FavoriteService {
     }
 
     public Users checkUser(Long userId){
-        System.out.println("회원: " + userId);
         return userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(USER_NOT_FOUND));
     }

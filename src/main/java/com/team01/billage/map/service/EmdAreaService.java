@@ -1,5 +1,7 @@
 package com.team01.billage.map.service;
 
+import com.team01.billage.exception.CustomException;
+import com.team01.billage.exception.ErrorCode;
 import com.team01.billage.map.dto.EmdAreaGeoJsonResponseDto;
 import com.team01.billage.map.dto.EmdAreaGeoResponseDto;
 import com.team01.billage.map.dto.EmdAreaResponseDto;
@@ -25,7 +27,7 @@ public class EmdAreaService {
         Object result = emdAreaRepository.findEmdAreaWithGeoJsonById(emdCd);
 
         if (result == null) {
-            throw new IllegalArgumentException("존재하지 않는 emdCd입니다.");
+            throw new CustomException(ErrorCode.EMD_AREA_NOT_FOUND);
         }
 
         // Object를 배열로 변환하여 DTO 생성
